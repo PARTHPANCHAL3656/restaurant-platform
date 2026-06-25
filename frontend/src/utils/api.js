@@ -1,7 +1,16 @@
 import axios from "axios"
 
-// All API calls go through this instance
-// Base URL comes from .env → VITE_API_URL=http://localhost:5000
+// -------------------------------------------------------
+// DEPLOYMENT NOTE:
+// import.meta.env.VITE_API_URL is set in frontend/.env
+// DEV:        http://localhost:5000
+// PRODUCTION: https://your-render-app.onrender.com
+//
+// Before deploying, add VITE_API_URL to Vercel/Netlify's
+// Environment Variables panel in their dashboard.
+// Do NOT rely on the .env file being uploaded — it won't be.
+// -------------------------------------------------------
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 })

@@ -18,7 +18,17 @@ connectDB()
 const app = express()
 const httpServer = createServer(app)
 
-// Socket.IO — attached to the same HTTP server
+// -------------------------------------------------------
+// DEPLOYMENT NOTE — CORS:
+// process.env.FRONTEND_URL controls which origin can call this API.
+// DEV:        http://localhost:5173
+// PRODUCTION: https://your-app.vercel.app
+//
+// Update FRONTEND_URL in Render's environment variables panel
+// after you deploy the frontend and get its URL.
+// If you get CORS errors after deploying, this is the first thing to check.
+// -------------------------------------------------------
+
 export const io = new Server(httpServer, {
   cors: {
     origin: process.env.FRONTEND_URL,
@@ -33,11 +43,17 @@ io.on("connection", (socket) => {
   })
 })
 
-// Middleware
 app.use(cors({ origin: process.env.FRONTEND_URL }))
 app.use(express.json())
 
-// Routes
+// -------------------------------------------------------
+// DEPLOYMENT NOTE — Socket.IO on Render:
+// Socket.IO works on Render with no extra config.
+// If you ever move to Vercel for the backend (not recommended),
+// Socket.IO will NOT work — Vercel is serverless and does not
+// support persistent connections. Stay on Render for the backend.
+// -------------------------------------------------------
+
 app.use("/api/auth", authRoutes)
 app.use("/api/tables", tableRoutes)
 app.use("/api/orders", orderRoutes)
@@ -45,10 +61,16 @@ app.use("/api/reservations", reservationRoutes)
 app.use("/api/menu", menuRoutes)
 app.use("/api/payments", paymentRoutes)
 
-// Health check
 app.get("/", (req, res) => {
   res.json({ message: "Restaurant API is running" })
 })
+
+// -------------------------------------------------------
+// DEPLOYMENT NOTE — PORT:
+// Render assigns its own PORT automatically via process.env.PORT.
+// The fallback 5000 is only used locally.
+// Do not hardcode a port number here.
+// -------------------------------------------------------
 
 const PORT = process.env.PORT || 5000
 httpServer.listen(PORT, () => {
