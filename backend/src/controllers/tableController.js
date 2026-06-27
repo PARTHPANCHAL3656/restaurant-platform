@@ -43,6 +43,9 @@ export const seedTables = async (req, res) => {
 
 // POST /api/tables/:id/assign
 // Staff assigns a table → creates session + order → returns QR code
+// In backend/src/controllers/tableController.js
+// Find the assignTable function and replace the res.json at the bottom with this:
+
 export const assignTable = async (req, res) => {
   try {
     const table = await Table.findById(req.params.id)
@@ -52,10 +55,9 @@ export const assignTable = async (req, res) => {
       return res.status(400).json({ error: "Table is already occupied." })
     }
 
-    // Generate a signed token + QR image
-    const { sessionId, qrDataUrl } = await generateTableToken(table._id, table.tableNumber)
+    // ← token is now destructured (was missing before)
+    const { sessionId, token, qrDataUrl } = await generateTableToken(table._id, table.tableNumber)
 
-    // Create an empty Order for this session — items will be added when customer orders
     const order = await Order.create({
       tableId: table._id,
       tableNumber: table.tableNumber,
@@ -64,19 +66,18 @@ export const assignTable = async (req, res) => {
       status: "active"
     })
 
-    // Update the table
     table.status = "occupied"
     table.currentSessionId = sessionId
     table.currentOrderId = order._id
     await table.save()
 
-    // Notify all connected clients (staff dashboard updates live)
     io.emit("table:updated", { tableId: table._id, status: "occupied", tableNumber: table.tableNumber })
 
     res.json({
       message: `Table ${table.tableNumber} assigned.`,
-      qrDataUrl,   // <img src={qrDataUrl} /> on frontend
+      qrDataUrl,
       sessionId,
+      token,        // ← THIS was missing — the actual JWT for the customer
       orderId: order._id
     })
   } catch (err) {
