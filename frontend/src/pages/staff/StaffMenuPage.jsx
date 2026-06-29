@@ -353,12 +353,16 @@ export default function StaffMenuPage() {
 
                   {/* Body Preview */}
                   <div className="flex-grow overflow-y-auto p-6 space-y-6 text-xs">
-                    <div className="aspect-[16/10] overflow-hidden bg-[#faf9f8] border border-[#E5E1DA]">
-                      <img 
-                        src={getImage(activeItem.image)} 
-                        alt={activeItem.name} 
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="aspect-[16/10] overflow-hidden bg-[#faf9f8] border border-[#E5E1DA] flex items-center justify-center">
+                      {activeItem.image ? (
+                        <img 
+                          src={getImage(activeItem.image)} 
+                          alt={activeItem.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="font-serif italic text-xs text-subtle-text/50">Image Missing</span>
+                      )}
                     </div>
 
                     <div className="flex justify-between items-end border-b border-[#E5E1DA] pb-4">
@@ -366,7 +370,7 @@ export default function StaffMenuPage() {
                         <span className="font-label-caps text-[9px] text-subtle-text uppercase block mb-1">Category</span>
                         <span className="font-serif text-md text-ink-navy font-bold">{activeItem.category}</span>
                       </div>
-                      <span className="font-serif text-3xl text-saffron-gold font-bold">₹{activeItem.price.toFixed(2)}</span>
+                      <span className="font-serif text-3xl text-saffron-gold font-bold">${activeItem.price.toFixed(2)}</span>
                     </div>
 
                     <div className="space-y-2">

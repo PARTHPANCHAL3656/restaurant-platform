@@ -8,26 +8,38 @@ import MobileHeader from './components/MobileHeader';
 import MobileMenu from './components/MobileMenu';
 import CartDrawer from './components/CartDrawer';
 
-// Pages
-import LandingPage from './pages/LandingPage';
-import ReservationPage from './pages/ReservationPage';
-import ReservationSuccess from './pages/ReservationSuccess';
-import MenuPage from './pages/MenuPage';
-import OrderTrackingPage from './pages/OrderTrackingPage';
-import BillSummaryPage from './pages/BillSummaryPage';
-import GalleryPage from './pages/GalleryPage';
-import ContactPage from './pages/ContactPage';
-import CartPage from './pages/CartPage';
+// Pages (Lazy Loaded)
+const LandingPage = React.lazy(() => import('./pages/LandingPage'));
+const ReservationPage = React.lazy(() => import('./pages/ReservationPage'));
+const ReservationSuccess = React.lazy(() => import('./pages/ReservationSuccess'));
+const MenuPage = React.lazy(() => import('./pages/MenuPage'));
+const OrderTrackingPage = React.lazy(() => import('./pages/OrderTrackingPage'));
+const BillSummaryPage = React.lazy(() => import('./pages/BillSummaryPage'));
+const GalleryPage = React.lazy(() => import('./pages/GalleryPage'));
+const ContactPage = React.lazy(() => import('./pages/ContactPage'));
+const CartPage = React.lazy(() => import('./pages/CartPage'));
 
-// Staff Pages & Shell Components
+// Staff Pages (Lazy Loaded)
 import StaffLayout from './components/staff/StaffLayout';
-import StaffLoginPage from './pages/staff/StaffLoginPage';
-import StaffDashboardPage from './pages/staff/StaffDashboardPage';
-import StaffTablesPage from './pages/staff/StaffTablesPage';
-import StaffOrdersPage from './pages/staff/StaffOrdersPage';
-import StaffBillingPage from './pages/staff/StaffBillingPage';
-import StaffGuestQueuePage from './pages/staff/StaffGuestQueuePage';
-import StaffMenuPage from './pages/staff/StaffMenuPage';
+const StaffLoginPage = React.lazy(() => import('./pages/staff/StaffLoginPage'));
+const StaffDashboardPage = React.lazy(() => import('./pages/staff/StaffDashboardPage'));
+const StaffTablesPage = React.lazy(() => import('./pages/staff/StaffTablesPage'));
+const StaffOrdersPage = React.lazy(() => import('./pages/staff/StaffOrdersPage'));
+const StaffBillingPage = React.lazy(() => import('./pages/staff/StaffBillingPage'));
+const StaffGuestQueuePage = React.lazy(() => import('./pages/staff/StaffGuestQueuePage'));
+const StaffMenuPage = React.lazy(() => import('./pages/staff/StaffMenuPage'));
+
+// Premium Minimalist Loader
+function PageLoader() {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-canvas-cream z-50">
+      <div className="flex flex-col items-center space-y-4">
+        <div className="w-10 h-10 border-2 border-saffron-gold/20 border-t-saffron-gold rounded-full animate-spin"></div>
+        <p className="font-serif italic text-xs text-subtle-text tracking-widest animate-pulse">Spice Garden...</p>
+      </div>
+    </div>
+  );
+}
 
 // Scroll control helper
 function ScrollToTop() {
@@ -145,7 +157,9 @@ export default function App() {
       <ScrollToTop />
       <StaffProvider>
         <CartProvider>
-          <MainAppRouter />
+          <Suspense fallback={<PageLoader />}>
+            <MainAppRouter />
+          </Suspense>
         </CartProvider>
       </StaffProvider>
     </Router>
