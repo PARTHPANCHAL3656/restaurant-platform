@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useStaff } from './StaffContext';
 import api from '../utils/api';
+import socket from '../utils/socket';
 
 const CartContext = createContext();
 
@@ -68,16 +69,52 @@ export function CartProvider({ children }) {
     return 'T-14';
   };
 
-  // Dynamically lookup the active customer order from the shared staff orders collection
-  const activeOrder = orders.find(o => o.id === orderId);
+  const [activeOrder, setActiveOrder] = useState(null);
+
+  useEffect(() => {
+    if (!orderId || !tableToken) {
+      setActiveOrder(null);
+      return;
+    }
+
+    const fetchMyOrder = async () => {
+      try {
+        const res = await api.get('/api/orders/my-order');
+        setActiveOrder(res.data);
+      } catch (err) {
+        console.error('Error fetching my-order in CartContext:', err);
+      }
+    };
+
+    fetchMyOrder();
+
+    const handleStatusChange = (data) => {
+      if (data.orderId === orderId) {
+        fetchMyOrder();
+      }
+    };
+
+    const handleOrderUpdate = (data) => {
+      if (data.orderId === orderId) {
+        fetchMyOrder();
+      }
+    };
+
+    socket.on('order:statusChanged', handleStatusChange);
+    socket.on('order:updated', handleOrderUpdate);
+
+    return () => {
+      socket.off('order:statusChanged', handleStatusChange);
+      socket.off('order:updated', handleOrderUpdate);
+    };
+  }, [orderId, tableToken]);
 
   // Map backend/staff status keys to customer tracking timeline labels
   const getCustomerStatusLabel = (status) => {
     switch (status) {
-      case 'new': return 'Received';
-      case 'preparing': return 'Preparing';
-      case 'ready': return 'Ready';
-      case 'served': return 'At Table';
+      case 'active': return 'Received';
+      case 'billed': return 'Ready';
+      case 'closed': return 'At Table';
       default: return 'Received';
     }
   };
@@ -97,7 +134,7 @@ export function CartProvider({ children }) {
       )
     : [];
   const activeOrderTotal = activeOrder ? activeOrder.items.reduce((sum, i) => sum + (i.price * i.qty), 0) * 1.175 : 0;
-  const activeOrderTime = activeOrder ? activeOrder.time : null;
+  const activeOrderTime = activeOrder ? new Date(activeOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
 
   const addToCart = (item) => {
     setCartItems(prev => {

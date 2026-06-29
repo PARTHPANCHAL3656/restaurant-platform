@@ -13,57 +13,66 @@ export default function OrderTrackingPage() {
   const location = useLocation();
   const { 
     orderId, 
+    orderStatus,
     activeOrderItems, 
     activeOrderTotal, 
     tableNumber
   } = useCart();
 
   const [localStatus, setLocalStatus] = useState('Received');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for order status updates from backend
-    const handleStatusChange = (data) => {
-      if (data.orderId === orderId) {
-        if (data.status === 'billed') {
-          setLocalStatus('Ready');
-        } else if (data.status === 'closed') {
-          setLocalStatus('At Table');
-        } else if (data.status === 'active') {
+    if (!orderId) {
+      setLoading(false);
+      return;
+    }
+
+    let timeoutId;
+
+    const syncStatus = (status) => {
+      if (status === 'Received') {
+        setLocalStatus('Received');
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
           setLocalStatus('Preparing');
-        }
+        }, 5000);
+      } else {
+        setLocalStatus(status || 'Received');
       }
     };
 
-    socket.on('order:statusChanged', handleStatusChange);
-
-    // Initial load check if active order exists
-    const fetchOrderStatus = async () => {
-      if (!orderId) return;
-      try {
-        const response = await api.get('/api/orders/my-order');
-        const order = response.data;
-        if (order.status === 'billed') {
-          setLocalStatus('Ready');
-        } else if (order.status === 'closed') {
-          setLocalStatus('At Table');
-        } else if (order.status === 'active') {
-          setLocalStatus('Received');
-          // Animate transition to preparing after 5s
-          setTimeout(() => {
-            setLocalStatus('Preparing');
-          }, 5000);
+    if (orderStatus) {
+      syncStatus(orderStatus);
+      setLoading(false);
+    } else {
+      // Fetch initial status from API
+      const fetchInitialStatus = async () => {
+        try {
+          const res = await api.get('/api/orders/my-order');
+          const order = res.data;
+          let currentStatus = 'Received';
+          if (order.status === 'billed') {
+            currentStatus = 'Ready';
+          } else if (order.status === 'closed') {
+            currentStatus = 'At Table';
+          }
+          syncStatus(currentStatus);
+        } catch (err) {
+          console.error('Error fetching initial status:', err);
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error('Error fetching my-order status:', err);
-      }
-    };
-    
-    fetchOrderStatus();
+      };
+      fetchInitialStatus();
+    }
 
     return () => {
-      socket.off('order:statusChanged', handleStatusChange);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
-  }, [orderId]);
+  }, [orderId, orderStatus]);
 
   // Hide simulation toolbar behind a debug flag ?debug=true or ?test=true
   const queryParams = new URLSearchParams(location.search);
@@ -113,6 +122,31 @@ export default function OrderTrackingPage() {
   };
 
   const displayStatus = localStatus || 'Received';
+
+  if (loading) {
+    return (
+      <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20 flex flex-col items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-saffron-gold mb-4"></div>
+        <p className="font-serif text-md italic">Loading your culinary journey...</p>
+      </div>
+    );
+  }
+
+  if (!orderId) {
+    return (
+      <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20 flex flex-col items-center justify-center p-8 text-center">
+        <span className="material-symbols-outlined text-4xl mb-4 text-saffron-gold">shopping_bag</span>
+        <h1 className="font-serif text-2xl mb-2 text-ink-navy">No Active Order Found</h1>
+        <p className="font-sans text-subtle-text text-sm mb-6 max-w-sm">You haven't placed an order yet or your session has expired.</p>
+        <button 
+          onClick={() => navigate('/menu')}
+          className="bg-ink-navy text-canvas-cream font-cta-label text-cta-label px-6 py-3 uppercase tracking-wider hover:bg-saffron-gold hover:text-ink-navy transition-colors cursor-pointer"
+        >
+          Go to Menu
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20">
