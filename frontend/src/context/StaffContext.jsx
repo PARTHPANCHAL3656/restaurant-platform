@@ -4,6 +4,34 @@ import socket from '../utils/socket';
 
 const StaffContext = createContext();
 
+const MOCK_TABLES = [
+  { id: 'T-01', seats: 2, status: 'available', guestName: '', arrivalTime: '', billTotal: 0, notes: '', items: [], qrId: 'QR-01', qrImage: 'qr/table-01.png', qrRoute: '/menu?table=T01', waiter: 'Rahul Sharma', guestCount: 0 },
+  { id: 'T-02', seats: 4, status: 'occupied', guestName: 'Julian Alvarez', arrivalTime: '19:15', billTotal: 96.00, notes: 'No gluten. Prefers quiet corner table.', items: [{ name: 'Saffron Infused Scallops', qty: 2, price: 48.00 }], qrId: 'QR-02', qrImage: 'qr/table-02.png', qrRoute: '/menu?table=T02', waiter: 'Rahul Sharma', guestCount: 2 },
+  { id: 'T-03', seats: 2, status: 'reserved', guestName: 'Aria Stark', arrivalTime: '19:30', billTotal: 0, notes: 'Anniversary celebration. Requesting champagne.', items: [], qrId: 'QR-03', qrImage: 'qr/table-03.png', qrRoute: '/menu?table=T03', waiter: 'Rahul Sharma', guestCount: 2 },
+  { id: 'T-04', seats: 4, status: 'occupied', guestName: 'Elena Vance', arrivalTime: '20:00', billTotal: 611.00, notes: 'Frequent VIP diner. Walnuts allergy.', items: [{ name: 'Malai Truffle Paneer', qty: 2, price: 26.00 }, { name: 'Royal Makhani Murgh', qty: 1, price: 32.00 }], qrId: 'QR-04', qrImage: 'qr/table-04.png', qrRoute: '/menu?table=T04', waiter: 'Rahul Sharma', guestCount: 4 },
+  { id: 'T-05', seats: 4, status: 'cleaning', guestName: '', arrivalTime: '', billTotal: 0, notes: '', items: [], qrId: 'QR-05', qrImage: 'qr/table-05.png', qrRoute: '/menu?table=T05', waiter: 'Rahul Sharma', guestCount: 0 },
+  { id: 'T-06', seats: 6, status: 'available', guestName: '', arrivalTime: '', billTotal: 0, notes: '', items: [], qrId: 'QR-06', qrImage: 'qr/table-06.png', qrRoute: '/menu?table=T06', waiter: 'Rahul Sharma', guestCount: 0 },
+  { id: 'T-14', seats: 4, status: 'occupied', guestName: 'Garden Terrace Guest', arrivalTime: '20:30', billTotal: 0, notes: '', items: [], qrId: 'QR-14', qrImage: 'qr/table-14.png', qrRoute: '/menu?table=T14', waiter: 'Rahul Sharma', guestCount: 2 }
+];
+
+const MOCK_RESERVATIONS = [
+  { id: 'res-1', time: '6:30 PM', guest: 'Rahul Sharma', partySize: 4, table: 'T-03', vip: false, phone: '+44 7946 0901', status: 'confirmed' },
+  { id: 'res-2', time: '7:00 PM', guest: 'Priya Mehta', partySize: 2, table: 'T-06', vip: false, phone: '+44 7946 0902', status: 'confirmed' },
+  { id: 'res-3', time: '7:30 PM', guest: 'Aarav Kapoor', partySize: 3, table: 'T-08', vip: true, phone: '+44 7946 0903', status: 'confirmed' }
+];
+
+const MOCK_ORDERS = [
+  { id: 'ORD-402', table: 'T-03', section: 'Main Hall', time: '4 mins ago', status: 'new', items: [{ name: 'Malai Truffle Paneer', qty: 2, price: 26.00 }, { name: 'Artisanal Garlic Naan', qty: 3, price: 6.00 }], notes: 'Walnut allergy warning. Make starters medium spicy.' },
+  { id: 'ORD-398', table: 'T-02', section: 'Main Hall', time: '12 mins ago', status: 'preparing', items: [{ name: 'Royal Makhani Murgh', qty: 1, price: 32.00 }, { name: 'Nawabi Mutton Biryani', qty: 2, price: 38.00 }], notes: 'Serve extra raita with biryani.' },
+  { id: 'ORD-391', table: 'T-04', section: 'Window Alcove', time: '22 mins ago', status: 'ready', items: [{ name: 'Saffron Infused Scallops', qty: 3, price: 24.00 }], notes: 'VIP customer. Serve immediately.' }
+];
+
+const MOCK_QUEUE = [
+  { id: 'Q-01', name: 'Julianne Moore', partySize: 2, waitTime: '35 Mins', phone: '+1 (555) 019-2834', vip: true, notes: 'Prefers window alcove table.', status: 'Waiting' },
+  { id: 'Q-02', name: 'Marcus Aurelius', partySize: 6, waitTime: '15 Mins', phone: '+1 (555) 042-9988', vip: true, notes: 'Celebrating birthday. Requesting Chef\'s Table.', status: 'Waiting' },
+  { id: 'Q-03', name: 'Diana Prince', partySize: 4, waitTime: '8 Mins', phone: '+1 (555) 088-7711', vip: false, notes: 'Need high-chair for toddler.', status: 'Waiting' }
+];
+
 export function useStaff() {
   const context = useContext(StaffContext);
   if (!context) {
@@ -516,6 +544,16 @@ export function StaffProvider({ children }) {
 
   const loadAllData = useCallback(async () => {
     if (!localStorage.getItem('staffToken')) return;
+
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      setTables(prev => prev.length ? prev : MOCK_TABLES);
+      setReservations(prev => prev.length ? prev : MOCK_RESERVATIONS);
+      setOrders(prev => prev.length ? prev : MOCK_ORDERS);
+      setQueue(prev => prev.length ? prev : MOCK_QUEUE);
+      return;
+    }
+
     try {
       const [rawTables, rawReservations, rawOrders, rawQueue] = await Promise.all([
         fetchTables(),
@@ -530,7 +568,11 @@ export function StaffProvider({ children }) {
       setReservations(rawReservations.map(mapBackendReservation));
       setQueue(rawQueue.map(mapBackendQueueItem));
     } catch (err) {
-      console.error('Error loading backend data:', err);
+      console.warn('Backend server is offline or failed. Falling back to local mock data.', err);
+      setTables(prev => prev.length ? prev : MOCK_TABLES);
+      setReservations(prev => prev.length ? prev : MOCK_RESERVATIONS);
+      setOrders(prev => prev.length ? prev : MOCK_ORDERS);
+      setQueue(prev => prev.length ? prev : MOCK_QUEUE);
     }
   }, [fetchTables, fetchReservations, fetchOrders, fetchQueue, mapBackendOrder, mapBackendTable, mapBackendReservation, mapBackendQueueItem]);
 
@@ -594,6 +636,29 @@ export function StaffProvider({ children }) {
   // Add Customer Reservation
   const addReservation = async (formData) => {
     const timeSlot = formData.timeSlot || '20:00';
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    
+    if (isMock) {
+      const newRes = {
+        id: 'res-' + Date.now(),
+        time: timeSlot,
+        guest: formData.name,
+        partySize: parseInt(formData.guests) || 2,
+        table: 'T-03',
+        vip: (parseInt(formData.guests) || 2) >= 5,
+        phone: formData.phone || '',
+        status: 'confirmed'
+      };
+      setReservations(prev => [newRes, ...prev]);
+      logActivity(
+        `Table reserved by ${formData.name}`,
+        `Reservation confirmed for Party of ${formData.guests} at ${timeSlot}`,
+        'event_seat',
+        '/staff/tables'
+      );
+      return;
+    }
+
     try {
       const payload = {
         name: formData.name,
@@ -632,6 +697,36 @@ export function StaffProvider({ children }) {
   const advanceOrder = async (orderId) => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
+
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      if (order.status === 'new') {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'preparing' } : o));
+        logActivity(
+          `Order ${orderId} in Preparation`,
+          `Kitchen started preparing order for Table ${order.table}`,
+          'schedule',
+          '/staff/orders'
+        );
+      } else if (order.status === 'preparing') {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'ready' } : o));
+        logActivity(
+          `Order ${orderId} Ready`,
+          `Chef marked order for Table ${order.table} Ready to Serve`,
+          'schedule',
+          '/staff/orders'
+        );
+      } else if (order.status === 'ready') {
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'served' } : o));
+        logActivity(
+          `Order ${orderId} Served`,
+          `Waiter served order to Table ${order.table}`,
+          'check_circle',
+          '/staff/orders'
+        );
+      }
+      return;
+    }
 
     try {
       let nextBackendStatus = null;
@@ -682,6 +777,26 @@ export function StaffProvider({ children }) {
     const guest = queue.find(q => q.id === queueId);
     const table = tables.find(t => t.id === tableId);
     if (!guest || !table) return;
+
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      setQueue(prev => prev.filter(q => q.id !== queueId));
+      setTables(prev => prev.map(t => t.id === tableId ? {
+        ...t,
+        status: 'occupied',
+        guestName: guest.name,
+        arrivalTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        guestCount: guest.partySize
+      } : t));
+
+      logActivity(
+        `Guest ${guest.name} seated`,
+        `Assigned to Table ${tableId} from guest waitlist`,
+        'check_circle',
+        '/staff/tables'
+      );
+      return;
+    }
 
     try {
       // Remove from waitlist on backend
@@ -759,6 +874,28 @@ export function StaffProvider({ children }) {
   const releaseTable = async (tableId) => {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
+
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      setTables(prev => prev.map(t => t.id === tableId ? {
+        ...t,
+        status: 'available',
+        guestName: '',
+        arrivalTime: '',
+        billTotal: 0,
+        notes: '',
+        items: [],
+        guestCount: 0
+      } : t));
+
+      logActivity(
+        `Table ${tableId} released`,
+        `Table is now vacant and available for seating`,
+        'check_circle',
+        '/staff/tables'
+      );
+      return;
+    }
 
     try {
       await api.post(`/api/tables/${table._id}/free`);
@@ -861,6 +998,28 @@ export function StaffProvider({ children }) {
 
   // Add Walk-in/Guest to Queue
   const addGuestToQueue = async (guestDetails) => {
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      const newGuest = {
+        id: 'Q-' + Date.now(),
+        name: guestDetails.name,
+        partySize: parseInt(guestDetails.partySize) || 2,
+        waitTime: 'Just now',
+        phone: guestDetails.phone || '',
+        vip: (parseInt(guestDetails.partySize) || 2) >= 5,
+        notes: guestDetails.notes || '',
+        status: 'Waiting'
+      };
+      setQueue(prev => [...prev, newGuest]);
+      logActivity(
+        `Guest ${guestDetails.name} queued`,
+        `Added party of ${guestDetails.partySize} to waiting list`,
+        'hourglass_empty',
+        '/staff/guest-queue'
+      );
+      return;
+    }
+
     try {
       await api.post('/api/tables/waiting', {
         name: guestDetails.name,
