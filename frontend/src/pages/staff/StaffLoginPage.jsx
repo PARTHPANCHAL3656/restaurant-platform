@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StaffLogo from '../../components/staff/StaffLogo';
+import api from '../../utils/api';
 
 export default function StaffLoginPage() {
   const navigate = useNavigate();
@@ -11,23 +12,44 @@ export default function StaffLoginPage() {
   const [error, setError] = useState('');
   const [staffName, setStaffName] = useState('');
   const [staffRole, setStaffRole] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!staffId.trim() || !password.trim() || !staffName.trim() || !staffRole) {
       setError('Please fill in all security credentials.');
       return;
     }
 
-    // Set mock authentication
-    sessionStorage.setItem('staffAuthenticated', 'true');
-    sessionStorage.setItem('staffName', staffName.trim());
-    sessionStorage.setItem('staffRole', staffRole);
-    if (rememberMe) {
-      localStorage.setItem('savedStaffId', staffId);
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await api.post('/api/auth/login', { password });
+      
+      const { token } = response.data;
+      if (!token) {
+        throw new Error('Authentication token not received from server.');
+      }
+
+      // Save credentials in storage
+      localStorage.setItem('staffToken', token);
+      sessionStorage.setItem('staffAuthenticated', 'true');
+      sessionStorage.setItem('staffName', staffName.trim());
+      sessionStorage.setItem('staffRole', staffRole);
+
+      if (rememberMe) {
+        localStorage.setItem('savedStaffId', staffId);
+      } else {
+        localStorage.removeItem('savedStaffId');
+      }
+      
+      navigate('/staff/dashboard');
+    } catch (err) {
+      setError(err.message || 'Authentication failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
-    
-    navigate('/staff/dashboard');
   };
 
   return (
@@ -169,9 +191,10 @@ export default function StaffLoginPage() {
             {/* Submit */}
             <button 
               type="submit"
-              className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all shadow-md rounded-none cursor-pointer"
+              disabled={loading}
+              className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all shadow-md rounded-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In to Dashboard
+              {loading ? 'Signing In...' : 'Sign In to Dashboard'}
             </button>
 
           </form>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Footer from '../components/Footer';
 import { useStaff } from '../context/StaffContext';
+import api from '../utils/api';
 
 import { getImage } from '../utils/assetHelper';
 
@@ -21,6 +22,8 @@ export default function ReservationPage() {
   });
 
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -54,12 +57,38 @@ export default function ReservationPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      addReservation(formData);
-      // Navigate to ReservationSuccess page and pass reservation details via state
-      navigate('/reservation-success', { state: { reservation: formData } });
+      setSubmitting(true);
+      setSubmitError(null);
+      try {
+        const payload = {
+          name: formData.name,
+          phone: formData.phone,
+          date: formData.date,
+          time: formData.timeSlot,
+          guests: parseInt(formData.guests) || 2
+        };
+        const response = await api.post('/api/reservations', payload);
+        
+        // Also update local staff context state optimistically
+        addReservation(formData);
+
+        // Navigate to ReservationSuccess page and pass reservation details via state
+        navigate('/reservation-success', { 
+          state: { 
+            reservation: {
+              ...formData,
+              id: response.data._id
+            } 
+          } 
+        });
+      } catch (err) {
+        setSubmitError(err.message || 'Failed to submit reservation. Please try again.');
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -220,12 +249,19 @@ export default function ReservationPage() {
                 className="w-full bg-transparent border border-muted-border p-4 focus:outline-none focus:border-ink-navy transition-colors font-body-md resize-none outline-none"
               />
             </section>
+            
+            {submitError && (
+              <div className="p-4 bg-red-900/20 border border-red-500/30 text-red-300 text-xs font-sans tracking-wide">
+                {submitError}
+              </div>
+            )}
 
             <button 
               type="submit"
-              className="w-full bg-ink-navy text-canvas-cream font-cta-label text-cta-label py-5 uppercase tracking-[0.2em] hover:bg-saffron-gold hover:text-ink-navy transition-all duration-500 shadow-md focus:outline-none"
+              disabled={submitting}
+              className="w-full bg-ink-navy text-canvas-cream font-cta-label text-cta-label py-5 uppercase tracking-[0.2em] hover:bg-saffron-gold hover:text-ink-navy transition-all duration-500 shadow-md focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Request Reservation
+              {submitting ? 'Requesting...' : 'Request Reservation'}
             </button>
           </form>
 

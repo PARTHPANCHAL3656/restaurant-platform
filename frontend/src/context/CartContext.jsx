@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useStaff } from './StaffContext';
+import api from '../utils/api';
 
 const CartContext = createContext();
 
@@ -10,8 +11,49 @@ export function useCart() {
 export function CartProvider({ children }) {
   const { orders, addOrder } = useStaff();
   const [cartItems, setCartItems] = useState([]);
-  const [tableNumber, setTableNumber] = useState('Garden Terrace 14');
-  const [orderId, setOrderId] = useState(null);
+  const [orderId, setOrderId] = useState(() => localStorage.getItem('lastOrderId') || null);
+  
+  const [tableToken, setTableToken] = useState(() => {
+    const urlToken = new URLSearchParams(window.location.search).get('token');
+    if (urlToken) {
+      sessionStorage.setItem('tableToken', urlToken);
+      return urlToken;
+    }
+    return sessionStorage.getItem('tableToken') || '';
+  });
+
+  const [tableNumber, setTableNumber] = useState(() => {
+    const urlToken = new URLSearchParams(window.location.search).get('token');
+    const token = urlToken || sessionStorage.getItem('tableToken');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload && payload.tableNumber) {
+          return `Table T-${String(payload.tableNumber).padStart(2, '0')}`;
+        }
+      } catch (e) {
+        console.error('Error parsing table token:', e);
+      }
+    }
+    return 'Garden Terrace 14';
+  });
+
+  // Keep track of URL changes to extract token automatically
+  useEffect(() => {
+    const urlToken = new URLSearchParams(window.location.search).get('token');
+    if (urlToken && urlToken !== tableToken) {
+      sessionStorage.setItem('tableToken', urlToken);
+      setTableToken(urlToken);
+      try {
+        const payload = JSON.parse(atob(urlToken.split('.')[1]));
+        if (payload && payload.tableNumber) {
+          setTableNumber(`Table T-${String(payload.tableNumber).padStart(2, '0')}`);
+        }
+      } catch (e) {
+        console.error('Error parsing table token in effect:', e);
+      }
+    }
+  }, [tableToken]);
 
   // Translate user-facing table labels to system Table IDs
   const getTableId = (label) => {
@@ -103,15 +145,30 @@ export function CartProvider({ children }) {
     return sub + getServiceCharge(sub) + getGST(sub);
   };
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
     if (cartItems.length === 0) return;
     
-    // Seat and place the order directly into the centralized staff order database
-    const targetTableId = getTableId(tableNumber);
-    const generatedOrderId = addOrder(targetTableId, cartItems, 'Placed from digital menu.');
-    
-    setOrderId(generatedOrderId);
-    clearCart();
+    try {
+      const payload = {
+        items: cartItems.map(item => ({
+          itemId: item.id,
+          name: item.name,
+          price: item.price,
+          qty: item.quantity
+        }))
+      };
+      
+      const response = await api.post('/api/orders/add-items', payload);
+      const order = response.data.order;
+      if (order && order._id) {
+        setOrderId(order._id);
+        localStorage.setItem('lastOrderId', order._id);
+      }
+      clearCart();
+    } catch (err) {
+      console.error('Error placing order:', err);
+      alert(err.message || 'Failed to place order. Please try again.');
+    }
   };
 
   return (

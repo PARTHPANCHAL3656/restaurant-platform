@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import Footer from '../components/Footer';
+import socket from '../utils/socket';
+import api from '../utils/api';
 
 import { getImage } from '../utils/assetHelper';
 
@@ -11,12 +13,57 @@ export default function OrderTrackingPage() {
   const location = useLocation();
   const { 
     orderId, 
-    orderStatus, 
     activeOrderItems, 
     activeOrderTotal, 
-    tableNumber,
-    setOrderStatus
+    tableNumber
   } = useCart();
+
+  const [localStatus, setLocalStatus] = useState('Received');
+
+  useEffect(() => {
+    // Listen for order status updates from backend
+    const handleStatusChange = (data) => {
+      if (data.orderId === orderId) {
+        if (data.status === 'billed') {
+          setLocalStatus('Ready');
+        } else if (data.status === 'closed') {
+          setLocalStatus('At Table');
+        } else if (data.status === 'active') {
+          setLocalStatus('Preparing');
+        }
+      }
+    };
+
+    socket.on('order:statusChanged', handleStatusChange);
+
+    // Initial load check if active order exists
+    const fetchOrderStatus = async () => {
+      if (!orderId) return;
+      try {
+        const response = await api.get('/api/orders/my-order');
+        const order = response.data;
+        if (order.status === 'billed') {
+          setLocalStatus('Ready');
+        } else if (order.status === 'closed') {
+          setLocalStatus('At Table');
+        } else if (order.status === 'active') {
+          setLocalStatus('Received');
+          // Animate transition to preparing after 5s
+          setTimeout(() => {
+            setLocalStatus('Preparing');
+          }, 5000);
+        }
+      } catch (err) {
+        console.error('Error fetching my-order status:', err);
+      }
+    };
+    
+    fetchOrderStatus();
+
+    return () => {
+      socket.off('order:statusChanged', handleStatusChange);
+    };
+  }, [orderId]);
 
   // Hide simulation toolbar behind a debug flag ?debug=true or ?test=true
   const queryParams = new URLSearchParams(location.search);
@@ -25,7 +72,7 @@ export default function OrderTrackingPage() {
   // Helper to determine status style
   const getStatusStepClass = (step) => {
     const statuses = ['Received', 'Preparing', 'Ready', 'At Table'];
-    const currentIndex = statuses.indexOf(orderStatus || 'Received');
+    const currentIndex = statuses.indexOf(localStatus || 'Received');
     const stepIndex = statuses.indexOf(step);
 
     if (stepIndex < currentIndex) {
@@ -56,7 +103,7 @@ export default function OrderTrackingPage() {
   };
 
   const getProgressPercentage = () => {
-    switch (orderStatus) {
+    switch (localStatus) {
       case 'Received': return 15;
       case 'Preparing': return 50;
       case 'Ready': return 80;
@@ -65,7 +112,7 @@ export default function OrderTrackingPage() {
     }
   };
 
-  const displayStatus = orderStatus || 'Received';
+  const displayStatus = localStatus || 'Received';
 
   return (
     <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20">
@@ -78,9 +125,9 @@ export default function OrderTrackingPage() {
             {['Received', 'Preparing', 'Ready', 'At Table'].map(s => (
               <button 
                 key={s}
-                onClick={() => setOrderStatus(s)}
+                onClick={() => setLocalStatus(s)}
                 className={`px-2 py-0.5 border font-label-caps transition-colors ${
-                  orderStatus === s ? 'bg-ink-navy text-canvas-cream border-ink-navy' : 'border-muted-border hover:bg-white text-ink-navy'
+                  localStatus === s ? 'bg-ink-navy text-canvas-cream border-ink-navy' : 'border-muted-border hover:bg-white text-ink-navy'
                 }`}
               >
                 {s}
@@ -117,19 +164,19 @@ export default function OrderTrackingPage() {
           </div>
 
           <div className="bg-white p-8 border border-muted-border flex flex-col items-center justify-center text-center min-w-[280px] shadow-sm">
-            {orderStatus === 'Preparing' ? (
+            {localStatus === 'Preparing' ? (
               <>
                 <p className="font-label-caps text-label-caps text-subtle-text tracking-widest mb-1">ESTIMATED TIME</p>
                 <div className="font-serif text-3xl text-saffron-gold font-bold">10-15 MINS</div>
                 <p className="font-body-md text-subtle-text mt-2 italic text-xs">Chef is perfecting your flavors</p>
               </>
-            ) : orderStatus === 'At Table' ? (
+            ) : localStatus === 'At Table' ? (
               <>
                 <p className="font-label-caps text-label-caps text-subtle-text tracking-widest mb-1">ORDER STATUS</p>
                 <div className="font-serif text-3xl text-saffron-gold font-bold">SERVED</div>
                 <p className="font-body-md text-subtle-text mt-2 italic text-xs">Enjoy your culinary selection</p>
               </>
-            ) : orderStatus === 'Ready' ? (
+            ) : localStatus === 'Ready' ? (
               <>
                 <p className="font-label-caps text-label-caps text-subtle-text tracking-widest mb-1">ORDER STATUS</p>
                 <div className="font-serif text-3xl text-saffron-gold font-bold">READY</div>

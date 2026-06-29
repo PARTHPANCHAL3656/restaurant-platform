@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import api from '../utils/api';
+import socket from '../utils/socket';
 
 const StaffContext = createContext();
 
@@ -376,168 +378,18 @@ export function StaffProvider({ children }) {
   ]);
 
   // Unified Tables Floor Map state
-  const [tables, setTables] = useState([
-    { 
-      id: 'T-01', 
-      seats: 2, 
-      status: 'available', 
-      guestName: '', 
-      arrivalTime: '', 
-      billTotal: 0, 
-      notes: '', 
-      items: [],
-      qrId: 'QR-01',
-      qrImage: 'qr/table-01.png',
-      qrRoute: '/menu?table=T01',
-      waiter: 'Rahul Sharma',
-      guestCount: 0
-    },
-    { 
-      id: 'T-02', 
-      seats: 4, 
-      status: 'occupied', 
-      guestName: 'Julian Alvarez', 
-      arrivalTime: '19:15', 
-      billTotal: 96.00, 
-      notes: 'No gluten. Prefers quiet corner table.', 
-      items: [
-        { name: 'Saffron Infused Scallops', qty: 2, price: 48.00 }
-      ],
-      qrId: 'QR-02',
-      qrImage: 'qr/table-02.png',
-      qrRoute: '/menu?table=T02',
-      waiter: 'Rahul Sharma',
-      guestCount: 2
-    },
-    { 
-      id: 'T-03', 
-      seats: 2, 
-      status: 'reserved', 
-      guestName: 'Aria Stark', 
-      arrivalTime: '19:30', 
-      billTotal: 0, 
-      notes: 'Anniversary celebration. Requesting champagne.', 
-      items: [],
-      qrId: 'QR-03',
-      qrImage: 'qr/table-03.png',
-      qrRoute: '/menu?table=T03',
-      waiter: 'Rahul Sharma',
-      guestCount: 2
-    },
-    { 
-      id: 'T-04', 
-      seats: 4, 
-      status: 'occupied', 
-      guestName: 'Elena Vance', 
-      arrivalTime: '20:00', 
-      billTotal: 611.00, 
-      notes: 'Frequent VIP diner. Walnuts allergy.', 
-      items: [
-        { name: 'Malai Truffle Paneer', qty: 2, price: 72.00 },
-        { name: 'Royal Makhani Murgh', qty: 1, price: 85.00 },
-        { name: 'Sommelier Champagne Selection', qty: 1, price: 420.00 }
-      ],
-      qrId: 'QR-04',
-      qrImage: 'qr/table-04.png',
-      qrRoute: '/menu?table=T04',
-      waiter: 'Rahul Sharma',
-      guestCount: 4
-    },
-    { 
-      id: 'T-05', 
-      seats: 4, 
-      status: 'cleaning', 
-      guestName: '', 
-      arrivalTime: '', 
-      billTotal: 0, 
-      notes: '', 
-      items: [],
-      qrId: 'QR-05',
-      qrImage: 'qr/table-05.png',
-      qrRoute: '/menu?table=T05',
-      waiter: 'Rahul Sharma',
-      guestCount: 0
-    },
-    { 
-      id: 'T-06', 
-      seats: 6, 
-      status: 'available', 
-      guestName: '', 
-      arrivalTime: '', 
-      billTotal: 0, 
-      notes: '', 
-      items: [],
-      qrId: 'QR-06',
-      qrImage: 'qr/table-06.png',
-      qrRoute: '/menu?table=T06',
-      waiter: 'Rahul Sharma',
-      guestCount: 0
-    },
-    { 
-      id: 'T-14', 
-      seats: 4, 
-      status: 'occupied', 
-      guestName: 'Garden Terrace Guest', 
-      arrivalTime: '20:30', 
-      billTotal: 0, 
-      notes: '', 
-      items: [],
-      qrId: 'QR-14',
-      qrImage: 'qr/table-14.png',
-      qrRoute: '/menu?table=T14',
-      waiter: 'Rahul Sharma',
-      guestCount: 2
-    }
-  ]);
+  const [tables, setTables] = useState([]);
 
   // Shared Reservations List state
-  const [reservations, setReservations] = useState([
-    { id: 'res-1', time: '6:30 PM', guest: 'Rahul Sharma', partySize: 4, table: 'T-03', vip: false, phone: '+44 7946 0901', status: 'confirmed' },
-    { id: 'res-2', time: '7:00 PM', guest: 'Priya Mehta', partySize: 2, table: 'T-06', vip: false, phone: '+44 7946 0902', status: 'confirmed' },
-    { id: 'res-3', time: '7:30 PM', guest: 'Aarav Kapoor', partySize: 3, table: 'T-08', vip: true, phone: '+44 7946 0903', status: 'confirmed' }
-  ]);
+  const [reservations, setReservations] = useState([]);
 
   // Unified Orders pipeline state
-  const [orders, setOrders] = useState([
-    {
-      id: 'ORD-402',
-      table: 'T-03',
-      section: 'Main Hall',
-      time: '4 mins ago',
-      status: 'new',
-      items: [
-        { name: 'Malai Truffle Paneer', qty: 2, price: 26.00 },
-        { name: 'Artisanal Garlic Naan', qty: 3, price: 6.00 }
-      ],
-      notes: 'Walnut allergy warning. Make starters medium spicy.'
-    },
-    {
-      id: 'ORD-398',
-      table: 'T-02',
-      section: 'Main Hall',
-      time: '12 mins ago',
-      status: 'preparing',
-      items: [
-        { name: 'Royal Makhani Murgh', qty: 1, price: 32.00 },
-        { name: 'Nawabi Mutton Biryani', qty: 2, price: 38.00 },
-        { name: 'Artisanal Garlic Naan', qty: 4, price: 6.00 }
-      ],
-      notes: 'Serve extra raita with biryani.'
-    },
-    {
-      id: 'ORD-391',
-      table: 'T-04',
-      section: 'Window Alcove',
-      time: '22 mins ago',
-      status: 'ready',
-      items: [
-        { name: 'Saffron Infused Scallops', qty: 3, price: 24.00 }
-      ],
-      notes: 'VIP customer. Serve immediately.'
-    }
-  ]);
+  const [orders, setOrders] = useState([]);
 
-  // Centralized Billing Ledger state
+  // Guest Waitlist Queue state
+  const [queue, setQueue] = useState([]);
+
+  // Centralized Billing Ledger state (Keep mock as no backend endpoint exists)
   const [invoices, setInvoices] = useState([
     { id: 'INV-042', table: 'T-04', guest: 'Elena Vance', amount: 611.00, date: '28 Jun 2026', status: 'paid', paymentMethod: 'Credit Card', subtotal: 520.00, gst: 26.00, serviceCharge: 65.00 },
     { id: 'INV-041', table: 'T-02', guest: 'Julian Alvarez', amount: 96.00, date: '28 Jun 2026', status: 'unpaid', paymentMethod: '—', subtotal: 81.70, gst: 4.08, serviceCharge: 10.22 },
@@ -546,14 +398,7 @@ export function StaffProvider({ children }) {
     { id: 'INV-038', table: 'T-03', guest: 'Winston Churchill', amount: 350.00, date: '26 Jun 2026', status: 'unpaid', paymentMethod: '—', subtotal: 297.87, gst: 14.89, serviceCharge: 37.24 }
   ]);
 
-  // Guest Waitlist Queue state
-  const [queue, setQueue] = useState([
-    { id: 'Q-01', name: 'Julianne Moore', partySize: 2, waitTime: '35 Mins', phone: '+1 (555) 019-2834', vip: true, notes: 'Prefers window alcove table.', status: 'Waiting' },
-    { id: 'Q-02', name: 'Marcus Aurelius', partySize: 6, waitTime: '15 Mins', phone: '+1 (555) 042-9988', vip: true, notes: 'Celebrating birthday. Requesting Chef\'s Table.', status: 'Waiting' },
-    { id: 'Q-03', name: 'Diana Prince', partySize: 4, waitTime: '8 Mins', phone: '+1 (555) 088-7711', vip: false, notes: 'Need high-chair for toddler.', status: 'Waiting' }
-  ]);
-
-  // Recent Activity Timeline state
+  // Recent Activity Timeline state (Keep mock)
   const [activities, setActivities] = useState([
     { id: 'act-1', title: 'Table T-02 ordered', detail: 'Saffron Infused Scallops ordered by Julian Alvarez', time: '7 mins ago', icon: 'restaurant', link: '/staff/orders' },
     { id: 'act-2', title: 'Invoice INV-042 generated', detail: 'Table T-04 final invoice issued for Elena Vance', time: '12 mins ago', icon: 'payments', link: '/staff/billing' },
@@ -561,38 +406,176 @@ export function StaffProvider({ children }) {
     { id: 'act-4', title: 'Nawabi Mutton Biryani updated', detail: 'Menu item price set to $38.00 by Rahul Sharma', time: '1 hour ago', icon: 'edit_note', link: '/staff/menu' }
   ]);
 
-  // Auto-simulation: use a ref so the interval never goes stale
-  // and never causes an infinite render loop via [orders] dependency.
-  const ordersRef = useRef(orders);
-  useEffect(() => { ordersRef.current = orders; }, [orders]);
+  // Data mapping helper functions
+  const mapBackendOrder = useCallback((o) => {
+    const tableStr = "T-" + String(o.tableNumber).padStart(2, '0');
+    const diffMs = new Date() - new Date(o.createdAt);
+    const diffMins = Math.max(0, Math.floor(diffMs / 60000));
+    const timeStr = diffMins === 0 ? 'Just now' : `${diffMins} mins ago`;
 
-  const advanceOrderRef = useRef(null);
-  useEffect(() => {
-    // Store advanceOrder in a ref so the interval always calls the latest version
-    advanceOrderRef.current = (orderId) => {
-      setOrders(prev => {
-        const orderToUpdate = prev.find(o => o.id === orderId);
-        if (!orderToUpdate) return prev;
-        const statusMap = { new: 'preparing', preparing: 'ready' };
-        const nextStatus = statusMap[orderToUpdate.status];
-        if (!nextStatus) {
-          // served — remove from pipeline
-          return prev.filter(o => o.id !== orderId);
-        }
-        return prev.map(o => o.id === orderId ? { ...o, status: nextStatus, time: 'Just now' } : o);
-      });
+    let mappedStatus = 'new';
+    if (o.status === 'billed') {
+      mappedStatus = 'ready';
+    } else if (o.status === 'closed') {
+      mappedStatus = 'served';
+    }
+
+    return {
+      id: o._id,
+      table: tableStr,
+      section: o.tableNumber <= 5 ? 'Dining Room' : 'Garden Terrace',
+      time: timeStr,
+      status: mappedStatus,
+      items: o.items.map(i => ({
+        name: i.name,
+        qty: i.qty,
+        price: i.price
+      })),
+      notes: o.notes || '',
+      isCustomerOrder: true,
+      createdAt: o.createdAt
     };
-  });
+  }, []);
 
+  const mapBackendTable = useCallback((t, currentOrders) => {
+    const tableStr = "T-" + String(t.tableNumber).padStart(2, '0');
+    const associatedOrder = currentOrders.find(o => o.table === tableStr && o.status !== 'served');
+    
+    const items = associatedOrder ? associatedOrder.items : [];
+    const subtotal = items.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
+    const total = subtotal > 0 ? subtotal * 1.175 : 0;
+
+    return {
+      id: tableStr,
+      seats: t.capacity,
+      status: t.status,
+      guestName: associatedOrder ? `Table ${t.tableNumber} Guest` : (t.status === 'reserved' ? 'Reserved Guest' : ''),
+      arrivalTime: associatedOrder ? new Date(associatedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+      billTotal: parseFloat(total.toFixed(2)),
+      notes: associatedOrder ? associatedOrder.notes : '',
+      items,
+      qrId: `QR-${String(t.tableNumber).padStart(2, '0')}`,
+      qrImage: `qr/table-${String(t.tableNumber).padStart(2, '0')}.png`,
+      qrRoute: `/menu?table=T${String(t.tableNumber).padStart(2, '0')}`,
+      waiter: 'Rahul Sharma',
+      guestCount: associatedOrder ? associatedOrder.items.reduce((sum, i) => sum + i.qty, 0) || 2 : 0,
+      _id: t._id
+    };
+  }, []);
+
+  const mapBackendReservation = useCallback((r) => {
+    return {
+      id: r._id,
+      time: r.time,
+      guest: r.name,
+      partySize: r.guests,
+      table: 'T-01',
+      vip: r.guests >= 5,
+      phone: r.phone,
+      status: r.status
+    };
+  }, []);
+
+  const mapBackendQueueItem = useCallback((q) => {
+    const diffMs = new Date() - new Date(q.createdAt);
+    const diffMins = Math.max(0, Math.floor(diffMs / 60000));
+    const waitTimeStr = diffMins === 0 ? 'Just now' : `${diffMins} Mins`;
+
+    return {
+      id: q._id,
+      name: q.name,
+      partySize: q.partySize,
+      waitTime: waitTimeStr,
+      phone: q.phone,
+      vip: q.partySize >= 5,
+      notes: q.notes || '',
+      status: 'Waiting'
+    };
+  }, []);
+
+  // Fetch all data from backend
+  const fetchTables = useCallback(async () => {
+    const res = await api.get('/api/tables');
+    return res.data;
+  }, []);
+
+  const fetchReservations = useCallback(async () => {
+    const res = await api.get('/api/reservations');
+    return res.data;
+  }, []);
+
+  const fetchOrders = useCallback(async () => {
+    const res = await api.get('/api/orders/all-active');
+    return res.data;
+  }, []);
+
+  const fetchQueue = useCallback(async () => {
+    const res = await api.get('/api/tables/waiting');
+    return res.data;
+  }, []);
+
+  const loadAllData = useCallback(async () => {
+    if (!localStorage.getItem('staffToken')) return;
+    try {
+      const [rawTables, rawReservations, rawOrders, rawQueue] = await Promise.all([
+        fetchTables(),
+        fetchReservations(),
+        fetchOrders(),
+        fetchQueue(),
+      ]);
+
+      const mappedOrders = rawOrders.map(mapBackendOrder);
+      setOrders(mappedOrders);
+      setTables(rawTables.map(t => mapBackendTable(t, mappedOrders)));
+      setReservations(rawReservations.map(mapBackendReservation));
+      setQueue(rawQueue.map(mapBackendQueueItem));
+    } catch (err) {
+      console.error('Error loading backend data:', err);
+    }
+  }, [fetchTables, fetchReservations, fetchOrders, fetchQueue, mapBackendOrder, mapBackendTable, mapBackendReservation, mapBackendQueueItem]);
+
+  // Load data on mount and whenever credentials change
   useEffect(() => {
-    const interval = setInterval(() => {
-      const active = ordersRef.current.filter(o => o.isCustomerOrder && o.status !== 'served');
-      if (active.length > 0 && advanceOrderRef.current) {
-        advanceOrderRef.current(active[0].id);
-      }
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []); // Empty deps — runs ONCE on mount, never re-triggers
+    loadAllData();
+  }, [loadAllData]);
+
+  // Live Socket Updates
+  useEffect(() => {
+    const handleTableUpdate = () => {
+      loadAllData();
+    };
+
+    const handleOrderUpdate = () => {
+      loadAllData();
+    };
+
+    const handleReservationNew = (newRes) => {
+      setReservations(prev => [mapBackendReservation(newRes), ...prev]);
+      logActivity(
+        `Table reserved by ${newRes.name}`,
+        `New reservation for Party of ${newRes.guests} at ${newRes.time}`,
+        'event_seat',
+        '/staff/tables'
+      );
+      loadAllData();
+    };
+
+    const handleWaitingListUpdate = () => {
+      loadAllData();
+    };
+
+    socket.on('table:updated', handleTableUpdate);
+    socket.on('order:updated', handleOrderUpdate);
+    socket.on('reservation:new', handleReservationNew);
+    socket.on('waitingList:updated', handleWaitingListUpdate);
+
+    return () => {
+      socket.off('table:updated', handleTableUpdate);
+      socket.off('order:updated', handleOrderUpdate);
+      socket.off('reservation:new', handleReservationNew);
+      socket.off('waitingList:updated', handleWaitingListUpdate);
+    };
+  }, [loadAllData, mapBackendReservation]);
 
   // Helper to add activity log
   const logActivity = (title, detail, icon, link = '/staff/dashboard') => {
@@ -609,212 +592,124 @@ export function StaffProvider({ children }) {
 
   // Actions:
   // Add Customer Reservation
-  const addReservation = (formData) => {
+  const addReservation = async (formData) => {
     const timeSlot = formData.timeSlot || '20:00';
-    const newRes = {
-      id: `res-${Date.now()}`,
-      time: timeSlot,
-      guest: formData.name,
-      partySize: parseInt(formData.guests) || 2,
-      table: 'T-01',
-      vip: false,
-      phone: formData.phone || '',
-      status: 'pending'
-    };
-    setReservations(prev => [newRes, ...prev]);
+    try {
+      const payload = {
+        name: formData.name,
+        phone: formData.phone,
+        date: formData.date,
+        time: timeSlot,
+        guests: parseInt(formData.guests) || 2
+      };
+      await api.post('/api/reservations', payload);
+      await loadAllData();
 
-    logActivity(
-      `Table reserved by ${formData.name}`,
-      `Reservation confirmed for Party of ${formData.guests} at ${timeSlot}`,
-      'event_seat',
-      '/staff/tables'
-    );
-
-    // Update Table Floor Map status to reserved
-    setTables(prev => prev.map(t => {
-      if (t.status === 'available') {
-        return {
-          ...t,
-          status: 'reserved',
-          guestName: formData.name,
-          arrivalTime: timeSlot,
-          notes: formData.requests || '',
-          guestCount: parseInt(formData.guests) || 2
-        };
-      }
-      return t;
-    }));
+      logActivity(
+        `Table reserved by ${formData.name}`,
+        `Reservation confirmed for Party of ${formData.guests} at ${timeSlot}`,
+        'event_seat',
+        '/staff/tables'
+      );
+    } catch (err) {
+      console.error('Error adding reservation:', err);
+    }
   };
 
-  // Add Customer Cart Order
+  // Add Customer Cart Order (from guest flow checkout - fallback/mock reference)
   const addOrder = (tableId, cartItems, specialNotes) => {
     const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
-    const formattedItems = cartItems.map(item => ({
-      name: item.name,
-      qty: item.quantity,
-      price: item.price
-    }));
-    
-    const newOrder = {
-      id: orderId,
-      table: tableId,
-      section: tableId === 'T-14' ? 'Garden Terrace' : 'Dining Room',
-      time: 'Just now',
-      status: 'new',
-      items: formattedItems,
-      notes: specialNotes || '',
-      isCustomerOrder: true
-    };
-
-    setOrders(prev => [newOrder, ...prev]);
-
-    // Update Table Bill items & Total
-    setTables(prev => prev.map(t => {
-      if (t.id === tableId) {
-        const updatedItems = [...t.items, ...formattedItems];
-        const subtotal = updatedItems.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
-        const serviceCharge = subtotal * 0.125;
-        const gst = subtotal * 0.05;
-        const total = subtotal + serviceCharge + gst;
-        
-        return {
-          ...t,
-          status: 'occupied',
-          items: updatedItems,
-          billTotal: parseFloat(total.toFixed(2)),
-          guestCount: t.guestCount || 2,
-          guestName: t.guestName || 'Terrace Diner',
-          arrivalTime: t.arrivalTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-      }
-      return t;
-    }));
-
     logActivity(
       `Order ${orderId} placed`,
       `Table ${tableId} submitted new kitchen order`,
       'restaurant',
       '/staff/orders'
     );
-    
     return orderId;
   };
 
-  // Kitchen Advance Order status
-  const advanceOrder = (orderId) => {
-    let orderToUpdate = orders.find(o => o.id === orderId);
-    if (!orderToUpdate) return;
+  // Kitchen Advance Order status (Accept & Start Prep -> Mark Ready -> Settle)
+  const advanceOrder = async (orderId) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
 
-    let nextStatus = orderToUpdate.status;
-    let title = '';
-    let detail = '';
+    try {
+      let nextBackendStatus = null;
+      if (order.status === 'new') {
+        // new -> preparing (both are 'active' in backend)
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'preparing' } : o));
+        logActivity(
+          `Order ${orderId} in Preparation`,
+          `Kitchen started preparing order for Table ${order.table}`,
+          'schedule',
+          '/staff/orders'
+        );
+        return;
+      } else if (order.status === 'preparing') {
+        nextBackendStatus = 'billed';
+      } else if (order.status === 'ready') {
+        nextBackendStatus = 'closed';
+      }
 
-    if (orderToUpdate.status === 'new') {
-      nextStatus = 'preparing';
-      title = `Order ${orderId} in Preparation`;
-      detail = `Kitchen started preparing order for Table ${orderToUpdate.table}`;
-    } else if (orderToUpdate.status === 'preparing') {
-      nextStatus = 'ready';
-      title = `Order ${orderId} Ready`;
-      detail = `Chef marked order for Table ${orderToUpdate.table} Ready to Serve`;
-    } else if (orderToUpdate.status === 'ready') {
-      nextStatus = 'served';
-      title = `Order ${orderId} Served`;
-      detail = `Waiter served order to Table ${orderToUpdate.table}`;
-    }
+      if (nextBackendStatus) {
+        await api.patch(`/api/orders/${orderId}/status`, { status: nextBackendStatus });
+        await loadAllData();
 
-    if (nextStatus === 'served') {
-      // Remove from active order pipeline
-      setOrders(prev => prev.filter(o => o.id !== orderId));
-      
-      // Auto-generate invoice
-      const targetTable = tables.find(t => t.id === orderToUpdate.table);
-      const billAmount = targetTable?.billTotal || 120.00;
-      const invoiceId = `INV-0${Math.floor(43 + Math.random() * 50)}`;
-      const sub = billAmount / 1.175;
-      
-      const newInvoice = {
-        id: invoiceId,
-        table: orderToUpdate.table,
-        guest: targetTable?.guestName || 'Terrace Diner',
-        amount: billAmount,
-        date: new Date().toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }),
-        status: 'unpaid',
-        paymentMethod: '—',
-        subtotal: parseFloat(sub.toFixed(2)),
-        gst: parseFloat((sub * 0.05).toFixed(2)),
-        serviceCharge: parseFloat((sub * 0.125).toFixed(2))
-      };
-      setInvoices(prev => [newInvoice, ...prev]);
-      
-      logActivity(
-        `Invoice ${invoiceId} generated`,
-        `Table ${orderToUpdate.table} bill issued for $${billAmount.toFixed(2)}`,
-        'payments',
-        '/staff/billing'
-      );
-    } else {
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: nextStatus, time: 'Just now' } : o));
-      logActivity(title, detail, 'schedule', '/staff/orders');
+        if (nextBackendStatus === 'closed') {
+          logActivity(
+            `Order ${orderId} Served`,
+            `Waiter served order to Table ${order.table}`,
+            'check_circle',
+            '/staff/orders'
+          );
+        } else {
+          logActivity(
+            `Order ${orderId} Ready`,
+            `Chef marked order for Table ${order.table} Ready to Serve`,
+            'schedule',
+            '/staff/orders'
+          );
+        }
+      }
+    } catch (err) {
+      console.error('Error advancing order status:', err);
+      alert(err.message || 'Failed to update order status.');
     }
   };
 
   // Seating Guest from Queue to Table
-  const assignTable = (queueId, tableId) => {
+  const assignTable = async (queueId, tableId) => {
     const guest = queue.find(q => q.id === queueId);
-    if (!guest) return;
+    const table = tables.find(t => t.id === tableId);
+    if (!guest || !table) return;
 
-    // Remove from queue
-    setQueue(prev => prev.filter(q => q.id !== queueId));
+    try {
+      // Remove from waitlist on backend
+      await api.delete(`/api/tables/waiting/${queueId}`);
+      // Assign table session on backend
+      await api.post(`/api/tables/${table._id}/assign`);
+      await loadAllData();
 
-    // Seat at table
-    setTables(prev => prev.map(t => {
-      if (t.id === tableId) {
-        return {
-          ...t,
-          status: 'occupied',
-          guestName: guest.name,
-          arrivalTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          notes: guest.notes || '',
-          guestCount: guest.partySize
-        };
-      }
-      return t;
-    }));
-
-    logActivity(
-      `Guest ${guest.name} seated`,
-      `Assigned to Table ${tableId} from guest waitlist`,
-      'check_circle',
-      '/staff/tables'
-    );
+      logActivity(
+        `Guest ${guest.name} seated`,
+        `Assigned to Table ${tableId} from guest waitlist`,
+        'check_circle',
+        '/staff/tables'
+      );
+    } catch (err) {
+      console.error('Error assigning table:', err);
+      alert(err.message || 'Failed to assign table.');
+    }
   };
 
-  // Settle & Release Table
-  const markInvoicePaid = (invoiceId) => {
-    let invoice = invoices.find(i => i.id === invoiceId);
+  // Settle & Release Table (Invoice Payment flow)
+  const markInvoicePaid = async (invoiceId) => {
+    const invoice = invoices.find(i => i.id === invoiceId);
     if (!invoice) return;
 
     setInvoices(prev => prev.map(i => 
       i.id === invoiceId ? { ...i, status: 'paid', paymentMethod: 'Card (Staff Settled)' } : i
     ));
-
-    // Release table (Set to cleaning first, then available)
-    setTables(prev => prev.map(t => {
-      if (t.id === invoice.table) {
-        return {
-          ...t,
-          status: 'cleaning',
-          guestName: '',
-          arrivalTime: '',
-          billTotal: 0,
-          notes: '',
-          items: [],
-          guestCount: 0
-        };
-      }
-      return t;
-    }));
 
     logActivity(
       `Invoice ${invoiceId} paid`,
@@ -823,19 +718,12 @@ export function StaffProvider({ children }) {
       '/staff/billing'
     );
 
-    // After 15s of cleaning, release to available
-    setTimeout(() => {
-      setTables(prev => prev.map(t => {
-        if (t.id === invoice.table && t.status === 'cleaning') {
-          return { ...t, status: 'available' };
-        }
-        return t;
-      }));
-    }, 15000);
+    // Call releaseTable to free table session in backend
+    await releaseTable(invoice.table);
   };
 
   // Finalize table invoice manually
-  const finalizeTableBill = (tableId) => {
+  const finalizeTableBill = async (tableId) => {
     const table = tables.find(t => t.id === tableId);
     if (!table || table.billTotal === 0) return;
 
@@ -857,45 +745,35 @@ export function StaffProvider({ children }) {
 
     setInvoices(prev => [newInvoice, ...prev]);
 
-    setTables(prev => prev.map(t => {
-      if (t.id === tableId) {
-        return { ...t, status: 'cleaning', guestName: '', arrivalTime: '', billTotal: 0, notes: '', items: [], guestCount: 0 };
-      }
-      return t;
-    }));
-
     logActivity(
       `Invoice ${invoiceId} generated`,
       `Table ${tableId} manually finalized and billed`,
       'payments',
       '/staff/billing'
     );
+
+    await releaseTable(tableId);
   };
 
-  // Release Table manually (mark Available, clear orders/guest data)
-  const releaseTable = (tableId) => {
-    setTables(prev => prev.map(t => {
-      if (t.id === tableId) {
-        return {
-          ...t,
-          status: 'available',
-          guestName: '',
-          arrivalTime: '',
-          billTotal: 0,
-          notes: '',
-          items: [],
-          guestCount: 0
-        };
-      }
-      return t;
-    }));
+  // Release Table manually (free session on backend)
+  const releaseTable = async (tableId) => {
+    const table = tables.find(t => t.id === tableId);
+    if (!table) return;
 
-    logActivity(
-      `Table ${tableId} released`,
-      `Table is now vacant and available for seating`,
-      'check_circle',
-      '/staff/tables'
-    );
+    try {
+      await api.post(`/api/tables/${table._id}/free`);
+      await loadAllData();
+
+      logActivity(
+        `Table ${tableId} released`,
+        `Table is now vacant and available for seating`,
+        'check_circle',
+        '/staff/tables'
+      );
+    } catch (err) {
+      console.error('Error releasing table:', err);
+      alert(err.message || 'Failed to release table.');
+    }
   };
 
   // Check In Reserved Guest
@@ -922,7 +800,6 @@ export function StaffProvider({ children }) {
 
   // Cancel Reservation
   const cancelReservation = (tableId) => {
-    const table = tables.find(t => t.id === tableId);
     setTables(prev => prev.map(t => {
       if (t.id === tableId) {
         return {
@@ -939,6 +816,7 @@ export function StaffProvider({ children }) {
       return t;
     }));
 
+    const table = tables.find(t => t.id === tableId);
     logActivity(
       `Reservation cancelled`,
       `Reservation for ${table?.guestName || 'Reserved Diner'} cancelled`,
@@ -982,35 +860,35 @@ export function StaffProvider({ children }) {
   };
 
   // Add Walk-in/Guest to Queue
-  const addGuestToQueue = (guestDetails) => {
-    const queueId = `Q-0${queue.length + 1}`;
-    const newGuest = {
-      id: queueId,
-      name: guestDetails.name,
-      partySize: parseInt(guestDetails.partySize) || 2,
-      waitTime: 'Just now',
-      phone: guestDetails.phone || '',
-      vip: guestDetails.vip || false,
-      notes: guestDetails.notes || '',
-      status: 'Waiting'
-    };
+  const addGuestToQueue = async (guestDetails) => {
+    try {
+      await api.post('/api/tables/waiting', {
+        name: guestDetails.name,
+        phone: guestDetails.phone || '',
+        partySize: parseInt(guestDetails.partySize) || 2,
+        notes: guestDetails.notes || ''
+      });
+      await loadAllData();
 
-    setQueue(prev => [...prev, newGuest]);
-    logActivity(
-      `Guest ${guestDetails.name} queued`,
-      `Added party of ${newGuest.partySize} to waiting list`,
-      'hourglass_empty',
-      '/staff/guest-queue'
-    );
+      logActivity(
+        `Guest ${guestDetails.name} queued`,
+        `Added party of ${guestDetails.partySize} to waiting list`,
+        'hourglass_empty',
+        '/staff/guest-queue'
+      );
+    } catch (err) {
+      console.error('Error adding guest to waiting list:', err);
+      alert(err.message || 'Failed to add guest to waiting list.');
+    }
   };
 
-  // Menu Updates
+  // Menu Updates (Local mock as no backend endpoint exists)
   const addMenuItem = (item) => {
     const id = item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const newItem = {
       ...item,
       id,
-      image: item.image || '',  // Never substitute a wrong dish image
+      image: item.image || '',
       tag: item.special ? "Chef Special" : "Classic"
     };
     setMenuItems(prev => [...prev, newItem]);
