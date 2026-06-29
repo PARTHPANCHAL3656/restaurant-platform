@@ -10,9 +10,32 @@ export default function StaffMenuPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Drawer modes: 'add', 'edit', 'preview', null
   const [drawerMode, setDrawerMode] = useState(null);
   const [activeItemId, setActiveItemId] = useState(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [networkError, setNetworkError] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      if (!menuItems || menuItems.length === 0) {
+        setNetworkError(true);
+      }
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [menuItems]);
+
+  const handleRetry = () => {
+    setIsLoading(true);
+    setNetworkError(false);
+    setTimeout(() => {
+      setIsLoading(false);
+      if (!menuItems || menuItems.length === 0) {
+        setNetworkError(true);
+      }
+    }, 450);
+  };
 
   useEffect(() => {
     if (drawerMode) {
@@ -150,6 +173,55 @@ export default function StaffMenuPage() {
   }, [menuItems, safeCategory, searchQuery]);
 
   const activeItem = menuItems.find(i => i.id === activeItemId);
+
+  if (isLoading) {
+    return (
+      <div className="relative select-none bg-[#faf9f8] min-h-screen pt-20">
+        <div className="px-6 md:px-12 py-8 space-y-6 max-w-5xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="bg-white p-6 border border-[#E5E1DA] space-y-6 animate-pulse">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="h-6 bg-[#E5E1DA] w-48 rounded" />
+                <div className="h-4 bg-[#E5E1DA] w-64 rounded" />
+              </div>
+              <div className="h-14 bg-[#E5E1DA] w-40 rounded" />
+            </div>
+          </div>
+          {/* Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((n) => (
+              <div key={n} className="bg-white border border-[#E5E1DA] h-72 animate-pulse space-y-4 p-6">
+                <div className="w-full h-40 bg-[#E5E1DA]" />
+                <div className="h-6 bg-[#E5E1DA] w-3/4 rounded" />
+                <div className="h-4 bg-[#E5E1DA] w-1/2 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (networkError) {
+    return (
+      <div className="relative select-none bg-[#faf9f8] min-h-screen flex items-center justify-center p-6 pt-20">
+        <div className="bg-white border border-[#E5E1DA] max-w-md w-full p-8 shadow-md text-center space-y-6">
+          <span className="material-symbols-outlined text-red-500 text-4xl">cloud_off</span>
+          <h3 className="font-serif text-xl text-ink-navy font-bold">Failed to Load Menu</h3>
+          <p className="font-sans text-xs text-subtle-text leading-relaxed">
+            We encountered a network error while fetching the restaurant culinary menu offerings.
+          </p>
+          <button 
+            onClick={handleRetry}
+            className="w-full h-[56px] bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center font-bold"
+          >
+            Retry Fetching Menu
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative select-none bg-[#faf9f8] min-h-screen">

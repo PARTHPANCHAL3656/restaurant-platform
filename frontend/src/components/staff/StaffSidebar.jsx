@@ -1,10 +1,12 @@
 import React from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import StaffLogo from './StaffLogo';
+import { useStaff } from '../../context/StaffContext';
 
 export default function StaffSidebar({ isOpen, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logoutStaff } = useStaff();
 
   const menuItems = [
     { name: 'Dashboard', path: '/staff/dashboard', icon: 'dashboard' },
@@ -16,7 +18,7 @@ export default function StaffSidebar({ isOpen, onClose }) {
   ];
 
   const handleLogout = () => {
-    sessionStorage.removeItem('staffAuthenticated');
+    logoutStaff();
     navigate('/staff/login');
   };
 

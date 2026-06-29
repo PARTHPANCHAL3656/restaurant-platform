@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StaffLogo from '../../components/staff/StaffLogo';
 import api from '../../utils/api';
+import { useStaff } from '../../context/StaffContext';
 
 export default function StaffLoginPage() {
   const navigate = useNavigate();
+  const { authenticateStaff } = useStaff();
   const [staffId, setStaffId] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -32,11 +34,7 @@ export default function StaffLoginPage() {
         throw new Error('Authentication token not received from server.');
       }
 
-      // Save credentials in storage
-      localStorage.setItem('staffToken', token);
-      sessionStorage.setItem('staffAuthenticated', 'true');
-      sessionStorage.setItem('staffName', staffName.trim());
-      sessionStorage.setItem('staffRole', staffRole);
+      authenticateStaff(token, staffName.trim(), staffRole);
 
       if (rememberMe) {
         localStorage.setItem('savedStaffId', staffId);
@@ -49,10 +47,7 @@ export default function StaffLoginPage() {
       console.warn("Backend authentication failed or offline. Logging in with local mock credentials.", err.message);
       
       const mockToken = "mock-jwt-token-for-preview-only";
-      localStorage.setItem('staffToken', mockToken);
-      sessionStorage.setItem('staffAuthenticated', 'true');
-      sessionStorage.setItem('staffName', staffName.trim());
-      sessionStorage.setItem('staffRole', staffRole);
+      authenticateStaff(mockToken, staffName.trim(), staffRole);
       
       if (rememberMe) {
         localStorage.setItem('savedStaffId', staffId);

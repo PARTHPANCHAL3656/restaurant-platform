@@ -434,6 +434,39 @@ export function StaffProvider({ children }) {
     { id: 'act-4', title: 'Nawabi Mutton Biryani updated', detail: 'Menu item price set to $38.00 by Rahul Sharma', time: '1 hour ago', icon: 'edit_note', link: '/staff/menu' }
   ]);
 
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return sessionStorage.getItem('staffAuthenticated') === 'true' && !!localStorage.getItem('staffToken');
+  });
+
+  const logoutStaff = useCallback(() => {
+    localStorage.removeItem('staffToken');
+    sessionStorage.removeItem('staffAuthenticated');
+    sessionStorage.removeItem('staffName');
+    sessionStorage.removeItem('staffRole');
+    setIsAuthenticated(false);
+    socket.disconnect();
+    socket.connect();
+  }, []);
+
+  const authenticateStaff = useCallback((token, name, role) => {
+    localStorage.setItem('staffToken', token);
+    sessionStorage.setItem('staffAuthenticated', 'true');
+    sessionStorage.setItem('staffName', name);
+    sessionStorage.setItem('staffRole', role);
+    setIsAuthenticated(true);
+  }, []);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      logoutStaff();
+      alert('Your session has expired. Please log in again.');
+    };
+    window.addEventListener('auth-session-expired', handleSessionExpired);
+    return () => {
+      window.removeEventListener('auth-session-expired', handleSessionExpired);
+    };
+  }, [logoutStaff]);
+
   // Data mapping helper functions
   const mapBackendOrder = useCallback((o) => {
     const tableStr = "T-" + String(o.tableNumber).padStart(2, '0');
@@ -576,10 +609,12 @@ export function StaffProvider({ children }) {
     }
   }, [fetchTables, fetchReservations, fetchOrders, fetchQueue, mapBackendOrder, mapBackendTable, mapBackendReservation, mapBackendQueueItem]);
 
-  // Load data on mount and whenever credentials change
+  // Load data reactively when authenticated
   useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+    if (isAuthenticated) {
+      loadAllData();
+    }
+  }, [isAuthenticated, loadAllData]);
 
   // Live Socket Updates
   useEffect(() => {
@@ -1092,6 +1127,9 @@ export function StaffProvider({ children }) {
       queue,
       activities,
       menuItems,
+      isAuthenticated,
+      authenticateStaff,
+      logoutStaff,
       addReservation,
       addOrder,
       advanceOrder,

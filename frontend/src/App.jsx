@@ -8,6 +8,7 @@ import MobileHeader from './components/MobileHeader';
 import MobileMenu from './components/MobileMenu';
 import CartDrawer from './components/CartDrawer';
 import StaffLayout from './components/staff/StaffLayout';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages (Lazy Loaded)
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
@@ -114,17 +115,19 @@ function MainAppRouter() {
 
   if (isStaffRoute) {
     return (
-      <Routes>
-        <Route path="/staff/login" element={<StaffLoginPage />} />
-        <Route element={<StaffLayout />}>
-          <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
-          <Route path="/staff/tables" element={<StaffTablesPage />} />
-          <Route path="/staff/orders" element={<StaffOrdersPage />} />
-          <Route path="/staff/billing" element={<StaffBillingPage />} />
-          <Route path="/staff/guest-queue" element={<StaffGuestQueuePage />} />
-          <Route path="/staff/menu" element={<StaffMenuPage />} />
-        </Route>
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/staff/login" element={<StaffLoginPage />} />
+          <Route element={<StaffLayout />}>
+            <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
+            <Route path="/staff/tables" element={<StaffTablesPage />} />
+            <Route path="/staff/orders" element={<StaffOrdersPage />} />
+            <Route path="/staff/billing" element={<StaffBillingPage />} />
+            <Route path="/staff/guest-queue" element={<StaffGuestQueuePage />} />
+            <Route path="/staff/menu" element={<StaffMenuPage />} />
+          </Route>
+        </Routes>
+      </ErrorBoundary>
     );
   }
 

@@ -45,12 +45,10 @@ api.interceptors.response.use(
       
       message = data?.error || data?.message || `Error ${status}: ${error.response.statusText}`;
 
-      // JWT Expired / Unauthorized - Redirect staff to login
+      // JWT Expired / Unauthorized - Notify application to log out staff
       if (status === 401 || status === 403) {
         if (localStorage.getItem('staffToken')) {
-          localStorage.removeItem('staffToken');
-          sessionStorage.removeItem('staffAuthenticated');
-          window.location.href = '/staff/login';
+          window.dispatchEvent(new Event('auth-session-expired'));
         }
       }
     } else if (error.request) {

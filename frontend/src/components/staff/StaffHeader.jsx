@@ -4,7 +4,7 @@ import StaffAvatar from './StaffAvatar';
 import { useStaff } from '../../context/StaffContext';
 
 export default function StaffHeader({ onMenuToggle }) {
-  const { staffProfile } = useStaff();
+  const { staffProfile, logoutStaff } = useStaff();
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -14,6 +14,20 @@ export default function StaffHeader({ onMenuToggle }) {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setDropdownOpen(false);
+      }
+    };
+    if (dropdownOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [dropdownOpen]);
 
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -35,7 +49,7 @@ export default function StaffHeader({ onMenuToggle }) {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('staffAuthenticated');
+    logoutStaff();
     navigate('/staff/login');
   };
 
@@ -54,7 +68,7 @@ export default function StaffHeader({ onMenuToggle }) {
   const formattedDate = time.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <header className="h-16 md:h-20 border-b border-[#E5E1DA] bg-[#FDFCFB]/85 backdrop-blur-md fixed top-0 right-0 left-0 lg:left-[300px] z-30 px-4 sm:px-6 md:px-8 flex items-center justify-between overflow-hidden">
+    <header className="h-16 md:h-20 border-b border-[#E5E1DA] bg-[#FDFCFB]/85 backdrop-blur-md fixed top-0 right-0 left-0 lg:left-[300px] z-30 px-4 sm:px-6 md:px-8 flex items-center justify-between overflow-visible">
       
       {/* Left side: Hamburger (mobile/tablet) + Page Title */}
       <div className="flex items-center gap-4">
@@ -118,8 +132,8 @@ export default function StaffHeader({ onMenuToggle }) {
           {/* Luxury Dropdown Menu */}
           {dropdownOpen && (
             <>
-              <div onClick={() => setDropdownOpen(false)} className="fixed inset-0 z-40" />
-              <div className="absolute right-0 top-full mt-3 w-48 bg-canvas-cream rounded-sm shadow-xl border border-muted-border z-50 overflow-hidden py-1 animate-fadeIn">
+              <div onClick={() => setDropdownOpen(false)} className="fixed inset-0 z-[9998]" />
+              <div className="absolute right-0 top-full mt-3 w-[240px] bg-canvas-cream rounded-sm shadow-xl border border-muted-border z-[9999] overflow-hidden py-1 animate-fadeIn">
                 <div className="px-4 py-2 border-b border-muted-border/60">
                   <p className="font-sans text-xs text-subtle-text">Shift Status</p>
                   <p className="font-sans text-[11px] text-green-600 font-bold uppercase tracking-wider mt-0.5">On Duty</p>
