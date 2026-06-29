@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useStaff } from '../../context/StaffContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -131,16 +131,23 @@ export default function StaffMenuPage() {
     }
   };
 
-  // Filtering
-  const filteredDishes = menuItems.filter(item => {
-    // category mapping (Mains in tabs vs Main Course in DB)
-    const normalizedItemCat = item.category === 'Main Course' ? 'Mains' : item.category;
-    const matchesCategory = selectedCategory === 'All' || normalizedItemCat === selectedCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Guard: if selectedCategory somehow becomes invalid, fall back to 'All'
+  const safeCategory = categories.includes(selectedCategory) ? selectedCategory : 'All';
+
+  // Memoize filtered dishes — prevents unnecessary re-renders from parent context updates
+  const filteredDishes = useMemo(() => {
+    if (!menuItems || menuItems.length === 0) return [];
+    return menuItems.filter(item => {
+      const normalizedItemCat = item.category === 'Main Course' ? 'Mains' : item.category;
+      const matchesCategory = safeCategory === 'All' || normalizedItemCat === safeCategory;
+      const q = searchQuery.toLowerCase();
+      const matchesSearch = !q ||
+        item.name.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        (item.description && item.description.toLowerCase().includes(q));
+      return matchesCategory && matchesSearch;
+    });
+  }, [menuItems, safeCategory, searchQuery]);
 
   const activeItem = menuItems.find(i => i.id === activeItemId);
 

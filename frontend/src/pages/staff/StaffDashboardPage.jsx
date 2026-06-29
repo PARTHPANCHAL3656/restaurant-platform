@@ -43,7 +43,7 @@ export default function StaffDashboardPage() {
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#E5E1DA] pb-6">
         <div>
           <p className="font-label-caps text-[10px] text-[#D4AF37] tracking-[0.25em] uppercase font-bold mb-1">Shift active</p>
-          <h1 className="font-serif text-display-lg-mobile md:text-headline-md text-ink-navy">Welcome Back, {staffProfile.name.split(' ')[0]}</h1>
+          <h1 className="font-serif text-display-lg-mobile md:text-headline-md text-ink-navy">Welcome Back, {(sessionStorage.getItem('staffName') || staffProfile.name).split(' ')[0]}</h1>
         </div>
         <div className="flex items-center gap-2.5 text-subtle-text font-body-md text-xs font-semibold">
           <span className="material-symbols-outlined text-lg text-[#D4AF37]">calendar_today</span>
@@ -59,7 +59,7 @@ export default function StaffDashboardPage() {
           {/* Main Card: Restaurant Floor Operations */}
           <div 
             onClick={() => navigate('/staff/tables')}
-            className="col-span-12 lg:col-span-7 bg-[#FDFCFB] border border-[#D4AF37]/25 p-8 shadow-sm flex flex-col justify-between min-h-[300px] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+          className="col-span-12 lg:col-span-7 bg-[#FDFCFB] border border-[#D4AF37]/25 p-8 shadow-sm flex flex-col justify-between min-h-[300px] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
           >
             <div className="flex justify-between items-start">
               <span className="font-label-caps text-[10px] text-[#D4AF37] tracking-widest uppercase font-bold">Restaurant Operations</span>

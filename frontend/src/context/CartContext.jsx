@@ -41,11 +41,19 @@ export function CartProvider({ children }) {
   };
 
   const orderStatus = activeOrder ? getCustomerStatusLabel(activeOrder.status) : null;
-  const activeOrderItems = activeOrder ? activeOrder.items.map(i => ({
-    name: i.name,
-    price: i.price,
-    quantity: i.qty
-  })) : [];
+  const activeOrderItems = activeOrder
+    ? Object.values(
+        activeOrder.items.reduce((acc, i) => {
+          const key = i.name;
+          if (acc[key]) {
+            acc[key] = { ...acc[key], quantity: acc[key].quantity + i.qty };
+          } else {
+            acc[key] = { name: i.name, price: i.price, quantity: i.qty };
+          }
+          return acc;
+        }, {})
+      )
+    : [];
   const activeOrderTotal = activeOrder ? activeOrder.items.reduce((sum, i) => sum + (i.price * i.qty), 0) * 1.175 : 0;
   const activeOrderTime = activeOrder ? activeOrder.time : null;
 

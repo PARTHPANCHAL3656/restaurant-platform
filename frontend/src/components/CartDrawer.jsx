@@ -74,7 +74,7 @@ export default function CartDrawer({ isOpen, onClose }) {
           {/* Drawer Wrapper */}
           <div className="absolute inset-y-0 right-0 max-w-full flex lg:pl-10">
             <motion.aside 
-              className="w-screen max-w-md bg-canvas-cream shadow-2xl flex flex-col justify-between h-screen fixed right-0 top-0 lg:static bottom-0 lg:h-full lg:rounded-none rounded-t-[20px] overflow-hidden z-50"
+              className="w-screen max-w-md bg-canvas-cream shadow-2xl flex flex-col h-screen fixed right-0 top-0 lg:static lg:h-full lg:rounded-none rounded-t-[20px] overflow-hidden z-50"
               initial="hidden"
               animate="visible"
               exit="hidden"
@@ -95,8 +95,8 @@ export default function CartDrawer({ isOpen, onClose }) {
                 </button>
               </div>
 
-              {/* Items List */}
-              <div className="flex-grow overflow-y-auto p-6 space-y-6 bg-canvas-cream">
+              {/* Items List — independently scrollable */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 space-y-6 bg-canvas-cream">
                 {cartItems.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center py-12">
                     <span className="material-symbols-outlined text-5xl text-subtle-text/30 mb-4">shopping_bag</span>

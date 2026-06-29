@@ -273,22 +273,13 @@ export default function OrderTrackingPage() {
                   No active orders at this table yet. Go to the menu to place an order.
                 </div>
               ) : (
-                activeOrderItems.map((item) => (
-                  <div key={item.id} className="flex items-center gap-6 pb-6 border-b border-muted-border last:border-0 last:pb-0">
-                    <div className="w-16 h-16 bg-surface-container overflow-hidden flex-shrink-0 border border-muted-border">
-                      <img 
-                        className="w-full h-full object-cover" 
-                        src={getImage(item.image)}
-                        alt={item.name}
-                      />
+                activeOrderItems.map((item, idx) => (
+                  <div key={item.name + idx} className="flex items-center justify-between pb-6 border-b border-muted-border last:border-0 last:pb-0">
+                    <div>
+                      <h4 className="font-serif text-lg text-ink-navy">{item.name}</h4>
+                      <p className="font-body-md text-xs text-subtle-text mt-0.5">Quantity: {item.quantity}</p>
                     </div>
-                    <div className="flex-grow flex justify-between items-start">
-                      <div>
-                        <h4 className="font-serif text-lg text-ink-navy">{item.name}</h4>
-                        <p className="font-body-md text-xs text-subtle-text mt-0.5">Quantity: {item.quantity}</p>
-                      </div>
-                      <p className="font-body-md text-saffron-gold font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
-                    </div>
+                    <p className="font-body-md text-saffron-gold font-semibold flex-shrink-0 ml-4">${(item.price * item.quantity).toFixed(2)}</p>
                   </div>
                 ))
               )}

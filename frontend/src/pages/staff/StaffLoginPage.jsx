@@ -9,16 +9,20 @@ export default function StaffLoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [staffName, setStaffName] = useState('');
+  const [staffRole, setStaffRole] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!staffId.trim() || !password.trim()) {
+    if (!staffId.trim() || !password.trim() || !staffName.trim() || !staffRole) {
       setError('Please fill in all security credentials.');
       return;
     }
 
     // Set mock authentication
     sessionStorage.setItem('staffAuthenticated', 'true');
+    sessionStorage.setItem('staffName', staffName.trim());
+    sessionStorage.setItem('staffRole', staffRole);
     if (rememberMe) {
       localStorage.setItem('savedStaffId', staffId);
     }
@@ -69,6 +73,39 @@ export default function StaffLoginPage() {
                 {error}
               </div>
             )}
+
+            {/* Full Name */}
+            <div>
+              <label className="font-label-caps text-label-caps text-canvas-cream/40 uppercase block mb-2">Full Name</label>
+              <input 
+                type="text"
+                id="staff_name"
+                value={staffName}
+                onChange={(e) => { setStaffName(e.target.value); setError(''); }}
+                placeholder="E.g. Khushi Singh"
+                className="w-full bg-transparent border-b border-canvas-cream/20 py-3 focus:outline-none focus:border-saffron-gold transition-colors font-body-md text-canvas-cream outline-none animate-none"
+                required
+              />
+            </div>
+
+            {/* Role */}
+            <div>
+              <label className="font-label-caps text-label-caps text-canvas-cream/40 uppercase block mb-2">Role</label>
+              <select
+                id="staff_role"
+                value={staffRole}
+                onChange={(e) => { setStaffRole(e.target.value); setError(''); }}
+                className="w-full bg-transparent border-b border-canvas-cream/20 py-3 focus:outline-none focus:border-saffron-gold transition-colors font-body-md text-canvas-cream outline-none animate-none cursor-pointer appearance-none"
+                required
+              >
+                <option value="" className="bg-[#1A1F2C]">Select your role</option>
+                <option value="Restaurant Manager" className="bg-[#1A1F2C]">Restaurant Manager</option>
+                <option value="Operations Manager" className="bg-[#1A1F2C]">Operations Manager</option>
+                <option value="Floor Manager" className="bg-[#1A1F2C]">Floor Manager</option>
+                <option value="Maitre D'" className="bg-[#1A1F2C]">Maitre D'</option>
+                <option value="Head Chef" className="bg-[#1A1F2C]">Head Chef</option>
+              </select>
+            </div>
 
             {/* Staff ID */}
             <div>

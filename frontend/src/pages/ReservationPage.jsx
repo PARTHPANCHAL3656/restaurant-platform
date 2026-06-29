@@ -4,10 +4,7 @@ import { motion } from 'framer-motion';
 import Footer from '../components/Footer';
 import { useStaff } from '../context/StaffContext';
 
-// Helper to resolve local images dynamically
-const getImage = (filename) => {
-  return new URL(`../assets/images/${filename}`, import.meta.url).href;
-};
+import { getImage } from '../utils/assetHelper';
 
 export default function ReservationPage() {
   const navigate = useNavigate();
@@ -274,7 +271,7 @@ export default function ReservationPage() {
               <div className="relative group overflow-hidden border border-muted-border mt-8">
                 <div className="aspect-[1.79] w-full overflow-hidden">
                   <img 
-                    src={getImage('interior-1.jpg')} 
+                    src={getImage('restaurant-interior.jpg')} 
                     alt="Interior Gallery" 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     loading="lazy"

@@ -106,8 +106,12 @@ export default function StaffHeader({ onMenuToggle }) {
           >
             <StaffAvatar className="w-9 h-9" />
             <div className="hidden sm:flex flex-col shrink-0">
-              <span className="font-semibold text-xs text-ink-navy leading-tight">{staffProfile.name}</span>
-              <span className="text-[10px] text-subtle-text mt-0.5 leading-none">{staffProfile.role}</span>
+              <span className="font-semibold text-xs text-ink-navy leading-tight">
+                {sessionStorage.getItem('staffName') || staffProfile.name}
+              </span>
+              <span className="text-[10px] text-subtle-text mt-0.5 leading-none">
+                {sessionStorage.getItem('staffRole') || staffProfile.role}
+              </span>
             </div>
           </button>
 
