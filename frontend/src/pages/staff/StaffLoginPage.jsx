@@ -82,7 +82,7 @@ export default function StaffLoginPage() {
                 id="staff_name"
                 value={staffName}
                 onChange={(e) => { setStaffName(e.target.value); setError(''); }}
-                placeholder="E.g. Khushi Singh"
+                placeholder="E.g. Your Name"
                 className="w-full bg-transparent border-b border-canvas-cream/20 py-3 focus:outline-none focus:border-saffron-gold transition-colors font-body-md text-canvas-cream outline-none animate-none"
                 required
               />
