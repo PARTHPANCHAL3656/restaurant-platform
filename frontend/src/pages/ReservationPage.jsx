@@ -271,7 +271,7 @@ export default function ReservationPage() {
               <div className="relative group overflow-hidden border border-muted-border mt-8">
                 <div className="aspect-[1.79] w-full overflow-hidden">
                   <img 
-                    src={getImage('restaurant-interior.jpg')} 
+                    src={getImage('table-setting.jpg')} 
                     alt="Interior Gallery" 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     loading="lazy"

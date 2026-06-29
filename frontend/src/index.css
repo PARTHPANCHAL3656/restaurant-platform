@@ -5,9 +5,13 @@
 @config "../tailwind.config.js";
 
 @layer base {
+  html {
+    overflow-x: hidden;
+  }
   body {
     @apply bg-canvas-cream text-ink-navy selection:bg-saffron-gold/30 selection:text-ink-navy antialiased;
     font-family: 'Hanken Grotesk', sans-serif;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4 {

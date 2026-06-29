@@ -19,13 +19,13 @@ export default function StaffOrdersPage() {
   const selectedOrder = orders.find(o => o.id === selectedOrderId);
 
   return (
-    <div className="flex h-[calc(100vh-80px)] overflow-hidden relative select-none">
+    <div className="flex flex-col-reverse md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
       {/* 3-Column Service Pipeline */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-6 p-6 overflow-y-auto bg-[#faf9f8]">
+      <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-6 overflow-y-auto bg-[#faf9f8]">
         
         {/* Column 1: New Orders */}
-        <div className="flex flex-col h-full bg-white border border-[#E5E1DA] p-4">
+        <div className="flex flex-col bg-white border border-[#E5E1DA] p-4">
           <div className="flex justify-between items-center pb-4 border-b border-[#E5E1DA] mb-4 shrink-0">
             <h3 className="font-serif text-md text-ink-navy font-semibold">New Orders</h3>
             <span className="bg-saffron-gold/15 text-saffron-gold text-xs px-2.5 py-0.5 font-bold rounded-full">
@@ -55,7 +55,7 @@ export default function StaffOrdersPage() {
         </div>
 
         {/* Column 2: In Preparation */}
-        <div className="flex flex-col h-full bg-white border border-[#E5E1DA] p-4">
+        <div className="flex flex-col bg-white border border-[#E5E1DA] p-4">
           <div className="flex justify-between items-center pb-4 border-b border-[#E5E1DA] mb-4 shrink-0">
             <h3 className="font-serif text-md text-ink-navy font-semibold">In Preparation</h3>
             <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 font-bold rounded-full">
@@ -85,7 +85,7 @@ export default function StaffOrdersPage() {
         </div>
 
         {/* Column 3: Ready to Serve */}
-        <div className="flex flex-col h-full bg-white border border-[#E5E1DA] p-4">
+        <div className="flex flex-col bg-white border border-[#E5E1DA] p-4">
           <div className="flex justify-between items-center pb-4 border-b border-[#E5E1DA] mb-4 shrink-0">
             <h3 className="font-serif text-md text-ink-navy font-semibold">Ready to Serve</h3>
             <span className="bg-green-100 text-green-800 text-xs px-2.5 py-0.5 font-bold rounded-full">
@@ -117,8 +117,9 @@ export default function StaffOrdersPage() {
       </div>
 
       {/* Detail Slide-over Panel (Order Drawer) */}
-      <div className={`h-full bg-white border-l border-[#E5E1DA] shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
-        selectedOrder ? 'w-96' : 'w-0 opacity-0 overflow-hidden'
+      {selectedOrder && <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedOrderId(null)} />}
+      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-[#E5E1DA] shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
+        selectedOrder ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         {selectedOrder && (
           <div className="h-full flex flex-col justify-between">

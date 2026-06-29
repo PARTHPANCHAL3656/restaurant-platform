@@ -34,7 +34,7 @@ export default function StaffLayout() {
           <StaffHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
           
           {/* Dashboard/Feature Screen Contents */}
-          <main className="flex-grow pt-20">
+          <main className="flex-grow pt-16 md:pt-20">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}

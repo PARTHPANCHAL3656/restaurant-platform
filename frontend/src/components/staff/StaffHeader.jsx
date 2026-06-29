@@ -54,7 +54,7 @@ export default function StaffHeader({ onMenuToggle }) {
   const formattedDate = time.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <header className="h-20 border-b border-[#E5E1DA] bg-[#FDFCFB]/85 backdrop-blur-md fixed top-0 right-0 left-0 lg:left-[300px] z-30 px-6 sm:px-8 flex items-center justify-between">
+    <header className="h-16 md:h-20 border-b border-[#E5E1DA] bg-[#FDFCFB]/85 backdrop-blur-md fixed top-0 right-0 left-0 lg:left-[300px] z-30 px-4 sm:px-6 md:px-8 flex items-center justify-between overflow-hidden">
       
       {/* Left side: Hamburger (mobile/tablet) + Page Title */}
       <div className="flex items-center gap-4">
@@ -72,7 +72,7 @@ export default function StaffHeader({ onMenuToggle }) {
       </div>
 
       {/* Right side: Time, Shift, Notifications, Profile */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-3 md:gap-6">
         
         {/* Shift Details (Hidden on small screens) */}
         <div className="hidden md:flex flex-col text-right">

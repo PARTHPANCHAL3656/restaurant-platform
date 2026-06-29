@@ -37,7 +37,7 @@ export default function StaffDashboardPage() {
   ];
 
   return (
-    <div className="px-6 md:px-12 py-8 space-y-10 max-w-container-max mx-auto">
+    <div className="px-4 md:px-6 lg:px-12 py-6 md:py-8 space-y-8 md:space-y-10 max-w-container-max mx-auto">
       
       {/* Hero Welcome Row */}
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#E5E1DA] pb-6">
@@ -68,12 +68,12 @@ export default function StaffDashboardPage() {
             
             <div className="flex items-end gap-10 mt-6">
               <div>
-                <p className="font-serif text-6xl text-ink-navy leading-none mb-1">{occupiedTables}</p>
+                <p className="font-serif text-4xl md:text-6xl text-ink-navy leading-none mb-1">{occupiedTables}</p>
                 <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider">Occupied Tables</p>
               </div>
               <div className="h-14 w-[1px] bg-[#E5E1DA] self-end mb-1" />
               <div>
-                <p className="font-serif text-6xl text-subtle-text leading-none mb-1">{availableTables}</p>
+                <p className="font-serif text-4xl md:text-6xl text-subtle-text leading-none mb-1">{availableTables}</p>
                 <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider">Available</p>
               </div>
             </div>

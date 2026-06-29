@@ -101,11 +101,15 @@ export default function StaffTablesPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-80px)] overflow-hidden relative select-none">
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
+      {/* Mobile backdrop for left drawer */}
+      {leftDrawerOpen && (
+        <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setLeftDrawerOpen(false)} />
+      )}
       {/* Left Drawer (Collapsible Reservations Summary) */}
-      <div className={`h-full bg-white border-r border-[#E5E1DA] flex flex-col shrink-0 transition-all duration-300 ${
-        leftDrawerOpen ? 'w-80' : 'w-0 opacity-0 overflow-hidden'
+      <div className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto bg-white border-r border-[#E5E1DA] flex flex-col shrink-0 transition-all duration-300 ${
+        leftDrawerOpen ? 'w-80 translate-x-0' : 'w-80 -translate-x-full md:-translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         <div className="p-6 flex justify-between items-center border-b border-[#E5E1DA] shrink-0">
           <h3 className="font-serif text-md text-ink-navy font-semibold">Upcoming Reservations</h3>
@@ -155,7 +159,7 @@ export default function StaffTablesPage() {
       </div>
 
       {/* Hero Workspace: Floor Map Grid */}
-      <div className="flex-grow h-full bg-[#fdfcfb] overflow-auto p-8 md:p-16 flex flex-col items-center relative">
+      <div className="flex-grow bg-[#fdfcfb] overflow-auto p-4 md:p-8 lg:p-16 flex flex-col items-center relative min-h-[500px]">
         
         {/* Toggle Left Drawer Button */}
         {!leftDrawerOpen && (

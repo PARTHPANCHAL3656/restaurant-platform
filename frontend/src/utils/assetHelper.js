@@ -71,7 +71,8 @@ const ASSET_MAP = {
 
   // General & Backdrops
   'tracking-chef-bg.jpg': 'landing/chef.jpg',
-  'contact-map.jpg': 'landing/restaurant-interior.jpg'
+  'contact-map.jpg': 'landing/restaurant-interior.jpg',
+  'restaurant-interior.jpg': 'landing/restaurant-interior.jpg'
 };
 
 /**

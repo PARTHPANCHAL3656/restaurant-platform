@@ -69,10 +69,10 @@ export default function StaffBillingPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-80px)] overflow-hidden relative select-none">
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
       {/* Left side: Invoice List */}
-      <div className="flex-grow flex flex-col h-full bg-[#faf9f8] p-6 overflow-y-auto">
+      <div className="flex-grow flex flex-col bg-[#faf9f8] p-4 md:p-6 overflow-y-auto">
         <div className="max-w-4xl w-full mx-auto space-y-6">
           
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white p-6 border border-[#E5E1DA]">
@@ -93,8 +93,33 @@ export default function StaffBillingPage() {
             </div>
           </div>
 
-          {/* Ledger Table */}
-          <div className="bg-white border border-[#E5E1DA] overflow-hidden">
+          {/* Mobile: Invoice Cards (sm and below) */}
+          <div className="sm:hidden space-y-3">
+            {filteredInvoices.map((inv) => (
+              <div
+                key={inv.id}
+                onClick={() => setSelectedInvoiceId(inv.id)}
+                className={`bg-white border border-[#E5E1DA] p-4 cursor-pointer transition-all duration-200 ${
+                  selectedInvoiceId === inv.id ? 'border-[#D4AF37] ring-1 ring-[#D4AF37]/30' : 'hover:border-[#D4AF37]/50'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <span className="font-mono font-bold text-xs text-ink-navy">{inv.id}</span>
+                  {getStatusBadge(inv.status)}
+                </div>
+                <div className="flex justify-between items-end mt-3">
+                  <div>
+                    <p className="font-label-caps text-[9px] text-subtle-text uppercase tracking-wider">{inv.table} • {inv.guest}</p>
+                    <p className="font-label-caps text-[9px] text-subtle-text mt-0.5">{inv.date}</p>
+                  </div>
+                  <span className="font-serif text-lg text-[#D4AF37] font-bold">${inv.amount.toFixed(2)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: Ledger Table (sm and above) */}
+          <div className="hidden sm:block bg-white border border-[#E5E1DA] overflow-hidden">
             <div className="overflow-x-auto w-full">
               <table className="w-full text-left border-collapse text-xs min-w-[600px]">
                 <thead>
@@ -142,9 +167,13 @@ export default function StaffBillingPage() {
         </div>
       </div>
 
+      {/* Mobile overlay backdrop */}
+      {selectedInvoice && (
+        <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedInvoiceId(null)} />
+      )}
       {/* Right side: Invoice Preview */}
-      <div className={`h-full bg-white border-l border-[#E5E1DA] shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
-        selectedInvoice ? 'w-96' : 'w-0 opacity-0 overflow-hidden'
+      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-[#E5E1DA] shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
+        selectedInvoice ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         {selectedInvoice && (
           <div className="h-full flex flex-col justify-between">

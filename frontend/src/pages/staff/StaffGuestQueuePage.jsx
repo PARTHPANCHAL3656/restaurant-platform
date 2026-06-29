@@ -34,10 +34,10 @@ export default function StaffGuestQueuePage() {
   const availableTables = tables.filter(t => t.status === 'available');
 
   return (
-    <div className="flex h-[calc(100vh-80px)] overflow-hidden relative select-none">
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
       {/* Queue Grid Dashboard */}
-      <div className="flex-grow flex flex-col h-full bg-[#faf9f8] p-6 overflow-y-auto">
+      <div className="flex-grow flex flex-col bg-[#faf9f8] p-4 md:p-6 overflow-y-auto">
         <div className="max-w-4xl w-full mx-auto space-y-8">
           
           {/* Summary counters */}
@@ -178,9 +178,13 @@ export default function StaffGuestQueuePage() {
         </div>
       </div>
 
+      {/* Mobile overlay backdrop */}
+      {selectedGuest && (
+        <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedGuestId(null)} />
+      )}
       {/* Right Drawer details */}
-      <div className={`h-full bg-white border-l border-[#E5E1DA] shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
-        selectedGuest ? 'w-96' : 'w-0 opacity-0 overflow-hidden'
+      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-[#E5E1DA] shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
+        selectedGuest ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         {selectedGuest && (
           <div className="h-full flex flex-col justify-between">
