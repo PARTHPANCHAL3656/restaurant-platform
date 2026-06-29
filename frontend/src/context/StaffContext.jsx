@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 
 const StaffContext = createContext();
 
@@ -561,19 +561,38 @@ export function StaffProvider({ children }) {
     { id: 'act-4', title: 'Nawabi Mutton Biryani updated', detail: 'Menu item price set to $38.00 by Rahul Sharma', time: '1 hour ago', icon: 'edit_note', link: '/staff/menu' }
   ]);
 
-  // Auto-simulation progression for customer cart orders
+  // Auto-simulation: use a ref so the interval never goes stale
+  // and never causes an infinite render loop via [orders] dependency.
+  const ordersRef = useRef(orders);
+  useEffect(() => { ordersRef.current = orders; }, [orders]);
+
+  const advanceOrderRef = useRef(null);
   useEffect(() => {
-    const activeCustomerOrders = orders.filter(o => o.isCustomerOrder && o.status !== 'served');
-    if (activeCustomerOrders.length === 0) return;
+    // Store advanceOrder in a ref so the interval always calls the latest version
+    advanceOrderRef.current = (orderId) => {
+      setOrders(prev => {
+        const orderToUpdate = prev.find(o => o.id === orderId);
+        if (!orderToUpdate) return prev;
+        const statusMap = { new: 'preparing', preparing: 'ready' };
+        const nextStatus = statusMap[orderToUpdate.status];
+        if (!nextStatus) {
+          // served — remove from pipeline
+          return prev.filter(o => o.id !== orderId);
+        }
+        return prev.map(o => o.id === orderId ? { ...o, status: nextStatus, time: 'Just now' } : o);
+      });
+    };
+  });
 
-    const timer = setTimeout(() => {
-      // Advance first unserved customer order
-      const orderToAdvance = activeCustomerOrders[0];
-      advanceOrder(orderToAdvance.id);
-    }, 10000); // Progress status step every 10 seconds
-
-    return () => clearTimeout(timer);
-  }, [orders]);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const active = ordersRef.current.filter(o => o.isCustomerOrder && o.status !== 'served');
+      if (active.length > 0 && advanceOrderRef.current) {
+        advanceOrderRef.current(active[0].id);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []); // Empty deps — runs ONCE on mount, never re-triggers
 
   // Helper to add activity log
   const logActivity = (title, detail, icon, link = '/staff/dashboard') => {
@@ -991,7 +1010,7 @@ export function StaffProvider({ children }) {
     const newItem = {
       ...item,
       id,
-      image: item.image || 'paneer-tikka.jpg',
+      image: item.image || '',  // Never substitute a wrong dish image
       tag: item.special ? "Chef Special" : "Classic"
     };
     setMenuItems(prev => [...prev, newItem]);

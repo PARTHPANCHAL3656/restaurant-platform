@@ -7,6 +7,7 @@ import DesktopSidebar from './components/DesktopSidebar';
 import MobileHeader from './components/MobileHeader';
 import MobileMenu from './components/MobileMenu';
 import CartDrawer from './components/CartDrawer';
+import StaffLayout from './components/staff/StaffLayout';
 
 // Pages (Lazy Loaded)
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
@@ -20,7 +21,6 @@ const ContactPage = React.lazy(() => import('./pages/ContactPage'));
 const CartPage = React.lazy(() => import('./pages/CartPage'));
 
 // Staff Pages (Lazy Loaded)
-import StaffLayout from './components/staff/StaffLayout';
 const StaffLoginPage = React.lazy(() => import('./pages/staff/StaffLoginPage'));
 const StaffDashboardPage = React.lazy(() => import('./pages/staff/StaffDashboardPage'));
 const StaffTablesPage = React.lazy(() => import('./pages/staff/StaffTablesPage'));

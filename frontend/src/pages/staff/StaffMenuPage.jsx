@@ -260,7 +260,7 @@ export default function StaffMenuPage() {
                     <div className="p-6 space-y-3">
                       <div className="flex justify-between items-start">
                         <h4 className="font-serif text-md font-bold text-ink-navy">{dish.name}</h4>
-                        <span className="font-serif text-saffron-gold font-bold">₹{dish.price.toFixed(2)}</span>
+                        <span className="font-serif text-saffron-gold font-bold">${dish.price.toFixed(2)}</span>
                       </div>
                       <p className="text-xs text-subtle-text line-clamp-2 leading-relaxed">
                         {dish.description}
