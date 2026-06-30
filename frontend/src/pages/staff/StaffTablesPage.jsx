@@ -16,6 +16,7 @@ export default function StaffTablesPage() {
     queue, 
     invoices,
     orders,
+    tableQrData,
     assignTable, 
     releaseTable,
     checkInGuest,
@@ -69,6 +70,11 @@ export default function StaffTablesPage() {
   };
 
   const currentTable = tables.find(t => t.id === selectedTableId);
+
+  // Real QR data from the backend, if this table was assigned this session.
+  // Falls back to a static placeholder image for mock/offline mode or
+  // tables assigned before this page loaded.
+  const liveQr = selectedTableId ? tableQrData[selectedTableId] : null;
 
   // Estimated order subtotal & details lookup
   const currentTableOrder = orders.find(o => o.table === selectedTableId);
@@ -597,15 +603,33 @@ export default function StaffTablesPage() {
               {/* QR Image */}
               <div className="w-48 h-48 mx-auto border border-[#E5E1DA] p-3 bg-white flex items-center justify-center">
                 <img 
-                  src={getQrImage(selectedTableId)} 
+                  src={liveQr ? liveQr.qrDataUrl : getQrImage(selectedTableId)} 
                   alt={`QR for Table ${selectedTableId}`} 
                   className="w-full h-full object-contain"
                 />
               </div>
 
-              <p className="font-sans text-[11px] leading-relaxed text-subtle-text">
-                Guests can scan this QR to access the digital menu and place orders directly from their table.
-              </p>
+              {liveQr ? (
+                <div className="space-y-2">
+                  <p className="font-sans text-[11px] leading-relaxed text-subtle-text">
+                    Live session — scanning opens the digital menu for this table.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(liveQr.menuUrl);
+                      alert('Menu link copied — paste it in a browser to test without scanning.');
+                    }}
+                    className="font-mono text-[10px] text-[#D4AF37] underline break-all cursor-pointer hover:text-ink-navy transition-colors"
+                  >
+                    {liveQr.menuUrl}
+                  </button>
+                </div>
+              ) : (
+                <p className="font-sans text-[11px] leading-relaxed text-subtle-text">
+                  Guests can scan this QR to access the digital menu and place orders directly from their table.
+                </p>
+              )}
 
               {/* Action Buttons */}
               <div className="space-y-3 pt-2">

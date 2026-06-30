@@ -408,6 +408,13 @@ export function StaffProvider({ children }) {
   // Unified Tables Floor Map state
   const [tables, setTables] = useState([]);
 
+  // Live QR data captured from the backend when a table is assigned.
+  // Keyed by table id (e.g. "T-03") -> { qrDataUrl, token, menuUrl }
+  // Kept separate from `tables` because loadAllData() re-fetches/re-maps
+  // tables from GET /api/tables, which does NOT include QR data
+  // (the backend only returns it once, at the moment of assignment).
+  const [tableQrData, setTableQrData] = useState({});
+
   // Shared Reservations List state
   const [reservations, setReservations] = useState([]);
 
@@ -836,8 +843,15 @@ export function StaffProvider({ children }) {
     try {
       // Remove from waitlist on backend
       await api.delete(`/api/tables/waiting/${queueId}`);
-      // Assign table session on backend
-      await api.post(`/api/tables/${table._id}/assign`);
+      // Assign table session on backend — this is the ONLY moment the
+      // real QR code / customer token is ever returned, so we must
+      // capture it here rather than relying on a later refetch.
+      const res = await api.post(`/api/tables/${table._id}/assign`);
+      const { qrDataUrl, token } = res.data;
+      if (qrDataUrl && token) {
+        const menuUrl = `${window.location.origin}/menu?token=${token}`;
+        setTableQrData(prev => ({ ...prev, [tableId]: { qrDataUrl, token, menuUrl } }));
+      }
       await loadAllData();
 
       logActivity(
@@ -934,6 +948,11 @@ export function StaffProvider({ children }) {
 
     try {
       await api.post(`/api/tables/${table._id}/free`);
+      setTableQrData(prev => {
+        const next = { ...prev };
+        delete next[tableId];
+        return next;
+      });
       await loadAllData();
 
       logActivity(
@@ -1122,6 +1141,7 @@ export function StaffProvider({ children }) {
       staffProfile,
       reservations,
       tables,
+      tableQrData,
       orders,
       invoices,
       queue,

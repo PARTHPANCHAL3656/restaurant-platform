@@ -1,0 +1,118 @@
+diff --git a/frontend/src/context/StaffContext.jsx b/frontend/src/context/StaffContext.jsx
+index 722be6d..e5cff22 100644
+--- a/frontend/src/context/StaffContext.jsx
++++ b/frontend/src/context/StaffContext.jsx
+@@ -408,6 +408,13 @@ export function StaffProvider({ children }) {
+   // Unified Tables Floor Map state
+   const [tables, setTables] = useState([]);
+ 
++  // Live QR data captured from the backend when a table is assigned.
++  // Keyed by table id (e.g. "T-03") -> { qrDataUrl, token, menuUrl }
++  // Kept separate from `tables` because loadAllData() re-fetches/re-maps
++  // tables from GET /api/tables, which does NOT include QR data
++  // (the backend only returns it once, at the moment of assignment).
++  const [tableQrData, setTableQrData] = useState({});
++
+   // Shared Reservations List state
+   const [reservations, setReservations] = useState([]);
+ 
+@@ -836,8 +843,15 @@ export function StaffProvider({ children }) {
+     try {
+       // Remove from waitlist on backend
+       await api.delete(`/api/tables/waiting/${queueId}`);
+-      // Assign table session on backend
+-      await api.post(`/api/tables/${table._id}/assign`);
++      // Assign table session on backend — this is the ONLY moment the
++      // real QR code / customer token is ever returned, so we must
++      // capture it here rather than relying on a later refetch.
++      const res = await api.post(`/api/tables/${table._id}/assign`);
++      const { qrDataUrl, token } = res.data;
++      if (qrDataUrl && token) {
++        const menuUrl = `${window.location.origin}/menu?token=${token}`;
++        setTableQrData(prev => ({ ...prev, [tableId]: { qrDataUrl, token, menuUrl } }));
++      }
+       await loadAllData();
+ 
+       logActivity(
+@@ -934,6 +948,11 @@ export function StaffProvider({ children }) {
+ 
+     try {
+       await api.post(`/api/tables/${table._id}/free`);
++      setTableQrData(prev => {
++        const next = { ...prev };
++        delete next[tableId];
++        return next;
++      });
+       await loadAllData();
+ 
+       logActivity(
+@@ -1122,6 +1141,7 @@ export function StaffProvider({ children }) {
+       staffProfile,
+       reservations,
+       tables,
++      tableQrData,
+       orders,
+       invoices,
+       queue,
+diff --git a/frontend/src/pages/staff/StaffTablesPage.jsx b/frontend/src/pages/staff/StaffTablesPage.jsx
+index 811bd79..f15ec32 100644
+--- a/frontend/src/pages/staff/StaffTablesPage.jsx
++++ b/frontend/src/pages/staff/StaffTablesPage.jsx
+@@ -16,6 +16,7 @@ export default function StaffTablesPage() {
+     queue, 
+     invoices,
+     orders,
++    tableQrData,
+     assignTable, 
+     releaseTable,
+     checkInGuest,
+@@ -70,6 +71,11 @@ export default function StaffTablesPage() {
+ 
+   const currentTable = tables.find(t => t.id === selectedTableId);
+ 
++  // Real QR data from the backend, if this table was assigned this session.
++  // Falls back to a static placeholder image for mock/offline mode or
++  // tables assigned before this page loaded.
++  const liveQr = selectedTableId ? tableQrData[selectedTableId] : null;
++
+   // Estimated order subtotal & details lookup
+   const currentTableOrder = orders.find(o => o.table === selectedTableId);
+ 
+@@ -597,15 +603,33 @@ export default function StaffTablesPage() {
+               {/* QR Image */}
+               <div className="w-48 h-48 mx-auto border border-[#E5E1DA] p-3 bg-white flex items-center justify-center">
+                 <img 
+-                  src={getQrImage(selectedTableId)} 
++                  src={liveQr ? liveQr.qrDataUrl : getQrImage(selectedTableId)} 
+                   alt={`QR for Table ${selectedTableId}`} 
+                   className="w-full h-full object-contain"
+                 />
+               </div>
+ 
+-              <p className="font-sans text-[11px] leading-relaxed text-subtle-text">
+-                Guests can scan this QR to access the digital menu and place orders directly from their table.
+-              </p>
++              {liveQr ? (
++                <div className="space-y-2">
++                  <p className="font-sans text-[11px] leading-relaxed text-subtle-text">
++                    Live session — scanning opens the digital menu for this table.
++                  </p>
++                  <button
++                    type="button"
++                    onClick={() => {
++                      navigator.clipboard.writeText(liveQr.menuUrl);
++                      alert('Menu link copied — paste it in a browser to test without scanning.');
++                    }}
++                    className="font-mono text-[10px] text-[#D4AF37] underline break-all cursor-pointer hover:text-ink-navy transition-colors"
++                  >
++                    {liveQr.menuUrl}
++                  </button>
++                </div>
++              ) : (
++                <p className="font-sans text-[11px] leading-relaxed text-subtle-text">
++                  Guests can scan this QR to access the digital menu and place orders directly from their table.
++                </p>
++              )}
+ 
+               {/* Action Buttons */}
+               <div className="space-y-3 pt-2">
