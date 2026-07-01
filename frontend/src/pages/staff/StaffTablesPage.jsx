@@ -35,12 +35,6 @@ export default function StaffTablesPage() {
   const [showReleaseConfirm, setShowReleaseConfirm] = useState(false);
   const [showAssignForm, setShowAssignForm] = useState(false);
 
-  // Mock upcoming reservations
-  // const upcomingReservations = [
-  //   { time: '6:30 PM', guest: 'Rahul Sharma', partySize: 4, table: 'T-03', vip: false },
-  //   { time: '7:00 PM', guest: 'Priya Mehta', partySize: 2, table: 'T-06', vip: false },
-  //   { time: '7:30 PM', guest: 'Aarav Kapoor', partySize: 3, table: 'T-08', vip: true }
-  // ];
   // Real reservations from backend, sorted by soonest time
   const { reservations } = useStaff();
   const upcomingReservations = [...reservations]

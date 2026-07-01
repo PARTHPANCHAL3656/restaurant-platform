@@ -72,8 +72,6 @@ export default function ReservationPage() {
         };
         const response = await api.post('/api/reservations', payload);
         
-        // Also update local staff context state optimistically
-        // addReservation(formData);
 
         // Navigate to ReservationSuccess page and pass reservation details via state
         navigate('/reservation-success', { 
