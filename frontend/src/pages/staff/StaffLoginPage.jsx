@@ -44,18 +44,25 @@ export default function StaffLoginPage() {
       
       navigate('/staff/dashboard');
     } catch (err) {
-      console.warn("Backend authentication failed or offline. Logging in with local mock credentials.", err.message);
+      const isOffline = err.message && err.message.toLowerCase().includes('network');
       
-      const mockToken = "mock-jwt-token-for-preview-only";
-      authenticateStaff(mockToken, staffName.trim(), staffRole);
-      
-      if (rememberMe) {
-        localStorage.setItem('savedStaffId', staffId);
+      if (isOffline) {
+        console.warn("Backend server is offline. Logging in with local mock credentials.", err.message);
+        
+        const mockToken = "mock-jwt-token-for-preview-only";
+        authenticateStaff(mockToken, staffName.trim(), staffRole);
+        
+        if (rememberMe) {
+          localStorage.setItem('savedStaffId', staffId);
+        } else {
+          localStorage.removeItem('savedStaffId');
+        }
+        
+        navigate('/staff/dashboard');
       } else {
-        localStorage.removeItem('savedStaffId');
+        console.error("Authentication rejected by server:", err.message);
+        setError(err.message || 'Incorrect password or security credentials.');
       }
-      
-      navigate('/staff/dashboard');
     } finally {
       setLoading(false);
     }
