@@ -105,7 +105,8 @@ export const getOrderByTable = async (req, res) => {
 // Protected by staffAuth middleware
 export const getAllActiveOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ status: "active" }).sort({ createdAt: 1 })
+    // const orders = await Order.find({ status: "active" }).sort({ createdAt: 1 })
+    const orders = await Order.find({ status: { $in: ["active", "billed"] } }).sort({ createdAt: 1 })
     res.json(orders)
   } catch (err) {
     res.status(500).json({ error: err.message })
