@@ -167,9 +167,9 @@ Built with a **single source of truth** architecture, MongoDB is the authoritati
 |:---:|:---:|:---:|
 | ![Landing](./docs/screenshots/landing.png) | ![Reservation](./docs/screenshots/reservation.png) | ![Menu](./docs/screenshots/menu.png) |
 
-| Cart | Order Tracking | Invoice |
-|:---:|:---:|:---:|
-| ![Cart](./docs/screenshots/cart.png) | ![Order Tracking](./docs/screenshots/order-tracking.png) | ![Invoice](./docs/screenshots/invoice.png) |
+| Order Tracking | Invoice |
+|:---:|:---:|
+| ![Order Tracking](./docs/screenshots/order-tracking.png) | ![Invoice](./docs/screenshots/invoice.png) |
 
 </details>
 
