@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5174,
     strictPort: true,
     watch: {
-      ignored: ['**/assets/**', '**/scratch/**']
+      ignored: ['**/assets/**', '**/scratch/**', '**/docs/**']
     }
   },
   build: {
