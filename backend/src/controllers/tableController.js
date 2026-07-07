@@ -182,10 +182,11 @@ export const reserveTable = async (req, res) => {
 // GET /api/tables/waiting
 export const getWaitingList = async (req, res) => {
   try {
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
     const list = await Reservation.find({
       $or: [
         { status: "Waiting" },
-        { status: { $in: ["pending", "confirmed"] } }
+        { status: { $in: ["pending", "confirmed"] }, date: todayStr }
       ]
     }).sort({ date: 1, time: 1 })
     res.json(list)
@@ -198,8 +199,8 @@ export const getWaitingList = async (req, res) => {
 export const addToWaitingList = async (req, res) => {
   try {
     const { name, phone, partySize, notes } = req.body
-    const todayStr = new Date().toISOString().split('T')[0]
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
+    const timeStr = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })
 
     const entry = await Reservation.create({
       name,
