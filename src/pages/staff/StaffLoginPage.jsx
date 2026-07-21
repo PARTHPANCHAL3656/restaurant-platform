@@ -27,8 +27,11 @@ export default function StaffLoginPage() {
     setError('');
 
     try {
-      const response = await api.post('/api/auth/login', { password });
-      
+      const response = await api.post('/api/auth/login', {
+        staffId: staffId.trim(),
+        password,
+      });
+
       const { token } = response.data;
       if (!token) {
         throw new Error('Authentication token not received from server.');
@@ -41,28 +44,13 @@ export default function StaffLoginPage() {
       } else {
         localStorage.removeItem('savedStaffId');
       }
-      
+
       navigate('/staff/dashboard');
     } catch (err) {
-      const isOffline = err.message && err.message.toLowerCase().includes('network');
-      
-      if (isOffline) {
-        console.warn("Backend server is offline. Logging in with local mock credentials.", err.message);
-        
-        const mockToken = "mock-jwt-token-for-preview-only";
-        authenticateStaff(mockToken, staffName.trim(), staffRole);
-        
-        if (rememberMe) {
-          localStorage.setItem('savedStaffId', staffId);
-        } else {
-          localStorage.removeItem('savedStaffId');
-        }
-        
-        navigate('/staff/dashboard');
-      } else {
-        console.error("Authentication rejected by server:", err.message);
-        setError(err.message || 'Incorrect password or security credentials.');
-      }
+      console.error("Authentication rejected by server:", err.message);
+      setError(
+        err.response?.data?.error || err.message || 'Incorrect staff ID or password.'
+      );
     } finally {
       setLoading(false);
     }
