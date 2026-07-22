@@ -71,6 +71,10 @@ app.get("/", (req, res) => {
   res.json({ message: "Restaurant API is running" })
 })
 
+app.get("/api/ping", (req, res) => {
+  res.json({ pong: true, time: new Date().toISOString() })
+})
+
 // -------------------------------------------------------
 // DEPLOYMENT NOTE — PORT:
 // Render assigns its own PORT automatically via process.env.PORT.
