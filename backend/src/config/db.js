@@ -6,7 +6,8 @@ const connectDB = async () => {
     console.log(`MongoDB connected: ${conn.connection.host}`)
   } catch (error) {
     console.error(`MongoDB connection error: ${error.message}`)
-    process.exit(1)
+    // Don't crash the whole server on a DB failure — routes that don't
+    // touch MongoDB (like staff login) should still be able to respond.
   }
 }
 
