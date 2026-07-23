@@ -19,7 +19,7 @@ export default function StaffSidebar({ isOpen, onClose }) {
 
   const handleLogout = () => {
     logoutStaff();
-    navigate('/staff/login');
+    navigate('/');
   };
 
   const isActive = (path) => location.pathname === path;

@@ -49,7 +49,7 @@ setMenuIo(io)
 
 app.use(cors({ origin: process.env.FRONTEND_URL }))
 console.log('CORS configured for origin:', process.env.FRONTEND_URL)
-app.use(express.json())
+app.use(express.json({ limit: "10mb" }))
 
 // -------------------------------------------------------
 // DEPLOYMENT NOTE — Socket.IO on Render:

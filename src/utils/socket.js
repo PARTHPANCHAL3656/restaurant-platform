@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'https://spice-garden-ebon.vercel.app';
+const SOCKET_URL = import.meta.env.VITE_API_URL || 'https://spice-garden-tau.vercel.app';
 
 const socket = io(SOCKET_URL, {
   autoConnect: true,

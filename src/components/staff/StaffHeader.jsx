@@ -50,7 +50,7 @@ export default function StaffHeader({ onMenuToggle }) {
 
   const handleLogout = () => {
     logoutStaff();
-    navigate('/staff/login');
+    navigate('/');
   };
 
   const getServiceType = () => {
