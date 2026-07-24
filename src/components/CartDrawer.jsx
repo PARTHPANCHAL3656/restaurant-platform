@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useStaff } from '../context/StaffContext';
 
 import { getImage } from '../utils/assetHelper';
+import { formatINR } from '../utils/currency'
 
 export default function CartDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
@@ -134,7 +135,7 @@ export default function CartDrawer({ isOpen, onClose }) {
                                 <h3 className="font-headline-sm text-[16px] text-ink-navy leading-snug">{item.name}</h3>
                                 <p className="font-body-md text-xs text-subtle-text line-clamp-1 mt-0.5">{item.description}</p>
                               </div>
-                              <span className="font-body-md text-saffron-gold font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                              <span className="font-body-md text-saffron-gold font-semibold">{formatINR((item.price * item.quantity))}</span>
                             </div>
 
                             {/* Quantity Selector & Remove */}
@@ -189,15 +190,15 @@ export default function CartDrawer({ isOpen, onClose }) {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm text-subtle-text">
                       <span className="font-label-caps tracking-wider">Subtotal</span>
-                      <span className="font-body-md">${subtotal.toFixed(2)}</span>
+                      <span className="font-body-md">{formatINR(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-subtle-text">
                       <span className="font-label-caps tracking-wider">Service Charge (12.5%)</span>
-                      <span className="font-body-md">${serviceCharge.toFixed(2)}</span>
+                      <span className="font-body-md">{formatINR(serviceCharge)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-subtle-text">
                       <span className="font-label-caps tracking-wider">GST (5%)</span>
-                      <span className="font-body-md">${gst.toFixed(2)}</span>
+                      <span className="font-body-md">{formatINR(gst)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-subtle-text">
                       <span className="font-label-caps tracking-wider text-saffron-gold">Est. Prep Time</span>
@@ -206,7 +207,7 @@ export default function CartDrawer({ isOpen, onClose }) {
                     <div className="h-px bg-muted-border my-2" />
                     <div className="flex justify-between items-center pt-2">
                       <span className="font-display-lg text-headline-sm uppercase tracking-wider text-ink-navy">Total</span>
-                      <span className="font-display-lg text-headline-sm text-saffron-gold font-bold">${total.toFixed(2)}</span>
+                      <span className="font-display-lg text-headline-sm text-saffron-gold font-bold">{formatINR(total)}</span>
                     </div>
                   </div>
 

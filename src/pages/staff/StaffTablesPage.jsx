@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatINR } from '../../utils/currency';
 
 // Helper to resolve QR code image path
 const getQrImage = (tableId) => {
@@ -391,7 +392,7 @@ export default function StaffTablesPage() {
                             {currentTable.items.map((item, i) => (
                               <li key={i} className="flex justify-between items-center">
                                 <span>{item.qty}x {item.name}</span>
-                                <span className="font-bold font-mono">${(item.price * item.qty).toFixed(2)}</span>
+                                <span className="font-bold font-mono">{formatINR((item.price * item.qty))}</span>
                               </li>
                             ))}
                           </ul>
@@ -402,7 +403,7 @@ export default function StaffTablesPage() {
                         )}
                         <div className="flex justify-between items-end pt-2">
                           <span className="font-label-caps text-[10px] text-subtle-text uppercase">Total Charges</span>
-                          <span className="font-serif text-2xl font-bold">${currentTable.billTotal.toFixed(2)}</span>
+                          <span className="font-serif text-2xl font-bold">{formatINR(currentTable.billTotal)}</span>
                         </div>
                       </div>
 
@@ -787,7 +788,7 @@ export default function StaffTablesPage() {
 
                 <div className="flex justify-between pt-4 border-t border-[#E5E1DA] font-serif text-lg font-bold">
                   <span>Subtotal:</span>
-                  <span>${currentTable ? currentTable.billTotal.toFixed(2) : '0.00'}</span>
+                  <span>{currentTable ? formatINR(currentTable.billTotal) : '₹0'}</span>
                 </div>
               </div>
 

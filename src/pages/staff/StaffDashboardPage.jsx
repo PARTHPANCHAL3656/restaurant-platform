@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
+import { formatINR } from '../../utils/currency';
 
 export default function StaffDashboardPage() {
   const navigate = useNavigate();
@@ -154,11 +155,11 @@ export default function StaffDashboardPage() {
               <div className="flex justify-between items-end mb-4">
                 <div>
                   <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-1">Today's Revenue</p>
-                  <p className="font-serif text-3xl text-ink-navy">${todayRevenue.toFixed(2)}</p>
+                  <p className="font-serif text-3xl text-ink-navy">{formatINR(todayRevenue)}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-label-caps text-[9px] text-[#D4AF37] uppercase tracking-wider mb-0.5">Pending Revenue</p>
-                  <p className="font-serif text-md text-ink-navy">${revenuePending.toFixed(2)}</p>
+                  <p className="font-serif text-md text-ink-navy">{formatINR(revenuePending)}</p>
                 </div>
               </div>
 
@@ -177,7 +178,7 @@ export default function StaffDashboardPage() {
                   <p className="text-[7.5px] font-label-caps text-subtle-text uppercase tracking-wider">Sessions</p>
                 </div>
                 <div>
-                  <p className="font-serif text-sm font-bold">${avgBill.toFixed(2)}</p>
+                  <p className="font-serif text-sm font-bold">{formatINR(avgBill)}</p>
                   <p className="text-[7.5px] font-label-caps text-subtle-text uppercase tracking-wider">Avg Bill</p>
                 </div>
               </div>

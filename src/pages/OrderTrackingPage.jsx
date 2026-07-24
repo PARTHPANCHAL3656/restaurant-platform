@@ -7,6 +7,7 @@ import socket from '../utils/socket';
 import api from '../utils/api';
 
 import { getImage } from '../utils/assetHelper';
+import { formatINR } from '../utils/currency';
 
 export default function OrderTrackingPage() {
   const navigate = useNavigate();
@@ -348,7 +349,7 @@ export default function OrderTrackingPage() {
                       <h4 className="font-serif text-lg text-ink-navy">{item.name}</h4>
                       <p className="font-body-md text-xs text-subtle-text mt-0.5">Quantity: {item.quantity}</p>
                     </div>
-                    <p className="font-body-md text-saffron-gold font-semibold flex-shrink-0 ml-4">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="font-body-md text-saffron-gold font-semibold flex-shrink-0 ml-4">{formatINR((item.price * item.quantity))}</p>
                   </div>
                 ))
               )}
@@ -364,7 +365,7 @@ export default function OrderTrackingPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest mb-1">Total to Table</p>
-                  <p className="font-display-lg text-headline-md text-ink-navy">${activeOrderTotal.toFixed(2)}</p>
+                  <p className="font-display-lg text-headline-md text-ink-navy">{formatINR(activeOrderTotal)}</p>
                 </div>
               </div>
             )}

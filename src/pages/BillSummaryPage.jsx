@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import { useCart } from '../context/CartContext';
 import BrandLogo from '../components/BrandLogo';
 import Footer from '../components/Footer';
+import { formatINR } from '../utils/currency';
 
 export default function BillSummaryPage() {
   const navigate = useNavigate();
@@ -109,7 +110,7 @@ export default function BillSummaryPage() {
                     <span className="font-serif text-base text-ink-navy font-semibold">{item.name}</span>
                     <span className="font-sans text-xs text-subtle-text">Qty: {String(item.quantity).padStart(2, '0')}</span>
                   </div>
-                  <span className="font-sans text-base text-ink-navy">${(item.price * item.quantity).toFixed(2)}</span>
+                  <span className="font-sans text-base text-ink-navy">{formatINR((item.price * item.quantity))}</span>
                 </div>
               ))}
             </div>
@@ -119,15 +120,15 @@ export default function BillSummaryPage() {
           <div className="space-y-3 pt-6 border-t border-muted-border font-body-md text-sm text-subtle-text">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span className="text-ink-navy">${subtotal.toFixed(2)}</span>
+              <span className="text-ink-navy">{formatINR(subtotal)}</span>
             </div>
             <div className="flex justify-between">
               <span>Service Charge (10%)</span>
-              <span className="text-ink-navy">${serviceCharge.toFixed(2)}</span>
+              <span className="text-ink-navy">{formatINR(serviceCharge)}</span>
             </div>
             <div className="flex justify-between">
               <span>GST (7.5%)</span>
-              <span className="text-ink-navy">${gst.toFixed(2)}</span>
+              <span className="text-ink-navy">{formatINR(gst)}</span>
             </div>
 
             {/* Dashed Line */}
@@ -135,7 +136,7 @@ export default function BillSummaryPage() {
 
             <div className="flex justify-between items-center font-serif text-lg font-bold text-ink-navy">
               <span className="uppercase tracking-wider">Grand Total</span>
-              <span className="text-saffron-gold text-2xl">${grandTotal.toFixed(2)}</span>
+              <span className="text-saffron-gold text-2xl">{formatINR(grandTotal)}</span>
             </div>
           </div>
 

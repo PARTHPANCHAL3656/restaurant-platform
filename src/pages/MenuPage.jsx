@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import { useStaff } from '../context/StaffContext';
 
 import { getImage } from '../utils/assetHelper';
+import { formatINR } from '../utils/currency';
 
 const CATEGORIES = ['Starters', 'Mains', 'Rice & Biryani', 'Breads', 'Desserts', 'Signature Cocktails'];
 
@@ -165,7 +166,7 @@ export default function MenuPage({ onCartToggle }) {
                     {/* Meta info */}
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-serif text-headline-sm text-ink-navy group-hover:text-saffron-gold transition-colors">{item.name}</h3>
-                      <span className="font-serif text-saffron-gold text-lg font-semibold">${item.price.toFixed(2)}</span>
+                      <span className="font-serif text-saffron-gold text-lg font-semibold">{formatINR(item.price)}</span>
                     </div>
                     <p className="font-sans text-body-md text-subtle-text mb-6 leading-relaxed line-clamp-2">
                       {item.description}
@@ -227,7 +228,7 @@ export default function MenuPage({ onCartToggle }) {
               </div>
             </div>
             <div className="text-right flex flex-col items-end">
-              <span className="font-serif text-saffron-gold font-bold text-sm">${cartSubtotal.toFixed(2)}</span>
+              <span className="font-serif text-saffron-gold font-bold text-sm">{formatINR(cartSubtotal)}</span>
               <span className="text-[9px] font-label-caps tracking-widest text-canvas-cream/70 flex items-center gap-0.5">VIEW SELECTION <span className="material-symbols-outlined text-[10px]">east</span></span>
             </div>
           </button>

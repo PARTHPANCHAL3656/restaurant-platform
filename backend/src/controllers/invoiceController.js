@@ -27,10 +27,10 @@ export const generateInvoiceForTable = async (req, res) => {
       return res.status(400).json({ error: "No items to invoice for this table." })
     }
 
-    const subtotal = order.items.reduce((sum, i) => sum + i.price * i.qty, 0)
-    const serviceCharge = parseFloat((subtotal * 0.10).toFixed(2))
-    const gst = parseFloat((subtotal * 0.075).toFixed(2))
-    const total = parseFloat((subtotal + serviceCharge + gst).toFixed(2))
+    const subtotal = Math.round(order.items.reduce((sum, i) => sum + i.price * i.qty, 0))
+    const serviceCharge = Math.round(subtotal * 0.10)
+    const gst = Math.round(subtotal * 0.075)
+    const total = Math.round(subtotal + serviceCharge + gst)
 
     // Generate unique sequential invoice number
     const count = await Invoice.countDocuments()
@@ -45,7 +45,7 @@ export const generateInvoiceForTable = async (req, res) => {
       tableNumber: table.tableNumber,
       guestName: table.guestName || "Guest",
       items: order.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
-      subtotal: parseFloat(subtotal.toFixed(2)),
+      subtotal,
       serviceCharge,
       gst,
       total,

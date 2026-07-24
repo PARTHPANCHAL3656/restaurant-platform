@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import Footer from '../components/Footer';
 
 import { getImage } from '../utils/assetHelper';
+import { formatINR } from '../utils/currency';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export default function CartPage() {
                         <h3 className="font-serif text-xl text-ink-navy">{item.name}</h3>
                         <p className="font-body-md text-xs text-subtle-text mt-1 leading-relaxed max-w-md">{item.description}</p>
                       </div>
-                      <span className="font-serif text-saffron-gold text-lg font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                      <span className="font-serif text-saffron-gold text-lg font-semibold">{formatINR((item.price * item.quantity))}</span>
                     </div>
 
                     {/* Quantities */}
@@ -124,22 +125,22 @@ export default function CartPage() {
               <div className="space-y-4 text-sm font-body-md text-subtle-text">
                 <div className="flex justify-between">
                   <span className="font-label-caps tracking-wide">Subtotal</span>
-                  <span className="text-ink-navy">${subtotal.toFixed(2)}</span>
+                  <span className="text-ink-navy">{formatINR(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-label-caps tracking-wide">Service Charge (12.5%)</span>
-                  <span className="text-ink-navy">${serviceCharge.toFixed(2)}</span>
+                  <span className="text-ink-navy">{formatINR(serviceCharge)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-label-caps tracking-wide">GST (5%)</span>
-                  <span className="text-ink-navy">${gst.toFixed(2)}</span>
+                  <span className="text-ink-navy">{formatINR(gst)}</span>
                 </div>
                 
                 <div className="h-px bg-muted-border my-4" />
 
                 <div className="flex justify-between items-center font-serif text-lg font-bold text-ink-navy">
                   <span className="uppercase tracking-wider">Grand Total</span>
-                  <span className="text-saffron-gold text-2xl">${total.toFixed(2)}</span>
+                  <span className="text-saffron-gold text-2xl">{formatINR(total)}</span>
                 </div>
               </div>
 

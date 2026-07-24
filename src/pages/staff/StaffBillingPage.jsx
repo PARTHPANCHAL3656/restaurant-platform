@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useStaff } from '../../context/StaffContext';
+import { formatINR } from '../../utils/currency';
 
 export default function StaffBillingPage() {
   const { invoices, markInvoicePaid } = useStaff();
@@ -114,7 +115,7 @@ export default function StaffBillingPage() {
                     <p className="font-label-caps text-[9px] text-subtle-text uppercase tracking-wider">{inv.table} • {inv.guest}</p>
                     <p className="font-label-caps text-[9px] text-subtle-text mt-0.5">{inv.date}</p>
                   </div>
-                  <span className="font-serif text-lg text-[#D4AF37] font-bold">${inv.amount.toFixed(2)}</span>
+                  <span className="font-serif text-lg text-[#D4AF37] font-bold">{formatINR(inv.amount)}</span>
                 </div>
               </div>
             ))}
@@ -157,7 +158,7 @@ export default function StaffBillingPage() {
                       <td className="p-4 text-ink-navy">{inv.table}</td>
                       <td className="p-4 text-ink-navy">{inv.guest}</td>
                       <td className="p-4 text-subtle-text">{inv.date}</td>
-                      <td className="p-4 font-bold font-mono text-ink-navy">${inv.amount.toFixed(2)}</td>
+                      <td className="p-4 font-bold font-mono text-ink-navy">{formatINR(inv.amount)}</td>
                       <td className="p-4">{getStatusBadge(inv.status)}</td>
                     </motion.tr>
                   ))}
@@ -224,7 +225,7 @@ export default function StaffBillingPage() {
                     {selectedInvoice.items.map((item, idx) => (
                       <li key={idx} className="flex justify-between">
                         <span>{item.qty}x {item.name}</span>
-                        <span className="font-mono font-semibold">${(item.price * item.qty).toFixed(2)}</span>
+                        <span className="font-mono font-semibold">{formatINR((item.price * item.qty))}</span>
                       </li>
                     ))}
                   </ul>
@@ -237,20 +238,20 @@ export default function StaffBillingPage() {
                 <div className="space-y-2 border-b border-[#E5E1DA] pb-4">
                   <div className="flex justify-between text-subtle-text">
                     <span>Menu Subtotal</span>
-                    <span>${(selectedInvoice.subtotal || selectedInvoice.amount / 1.175).toFixed(2)}</span>
+                    <span>{formatINR((selectedInvoice.subtotal || selectedInvoice.amount / 1.175))}</span>
                   </div>
                   <div className="flex justify-between text-subtle-text">
                     <span>Service Charge (10%)</span>
-                    <span>${(selectedInvoice.serviceCharge || selectedInvoice.amount * 0.10 / 1.175).toFixed(2)}</span>
+                    <span>{formatINR((selectedInvoice.serviceCharge || selectedInvoice.amount * 0.10 / 1.175))}</span>
                   </div>
                   <div className="flex justify-between text-subtle-text">
                     <span>GST (7.5%)</span>
-                    <span>${(selectedInvoice.gst || selectedInvoice.amount * 0.075 / 1.175).toFixed(2)}</span>
+                    <span>{formatINR((selectedInvoice.gst || selectedInvoice.amount * 0.075 / 1.175))}</span>
                   </div>
                 </div>
                 <div className="flex justify-between items-end pt-2">
                   <span className="font-serif text-sm text-ink-navy font-bold uppercase">Total Charges</span>
-                  <span className="font-serif text-2xl text-[#D4AF37] font-bold">${selectedInvoice.amount.toFixed(2)}</span>
+                  <span className="font-serif text-2xl text-[#D4AF37] font-bold">{formatINR(selectedInvoice.amount)}</span>
                 </div>
               </div>
 

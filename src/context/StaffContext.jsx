@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import api from '../utils/api';
 import socket from '../utils/socket';
+import { formatINR } from '../utils/currency';
 
 const StaffContext = createContext();
 
@@ -445,7 +446,7 @@ export function StaffProvider({ children }) {
     { id: 'act-1', title: 'Table T-02 ordered', detail: 'Saffron Infused Scallops ordered by Julian Alvarez', time: '7 mins ago', icon: 'restaurant', link: '/staff/orders' },
     { id: 'act-2', title: 'Invoice INV-042 generated', detail: 'Table T-04 final invoice issued for Elena Vance', time: '12 mins ago', icon: 'payments', link: '/staff/billing' },
     { id: 'act-3', title: 'Guest checked into Garden Terrace', detail: 'Table T-04 marked active and occupied', time: '22 mins ago', icon: 'check_circle', link: '/staff/tables' },
-    { id: 'act-4', title: 'Nawabi Mutton Biryani updated', detail: 'Menu item price set to $38.00 by Rahul Sharma', time: '1 hour ago', icon: 'edit_note', link: '/staff/menu' }
+    { id: 'act-4', title: 'Nawabi Mutton Biryani updated', detail: 'Menu item price set to ₹780 by Rahul Sharma', time: '1 hour ago', icon: 'edit_note', link: '/staff/menu' }
   ]);
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -541,7 +542,7 @@ export function StaffProvider({ children }) {
       status: t.status,
       guestName: t.guestName || (associatedOrder ? associatedOrder.guestName || `Table ${t.tableNumber} Guest` : (t.status === 'reserved' ? 'Reserved Guest' : '')),
       arrivalTime: t.arrivalTime || (associatedOrder ? new Date(associatedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''),
-      billTotal: parseFloat(total.toFixed(2)),
+      billTotal:Math.round(total),
       notes: t.notes || (associatedOrder ? associatedOrder.notes : ''),
       items,
       qrId: `QR-${String(t.tableNumber).padStart(2, '0')}`,
@@ -1047,7 +1048,7 @@ export function StaffProvider({ children }) {
 
       logActivity(
         `Invoice ${invoiceId} paid`,
-        `Table ${invoice.table} settled bill of $${invoice.amount.toFixed(2)}`,
+        `Table ${invoice.table} settled bill of ${formatINR(invoice.amount)}`,
         'check_circle',
         '/staff/billing'
       );
@@ -1061,7 +1062,7 @@ export function StaffProvider({ children }) {
 
       logActivity(
         `Invoice ${invoice.invoiceNumber || invoiceId} paid`,
-        `Table ${invoice.table} settled bill of $${invoice.amount.toFixed(2)}`,
+        `Table ${invoice.table} settled bill of ${formatINR(invoice.amount)}`,
         'check_circle',
         '/staff/billing'
       );
@@ -1089,9 +1090,9 @@ export function StaffProvider({ children }) {
         date: new Date().toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }),
         status: 'unpaid',
         paymentMethod: '—',
-        subtotal: parseFloat(sub.toFixed(2)),
-        gst: parseFloat((sub * 0.05).toFixed(2)),
-        serviceCharge: parseFloat((sub * 0.125).toFixed(2))
+        subtotal: Math.round(sub),
+        gst: Math.round(sub * 0.05),
+        serviceCharge: Math.round(sub * 0.125)
       };
 
       setInvoices(prev => [newInvoice, ...prev]);

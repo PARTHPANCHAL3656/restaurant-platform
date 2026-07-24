@@ -3,6 +3,7 @@ import { useStaff } from '../../context/StaffContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { getImage } from '../../utils/assetHelper';
+import { formatINR } from '../../utils/currency';
 
 export default function StaffMenuPage() {
   const { menuItems, addMenuItem, updateMenuItem, deleteMenuItem } = useStaff();
@@ -335,7 +336,7 @@ export default function StaffMenuPage() {
                     <div className="p-6 space-y-3">
                       <div className="flex justify-between items-start">
                         <h4 className="font-serif text-md font-bold text-ink-navy">{dish.name}</h4>
-                        <span className="font-serif text-saffron-gold font-bold">${dish.price.toFixed(2)}</span>
+                        <span className="font-serif text-saffron-gold font-bold">{formatINR(dish.price)}</span>
                       </div>
                       <p className="text-xs text-subtle-text line-clamp-2 leading-relaxed">
                         {dish.description}
@@ -445,7 +446,7 @@ export default function StaffMenuPage() {
                         <span className="font-label-caps text-[9px] text-subtle-text uppercase block mb-1">Category</span>
                         <span className="font-serif text-md text-ink-navy font-bold">{activeItem.category}</span>
                       </div>
-                      <span className="font-serif text-3xl text-saffron-gold font-bold">${activeItem.price.toFixed(2)}</span>
+                      <span className="font-serif text-3xl text-saffron-gold font-bold">{formatINR(activeItem.price)}</span>
                     </div>
 
                     <div className="space-y-2">

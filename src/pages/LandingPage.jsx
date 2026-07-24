@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Footer from '../components/Footer';
 
 import { getImage } from '../utils/assetHelper';
+import { formatINR } from '../utils/currency';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -197,7 +198,7 @@ export default function LandingPage() {
                     Free-range chicken simmered for 24 hours in a charcoal-smoked tomato velouté, finished with aged saffron cream.
                   </p>
                 </div>
-                <span className="font-serif text-saffron-gold font-semibold text-xl">$42</span>
+                <span className="font-serif text-saffron-gold font-semibold text-xl">{formatINR(650)}</span>
               </div>
             </motion.article>
 
@@ -227,7 +228,7 @@ export default function LandingPage() {
                     Long-grain Basmati steamed in a sealed terracotta pot with grass-fed lamb, caramelized onions, and 12-spice blend.
                   </p>
                 </div>
-                <span className="font-serif text-saffron-gold font-semibold text-xl">$48</span>
+                <span className="font-serif text-saffron-gold font-semibold text-xl">{formatINR(720)}</span>
               </div>
             </motion.article>
           </div>

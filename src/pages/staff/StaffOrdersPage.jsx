@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStaff } from '../../context/StaffContext';
+import { formatINR } from '../../utils/currency';
 
 export default function StaffOrdersPage() {
   const { orders, advanceOrder } = useStaff();
@@ -179,7 +180,7 @@ export default function StaffOrdersPage() {
                           </span>
                         )}
                       </div>
-                      <span className="font-bold font-mono">${(item.price * item.qty).toFixed(2)}</span>
+                      <span className="font-bold font-mono">{formatINR((item.price * item.qty))}</span>
                     </li>
                   ))}
                 </ul>
