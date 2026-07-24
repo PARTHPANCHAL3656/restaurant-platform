@@ -108,3 +108,12 @@ export const updateInvoiceStatus = async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 }
+
+export const deleteInvoice = async (req, res) => {
+  try {
+    await Invoice.findByIdAndDelete(req.params.id)
+    res.json({ message: "Invoice deleted." })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
