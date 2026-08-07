@@ -5,9 +5,18 @@ import Footer from '../components/Footer';
 
 import { getImage } from '../utils/assetHelper';
 import { formatINR } from '../utils/currency';
+import { useStaff } from '../context/StaffContext';
+
+const guestReviews = [
+  { name: 'Ananya Kulkarni', initials: 'AK', meta: 'Local Guide · 42 reviews', rating: 5, text: 'The lamb biryani genuinely tastes like it was cooked over live embers for hours. Service felt personal, not rehearsed.', timeAgo: '2 weeks ago' },
+  { name: 'Rohan Mehta', initials: 'RM', meta: '18 reviews', rating: 5, text: 'Booked for an anniversary dinner and the staff quietly arranged a small dessert surprise without us asking. Small touches like that stay with you.', timeAgo: '1 month ago' },
+  { name: 'Priya Nair', initials: 'PN', meta: '9 reviews', rating: 4, text: 'Loved the butter chicken and the ambience is stunning at night. Wait time on a Saturday was a bit long, worth it though.', timeAgo: '3 weeks ago' },
+  { name: 'Devansh Patel', initials: 'DP', meta: 'Local Guide · 67 reviews', rating: 5, text: 'Ordered home delivery via Zomato twice this month, packaging keeps the biryani hot till it reaches you. Rare for Indian food delivery.', timeAgo: '5 days ago' },
+];
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { restaurantInfo } = useStaff();
 
   const handleStoryScroll = () => {
     const el = document.getElementById('story');
@@ -290,6 +299,108 @@ export default function LandingPage() {
                   loading="lazy"
                 />
               </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Guest Reviews Section */}
+      <section className="py-section-gap px-margin-mobile md:px-margin-desktop bg-[#f4f3f2]" id="reviews">
+        <div className="max-w-container-max mx-auto">
+          <div className="text-center mb-16">
+            <span className="font-label-caps text-label-caps text-saffron-gold mb-2 block tracking-[0.25em] uppercase">What Guests Are Saying</span>
+            <h2 className="font-serif text-headline-md md:text-headline-lg text-ink-navy">Loved Across Vadodara</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {guestReviews.map((review, i) => (
+              <motion.div
+                key={i}
+                className="bg-white p-6 border border-muted-border shadow-sm flex flex-col gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.1 }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-ink-navy text-canvas-cream flex items-center justify-center font-serif italic text-base flex-shrink-0">
+                    {review.initials}
+                  </div>
+                  <div>
+                    <p className="font-body-md text-sm text-ink-navy font-semibold leading-tight">{review.name}</p>
+                    <p className="font-label-caps text-[10px] text-subtle-text tracking-wide uppercase">{review.meta}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, starIdx) => (
+                    <span
+                      key={starIdx}
+                      className={`material-symbols-outlined text-base ${starIdx < review.rating ? 'text-saffron-gold' : 'text-muted-border'}`}
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      star
+                    </span>
+                  ))}
+                </div>
+                <p className="font-sans text-sm text-subtle-text leading-relaxed flex-grow">
+                  {review.text}
+                </p>
+                <div className="flex items-center justify-between pt-3 border-t border-muted-border/60">
+                  <span className="font-label-caps text-[10px] text-subtle-text/70 tracking-widest uppercase">Google Review</span>
+                  <span className="font-label-caps text-[10px] text-subtle-text/50 tracking-widest uppercase">{review.timeAgo}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Location & Delivery Partners Section */}
+      <section className="py-section-gap px-margin-mobile md:px-margin-desktop bg-canvas-cream" id="find-us">
+        <div className="max-w-container-max mx-auto">
+          <div className="text-center mb-16">
+            <span className="font-label-caps text-label-caps text-saffron-gold mb-2 block tracking-[0.25em] uppercase">Visit or Order In</span>
+            <h2 className="font-serif text-headline-md md:text-headline-lg text-ink-navy">Find Us &amp; Order From Home</h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-stretch">
+            <div className="lg:col-span-7 min-h-[380px] border border-muted-border shadow-sm overflow-hidden">
+              <iframe
+                title="Spice Garden Location"
+                className="w-full h-full min-h-[380px] grayscale-[15%] hover:grayscale-0 transition-all duration-700"
+                src="https://www.google.com/maps?q=Alkapuri,+Vadodara,+Gujarat+390007&output=embed"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+
+            <div className="lg:col-span-5 flex flex-col gap-6">
+              <div className="bg-white p-8 border border-muted-border shadow-sm space-y-4 flex-grow">
+                <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-3">
+                  Order Home Delivery
+                </h3>
+                <p className="font-sans text-sm text-subtle-text leading-relaxed">
+                  Can&apos;t make it in? Our full menu is available for delivery through our partners below.
+                </p>
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <a href="https://www.zomato.com" target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center gap-2 border border-muted-border py-6 hover:border-saffron-gold transition-colors group">
+                    <span className="font-serif text-xl italic text-ink-navy group-hover:text-saffron-gold transition-colors">Zomato</span>
+                    <span className="font-label-caps text-[10px] text-subtle-text tracking-widest uppercase">4.6 &bull; 30-40 min</span>
+                  </a>
+                  <a href="https://www.swiggy.com" target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center gap-2 border border-muted-border py-6 hover:border-saffron-gold transition-colors group">
+                    <span className="font-serif text-xl italic text-ink-navy group-hover:text-saffron-gold transition-colors">Swiggy</span>
+                    <span className="font-label-caps text-[10px] text-subtle-text tracking-widest uppercase">4.5 &bull; 35-45 min</span>
+                  </a>
+                </div>
+              </div>
+
+              <div className="bg-ink-navy p-8 text-canvas-cream space-y-3 shadow-sm">
+                <h3 className="font-label-caps text-[11px] text-saffron-gold tracking-widest uppercase">Dine With Us</h3>
+                <p className="font-serif text-lg italic leading-snug">{restaurantInfo.address}</p>
+                <a href={`tel:${restaurantInfo.reservationPhone}`} className="font-body-md text-sm text-canvas-cream/80 hover:text-saffron-gold transition-colors block">
+                  {restaurantInfo.reservationPhone}
+                </a>
+              </div>
             </div>
           </div>
         </div>

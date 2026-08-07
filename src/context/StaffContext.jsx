@@ -16,9 +16,9 @@ const MOCK_TABLES = [
 ];
 
 const MOCK_RESERVATIONS = [
-  { id: 'res-1', time: '6:30 PM', guest: 'Rahul Sharma', partySize: 4, table: 'T-03', vip: false, phone: '+44 7946 0901', status: 'confirmed' },
-  { id: 'res-2', time: '7:00 PM', guest: 'Priya Mehta', partySize: 2, table: 'T-06', vip: false, phone: '+44 7946 0902', status: 'confirmed' },
-  { id: 'res-3', time: '7:30 PM', guest: 'Aarav Kapoor', partySize: 3, table: 'T-08', vip: true, phone: '+44 7946 0903', status: 'confirmed' }
+  { id: 'res-1', time: '6:30 PM', guest: 'Rahul Sharma', partySize: 4, table: 'T-03', vip: false, phone: '+91 98250 10901', status: 'confirmed' },
+  { id: 'res-2', time: '7:00 PM', guest: 'Priya Mehta', partySize: 2, table: 'T-06', vip: false, phone: '+91 98250 10902', status: 'confirmed' },
+  { id: 'res-3', time: '7:30 PM', guest: 'Aarav Kapoor', partySize: 3, table: 'T-08', vip: true, phone: '+91 98250 10903', status: 'confirmed' }
 ];
 
 const MOCK_ORDERS = [
@@ -46,9 +46,9 @@ export function StaffProvider({ children }) {
   const restaurantInfo = {
     name: "Spice Garden",
     tagline: "Modern Indian Fine Dining",
-    address: "14 Garden Terrace, London, W1K 7HB",
-    phone: "+44 (0) 20 7946 0958",
-    reservationPhone: "+44 (0) 20 7946 0900",
+    address: "12 Alkapuri Boulevard, Vadodara, Gujarat 390007",
+    phone: "+91 265 234 5678",
+    reservationPhone: "+91 70960 34960",
     email: "concierge@spicegarden.com",
     openingHours: [
       { days: "Monday - Thursday", hours: "12:00 PM - 10:30 PM" },
@@ -56,9 +56,9 @@ export function StaffProvider({ children }) {
       { days: "Sunday", hours: "12:00 PM - 10:00 PM" }
     ],
     socials: {
-      instagram: "@spicegarden.london",
-      facebook: "spicegarden.london",
-      twitter: "@spicegardenldn"
+      instagram: "@spicegarden.vadodara",
+      facebook: "spicegarden.vadodara",
+      twitter: "@spicegardenvd"
     }
   };
 
