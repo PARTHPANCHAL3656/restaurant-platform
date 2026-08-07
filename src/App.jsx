@@ -112,7 +112,7 @@ function AppLayout() {
 
       {/* Main viewport area, offset beside the desktop sidebar */}
       <div className="flex-grow lg:pl-[300px] pt-[65px] lg:pt-0 min-h-screen flex flex-col justify-between">
-        {['/menu', '/order-status', '/track-order', '/cart', '/bill'].includes(location.pathname) && !tableToken ? (
+        {['/order-status', '/track-order', '/cart', '/bill'].includes(location.pathname) && !tableToken ? (
           <div className="flex-grow flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto space-y-6">
             <span className="material-symbols-outlined text-saffron-gold text-5xl font-bold">qr_code_scanner</span>
             <h2 className="font-serif text-headline-md text-ink-navy">Scan QR Code</h2>

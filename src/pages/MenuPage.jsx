@@ -11,7 +11,8 @@ const CATEGORIES = ['Starters', 'Mains', 'Rice & Biryani', 'Breads', 'Desserts',
 
 export default function MenuPage({ onCartToggle }) {
   const { menuItems } = useStaff();
-  const { cartItems, addToCart, removeFromCart, getSubtotal, tableNumber, sessionExpired, setSessionExpired } = useCart();
+  const { cartItems, addToCart, removeFromCart, getSubtotal, tableNumber, tableToken, sessionExpired, setSessionExpired } = useCart();
+  const previewMode = !tableToken;
   const [selectedCategory, setSelectedCategory] = useState('Starters');
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState({ visible: false, itemName: '', count: 0 });
@@ -42,15 +43,14 @@ export default function MenuPage({ onCartToggle }) {
     // If category in DB is Main Course but tab category is Mains, align them
     const itemCat = item.category === 'Main Course' ? 'Mains' : item.category;
     const matchesCategory = itemCat === selectedCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.description.toLowerCase().includes(searchQuery.toLowerCase());
     const isAvailable = item.available !== false;
     return matchesCategory && matchesSearch && isAvailable;
   });
 
   return (
     <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20">
-      
+
       {/* Search & Category Tabs sticky header */}
       <nav className="sticky top-12 lg:top-0 bg-gradient-to-b from-[#FBF7EE] to-[#F7F2E2] z-25 border-b border-[#D4AF37]/15 shadow-[0_8px_30px_rgba(212,175,55,0.03)]">
         <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-8 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -58,16 +58,20 @@ export default function MenuPage({ onCartToggle }) {
           {/* Table Header Details (Clean & Premium Editorial) */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-left">
             <span className="font-label-caps text-[10px] text-saffron-gold tracking-[0.2em] font-semibold uppercase">
-              DIGITAL MENU
+              {previewMode ? 'OUR MENU' : 'DIGITAL MENU'}
             </span>
-            <span className="hidden sm:inline opacity-30 text-xs text-subtle-text">•</span>
-            <span className="font-serif text-lg text-ink-navy italic font-medium">
-              {sectionName}
-            </span>
-            <span className="hidden sm:inline opacity-30 text-xs text-subtle-text">•</span>
-            <span className="font-label-caps text-xs text-saffron-gold font-bold tracking-widest uppercase">
-              TABLE {tableNum}
-            </span>
+            {!previewMode && (
+              <>
+                <span className="hidden sm:inline opacity-30 text-xs text-subtle-text">•</span>
+                <span className="font-serif text-lg text-ink-navy italic font-medium">
+                  {sectionName}
+                </span>
+                <span className="hidden sm:inline opacity-30 text-xs text-subtle-text">•</span>
+                <span className="font-label-caps text-xs text-saffron-gold font-bold tracking-widest uppercase">
+                  TABLE {tableNum}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Search bar */}
@@ -113,23 +117,24 @@ export default function MenuPage({ onCartToggle }) {
           <div className="lg:col-span-5 space-y-4">
             <span className="font-label-caps text-[10px] text-saffron-gold tracking-[0.3em] uppercase block">Welcome to Spice Garden</span>
             <h1 className="font-serif text-display-lg-mobile md:text-display-lg text-ink-navy leading-none italic">
-              Table {tableNum}
+              {previewMode ? 'Our Menu' : `Table ${tableNum}`}
             </h1>
             <p className="font-label-caps text-xs text-subtle-text tracking-widest uppercase">
-              {sectionName} • Summer Curations
+              {previewMode ? 'Summer Curations' : `${sectionName} • Summer Curations`}
             </p>
             <div className="h-px w-12 bg-saffron-gold my-4" />
             <p className="font-sans text-body-lg text-subtle-text max-w-md leading-relaxed">
               Our Michelin-inspired menu celebrates a century of culinary heritage, reimagined with contemporary artistry and locally sourced botanicals.
             </p>
-          </div>
-          <div className="lg:col-span-7 h-[300px] lg:h-[450px] overflow-hidden shadow-sm border border-muted-border mt-8 lg:mt-0">
-            <img 
-              className="w-full h-full object-cover grayscale-[10%]" 
-              src={getImage('interior-2.jpg')}
-              alt="Dining Experience"
-              loading="lazy"
-            />
+            {previewMode && (
+              <a
+                href="/reservation"
+                className="inline-flex items-center gap-2 font-label-caps text-xs text-ink-navy font-semibold tracking-widest uppercase border-b border-saffron-gold pb-1 hover:text-saffron-gold transition-colors"
+              >
+                Reserve a table to order online
+                <span className="material-symbols-outlined text-sm">east</span>
+              </a>
+            )}
           </div>
         </section>
 
@@ -175,7 +180,12 @@ export default function MenuPage({ onCartToggle }) {
 
                   {/* Actions */}
                   <div className="flex items-center justify-end pt-2 border-t border-muted-border/40 min-h-[50px]">
-                    {!item.available ? (
+                      {previewMode ? (
+                        <span className="font-label-caps text-[10px] text-subtle-text/60 uppercase tracking-widest px-2 py-3 flex items-center gap-2 select-none">
+                          <span className="material-symbols-outlined text-sm text-saffron-gold/70">qr_code_2</span>
+                          Order at your table
+                        </span>
+                      ) : !item.available ? (
                       <span className="font-label-caps text-xs text-subtle-text/50 uppercase tracking-widest px-6 py-3 border border-muted-border/30 bg-[#f4f3f2] select-none cursor-not-allowed">
                         Out of Stock
                       </span>
@@ -214,7 +224,7 @@ export default function MenuPage({ onCartToggle }) {
       </main>
 
       {/* Responsive Floating Cart Overlay (Desktop: bottom-right, Mobile: bottom-center) */}
-      {cartCount > 0 && (
+      {!previewMode && cartCount > 0 && (
         <div className="fixed bottom-6 right-6 lg:right-8 z-40 w-[90%] max-w-sm lg:w-80 left-1/2 -translate-x-1/2 lg:left-auto lg:translate-x-0">
           <button 
             onClick={onCartToggle}
@@ -266,7 +276,7 @@ export default function MenuPage({ onCartToggle }) {
       </AnimatePresence>
 
 
-
+      {/* Footer */}
       <Footer />
     </div>
   );
