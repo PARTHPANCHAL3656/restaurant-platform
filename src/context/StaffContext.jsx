@@ -1423,6 +1423,23 @@ export function StaffProvider({ children }) {
     }
   };
 
+  const reseedDemoMenu = async () => {
+  const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+  if (isMock) {
+      logActivity(`Demo menu synced`, `Demo prices refreshed (preview mode, no backend call made)`, 'restaurant_menu', '/staff/menu');
+      return { message: 'Preview mode: no backend call made.' };
+    }
+    try {
+      const res = await api.post('/api/menu/seed');
+      await loadAllData();
+      logActivity(`Demo menu synced`, `Refreshed built-in demo dishes to current prices (${res.data.created} created, ${res.data.updated} updated)`, 'restaurant_menu', '/staff/menu');
+      return res.data;
+    } catch (err) {
+      console.error('Error syncing demo menu:', err);
+      throw err;
+    }
+  };
+
   const updateMenuItem = async (updatedItem) => {
     const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
@@ -1508,6 +1525,7 @@ export function StaffProvider({ children }) {
       finalizeTableBill,
       addGuestToQueue,
       addMenuItem,
+      reseedDemoMenu,
       updateMenuItem,
       deleteMenuItem,
       releaseTable,

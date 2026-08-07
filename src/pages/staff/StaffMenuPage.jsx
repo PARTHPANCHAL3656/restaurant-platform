@@ -6,7 +6,7 @@ import { getImage } from '../../utils/assetHelper';
 import { formatINR } from '../../utils/currency';
 
 export default function StaffMenuPage() {
-  const { menuItems, addMenuItem, updateMenuItem, deleteMenuItem } = useStaff();
+  const { menuItems, addMenuItem, updateMenuItem, deleteMenuItem, reseedDemoMenu } = useStaff();
 
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,6 +67,14 @@ export default function StaffMenuPage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   const categories = ['All', 'Starters', 'Mains', 'Rice & Biryani', 'Breads', 'Desserts', 'Signature Cocktails'];
+
+  const [isResyncing, setIsResyncing] = useState(false);
+  const handleResyncDemoMenu = async () => {
+    const confirmed = window.confirm("This refreshes prices/details on the built-in demo dishes only (matched by name). Any custom dishes you've added yourself are never touched. Continue?");
+    if (!confirmed) return;
+    setIsResyncing(true);
+    try { await reseedDemoMenu(); } catch { alert('Sync failed, check console for details.'); } finally { setIsResyncing(false); }
+  };
 
   // Handle opening drawers
   const handleOpenAdd = () => {
@@ -258,6 +266,10 @@ export default function StaffMenuPage() {
                 >
                   <span className="material-symbols-outlined text-lg">add</span>
                   Add New Dish
+                </button>
+                <button onClick={handleResyncDemoMenu} disabled={isResyncing} title="Refreshes the built-in demo dishes to their current  default prices. Does not touch dishes you've added yourself." className="h-[56px] px-5 border border-[#E5E1DA] text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:border-saffron-gold transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span className={`material-symbols-outlined text-lg ${isResyncing ? 'animate-spin' : ''}`}>sync</span>
+                  {isResyncing ? 'Syncing...' : 'Sync Demo Prices'}
                 </button>
               </div>
             </div>

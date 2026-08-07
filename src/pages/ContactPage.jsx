@@ -25,7 +25,7 @@ export default function ContactPage() {
           </div>
           <div className="lg:col-span-5 lg:pb-4">
             <p className="font-sans text-body-lg text-subtle-text max-w-md leading-relaxed">
-              Experience the finest modern Indian cuisine in the heart of London. Join us for an unforgettable culinary journey.
+              Experience the finest modern Indian cuisine in the heart of Vadodara. Join us for an unforgettable culinary journey.
             </p>
           </div>
         </div>

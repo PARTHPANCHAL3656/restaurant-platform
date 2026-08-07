@@ -73,12 +73,21 @@ const DEFAULT_MENU = [
 
 export const seedMenuItems = async (req, res) => {
   try {
-    const count = await MenuItem.countDocuments()
-    if (count > 0) return res.status(400).json({ message: "Menu already seeded. Delete existing items first if you want to reseed." })
+    const bulkOps = DEFAULT_MENU.map((dish) => ({
+      updateOne: {
+        filter: { name: dish.name },
+        update: { $set: dish },
+        upsert: true
+      }
+    }))
 
-    const items = await MenuItem.insertMany(DEFAULT_MENU)
+    const result = await MenuItem.bulkWrite(bulkOps)
     if (io) io.emit("menu:updated", { action: "seed" })
-    res.json({ message: `Seeded ${items.length} menu items.` })
+    res.json({
+      message: `Synced ${DEFAULT_MENU.length} demo menu items.`,
+      created: result.upsertedCount,
+      updated: result.modifiedCount
+    })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
