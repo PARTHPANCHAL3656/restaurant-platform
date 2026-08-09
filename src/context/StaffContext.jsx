@@ -76,6 +76,7 @@ export function StaffProvider({ children }) {
 
   // Centralized Menu Catalog state (22 active dishes across 6 categories)
   const [menuItems, setMenuItems] = useState([]);
+  const [isMenuLoading, setIsMenuLoading] = useState(true);
   // const [menuItems, setMenuItems] = useState([
   //   // STARTERS
   //   {

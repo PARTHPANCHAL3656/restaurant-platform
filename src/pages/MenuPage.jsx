@@ -10,7 +10,7 @@ import { formatINR } from '../utils/currency';
 const CATEGORIES = ['Starters', 'Mains', 'Rice & Biryani', 'Breads', 'Desserts', 'Signature Cocktails'];
 
 export default function MenuPage({ onCartToggle }) {
-  const { menuItems } = useStaff();
+  const { menuItems, isMenuLoading } = useStaff();
   const { cartItems, addToCart, removeFromCart, getSubtotal, tableNumber, tableToken, sessionExpired, setSessionExpired } = useCart();
   const previewMode = !tableToken;
   const [selectedCategory, setSelectedCategory] = useState('Starters');
