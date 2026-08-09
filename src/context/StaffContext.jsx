@@ -75,336 +75,337 @@ export function StaffProvider({ children }) {
   });
 
   // Centralized Menu Catalog state (22 active dishes across 6 categories)
-  const [menuItems, setMenuItems] = useState([
-    // STARTERS
-    {
-      id: 'paneer-tikka',
-      name: 'Signature Paneer Tikka',
-      price: 22.00,
-      category: 'Starters',
-      tag: 'Classic',
-      description: 'Charcoal grilled cottage cheese, spiced yogurt marinade, bell peppers, mint chutney.',
-      image: 'signature-paneer-tikka.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '15 min',
-      spiceLevel: 'Medium'
-    },
-    {
-      id: 'hara-bhara-kebab',
-      name: 'Hara Bhara Kebab',
-      price: 18.00,
-      category: 'Starters',
-      tag: 'Veg Delight',
-      description: 'Pan-seared patties of spinach, green peas, and potatoes, spiced with aromatic herbs.',
-      image: 'hara-bhara-kebab.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '15 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'croquettes',
-      name: 'Golden Cheese Croquettes',
-      price: 16.00,
-      category: 'Starters',
-      tag: 'Crunchy',
-      description: 'Crispy spiced potato shell stuffed with melted mozzarella, cheddar, and fresh herbs.',
-      image: 'golden-cheese-croquettes.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '15 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'truffle-paneer',
-      name: 'Malai Truffle Paneer',
-      price: 26.00,
-      category: 'Starters',
-      tag: 'Veg Signature',
-      description: 'Hand-pressed cottage cheese marinated in a delicate truffle-infused cream and white pepper, char-grilled.',
-      image: 'malai-truffle-paneer.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '20 min',
-      spiceLevel: 'Medium'
-    },
-    {
-      id: 'scallops',
-      name: 'Saffron Infused Scallops',
-      price: 24.00,
-      category: 'Starters',
-      tag: 'Signature',
-      description: 'Wild caught scallops, smooth green pea purée, and a tangy pomegranate reduction.',
-      image: 'saffron-infused-scallops.jpg',
-      available: true,
-      special: true,
-      foodType: 'Non Vegetarian',
-      prepTime: '15 min',
-      spiceLevel: 'Mild'
-    },
-    // MAINS
-    {
-      id: 'makhani-murgh',
-      name: 'Royal Makhani Murgh',
-      price: 32.00,
-      category: 'Mains',
-      tag: 'Chef Special',
-      description: 'Slow-cooked tandoori chicken in a velvet-smooth tomato and cashew reduction, finished with fenugreek and cultured butter.',
-      image: 'royal-makhani-murgh.jpg',
-      available: true,
-      special: true,
-      foodType: 'Non Vegetarian',
-      prepTime: '30 min',
-      spiceLevel: 'Medium'
-    },
-    {
-      id: 'glazed-quail',
-      name: 'Truffle Glazed Quail',
-      price: 58.00,
-      category: 'Mains',
-      tag: 'Awadhi Heritage',
-      description: 'Tender quail roasted with a black truffle glaze, cracked coriander seeds, and caramelized wild forest honey.',
-      image: 'truffle-glazed-quail.jpg',
-      available: true,
-      special: false,
-      foodType: 'Non Vegetarian',
-      prepTime: '45 min',
-      spiceLevel: 'Hot'
-    },
-    {
-      id: 'kofta-royale',
-      name: 'Malai Kofta Royale',
-      price: 28.00,
-      category: 'Mains',
-      tag: 'Classic Veg',
-      description: 'Cottage cheese dumplings stuffed with dry fruits, served in a rich cashew onion gravy.',
-      image: 'malai-kofta-royale.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '25 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'dal-makhani',
-      name: 'Dal Makhani',
-      price: 20.00,
-      category: 'Mains',
-      tag: 'Classic',
-      description: 'Black lentils slow-cooked overnight with cream, butter, tomato purée, and house spices.',
-      image: 'dal-makhani.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '20 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'palak-paneer',
-      name: 'Palak Paneer',
-      price: 22.00,
-      category: 'Mains',
-      tag: 'Classic',
-      description: 'Fresh cottage cheese cubes simmered in a spiced spinach gravy, touched with fresh cream.',
-      image: 'palak-paneer.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '20 min',
-      spiceLevel: 'Medium'
-    },
-    // RICE & BIRYANI
-    {
-      id: 'veg-biryani',
-      name: 'Royal Dum Veg Biryani',
-      price: 28.00,
-      category: 'Rice & Biryani',
-      tag: 'Royal Veg',
-      description: 'Slow-cooked basmati rice with assorted seasonal vegetables, mint, and saffron.',
-      image: 'royal-dum-veg-biryani.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '30 min',
-      spiceLevel: 'Medium'
-    },
-    {
-      id: 'mutton-biryani',
-      name: 'Nawabi Mutton Biryani',
-      price: 38.00,
-      category: 'Rice & Biryani',
-      tag: 'Awadhi Heritage',
-      description: 'Aromatic basmati rice layered with tender lamb, house-secret spices, and saffron, dum-cooked for six hours.',
-      image: 'nawabi-mutton-biryani.jpg',
-      available: true,
-      special: false,
-      foodType: 'Non Vegetarian',
-      prepTime: '45 min',
-      spiceLevel: 'Medium'
-    },
-    {
-      id: 'jeera-rice',
-      name: 'Jeera Rice',
-      price: 12.00,
-      category: 'Rice & Biryani',
-      tag: 'Simple Side',
-      description: 'Long grain basmati rice tempered with cumin seeds and fresh ghee.',
-      image: 'jeera-rice.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '15 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'kashmiri-pulao',
-      name: 'Kashmiri Pulao',
-      price: 16.00,
-      category: 'Rice & Biryani',
-      tag: 'Fragrant',
-      description: 'Saffron-scented pulao loaded with walnuts, almonds, raisins, and fresh pomegranate.',
-      image: 'kashmiri-pulao.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '15 min',
-      spiceLevel: 'Mild'
-    },
-    // BREADS
-    {
-      id: 'butter-naan',
-      name: 'Butter Naan',
-      price: 5.00,
-      category: 'Breads',
-      tag: 'Freshly Baked',
-      description: 'Traditional leavened flatbread baked in the tandoor, brushed with rich butter.',
-      image: 'butter-naan.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '10 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'garlic-naan',
-      name: 'Garlic Naan',
-      price: 6.00,
-      category: 'Breads',
-      tag: 'Freshly Baked',
-      description: 'Traditional leavened flatbread topped with minced garlic and coriander.',
-      image: 'garlic-naan.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '10 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'paratha',
-      name: 'Laccha Paratha',
-      price: 7.00,
-      category: 'Breads',
-      tag: 'Layered',
-      description: 'Crispy, multi-layered whole wheat flatbread roasted in the tandoor.',
-      image: 'laccha-paratha.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '10 min',
-      spiceLevel: 'Mild'
-    },
-    // DESSERTS
-    {
-      id: 'brownie',
-      name: 'Belgian Chocolate Brownie',
-      price: 14.00,
-      category: 'Desserts',
-      tag: 'Decadent',
-      description: 'Warm, gooey Belgian chocolate brownie served with a scoop of Madagascar vanilla bean gelato.',
-      image: 'belgian-chocolate-brownie.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '10 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'panna-cotta',
-      name: 'Golden Leaf Panna Cotta',
-      price: 15.00,
-      category: 'Desserts',
-      tag: 'Signature',
-      description: 'Creamy vanilla bean panna cotta topped with organic rose water reduction and 24k gold leaf details.',
-      image: 'golden-leaf-panna-cotta.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '10 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'rose-mahal',
-      name: 'Saffron Rose Mahal',
-      price: 18.00,
-      category: 'Desserts',
-      tag: 'Michelin Style',
-      description: 'A deconstructed dessert featuring rose-scented milk reduction, Iranian saffron strands, and 24k edible gold leaf.',
-      image: 'saffron-rose-mahal.jpg',
-      available: true,
-      special: true,
-      foodType: 'Vegetarian',
-      prepTime: '15 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'gulab-jamun',
-      name: 'Gulab Jamun',
-      price: 10.00,
-      category: 'Desserts',
-      tag: 'Traditional',
-      description: 'Warm dumplings made of milk solids, soaked in cardamom-flavored rose water syrup.',
-      image: 'gulab-jamun.jpg',
-      available: true,
-      special: false,
-      foodType: 'Vegetarian',
-      prepTime: '10 min',
-      spiceLevel: 'Mild'
-    },
-    // SIGNATURE COCKTAILS
-    {
-      id: 'garden-elixir',
-      name: 'The Garden Elixir',
-      price: 18.00,
-      category: 'Signature Cocktails',
-      tag: 'Mixology',
-      description: 'Botanical gin, elderflower liqueur, cucumber cloud, fresh garden mint, and organic sparkling tonic.',
-      image: 'garden-elixir.jpg',
-      available: true,
-      special: true,
-      foodType: 'Vegan',
-      prepTime: '10 min',
-      spiceLevel: 'Mild'
-    },
-    {
-      id: 'krug-champagne',
-      name: 'Vintage Krug 2008',
-      price: 240.00,
-      category: 'Signature Cocktails',
-      tag: 'Sommelier Pick',
-      description: 'Rare vintage champagne with toasted notes, vibrant citrus acidity, and an incredibly smooth, creamy finish.',
-      image: 'vintage-krug-2008.jpg',
-      available: true,
-      special: true,
-      foodType: 'Vegan',
-      prepTime: '10 min',
-      spiceLevel: 'Mild'
-    }
-  ]);
+  const [menuItems, setMenuItems] = useState([]);
+  // const [menuItems, setMenuItems] = useState([
+  //   // STARTERS
+  //   {
+  //     id: 'paneer-tikka',
+  //     name: 'Signature Paneer Tikka',
+  //     price: 22.00,
+  //     category: 'Starters',
+  //     tag: 'Classic',
+  //     description: 'Charcoal grilled cottage cheese, spiced yogurt marinade, bell peppers, mint chutney.',
+  //     image: 'signature-paneer-tikka.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '15 min',
+  //     spiceLevel: 'Medium'
+  //   },
+  //   {
+  //     id: 'hara-bhara-kebab',
+  //     name: 'Hara Bhara Kebab',
+  //     price: 18.00,
+  //     category: 'Starters',
+  //     tag: 'Veg Delight',
+  //     description: 'Pan-seared patties of spinach, green peas, and potatoes, spiced with aromatic herbs.',
+  //     image: 'hara-bhara-kebab.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '15 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'croquettes',
+  //     name: 'Golden Cheese Croquettes',
+  //     price: 16.00,
+  //     category: 'Starters',
+  //     tag: 'Crunchy',
+  //     description: 'Crispy spiced potato shell stuffed with melted mozzarella, cheddar, and fresh herbs.',
+  //     image: 'golden-cheese-croquettes.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '15 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'truffle-paneer',
+  //     name: 'Malai Truffle Paneer',
+  //     price: 26.00,
+  //     category: 'Starters',
+  //     tag: 'Veg Signature',
+  //     description: 'Hand-pressed cottage cheese marinated in a delicate truffle-infused cream and white pepper, char-grilled.',
+  //     image: 'malai-truffle-paneer.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '20 min',
+  //     spiceLevel: 'Medium'
+  //   },
+  //   {
+  //     id: 'scallops',
+  //     name: 'Saffron Infused Scallops',
+  //     price: 24.00,
+  //     category: 'Starters',
+  //     tag: 'Signature',
+  //     description: 'Wild caught scallops, smooth green pea purée, and a tangy pomegranate reduction.',
+  //     image: 'saffron-infused-scallops.jpg',
+  //     available: true,
+  //     special: true,
+  //     foodType: 'Non Vegetarian',
+  //     prepTime: '15 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   // MAINS
+  //   {
+  //     id: 'makhani-murgh',
+  //     name: 'Royal Makhani Murgh',
+  //     price: 32.00,
+  //     category: 'Mains',
+  //     tag: 'Chef Special',
+  //     description: 'Slow-cooked tandoori chicken in a velvet-smooth tomato and cashew reduction, finished with fenugreek and cultured butter.',
+  //     image: 'royal-makhani-murgh.jpg',
+  //     available: true,
+  //     special: true,
+  //     foodType: 'Non Vegetarian',
+  //     prepTime: '30 min',
+  //     spiceLevel: 'Medium'
+  //   },
+  //   {
+  //     id: 'glazed-quail',
+  //     name: 'Truffle Glazed Quail',
+  //     price: 58.00,
+  //     category: 'Mains',
+  //     tag: 'Awadhi Heritage',
+  //     description: 'Tender quail roasted with a black truffle glaze, cracked coriander seeds, and caramelized wild forest honey.',
+  //     image: 'truffle-glazed-quail.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Non Vegetarian',
+  //     prepTime: '45 min',
+  //     spiceLevel: 'Hot'
+  //   },
+  //   {
+  //     id: 'kofta-royale',
+  //     name: 'Malai Kofta Royale',
+  //     price: 28.00,
+  //     category: 'Mains',
+  //     tag: 'Classic Veg',
+  //     description: 'Cottage cheese dumplings stuffed with dry fruits, served in a rich cashew onion gravy.',
+  //     image: 'malai-kofta-royale.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '25 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'dal-makhani',
+  //     name: 'Dal Makhani',
+  //     price: 20.00,
+  //     category: 'Mains',
+  //     tag: 'Classic',
+  //     description: 'Black lentils slow-cooked overnight with cream, butter, tomato purée, and house spices.',
+  //     image: 'dal-makhani.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '20 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'palak-paneer',
+  //     name: 'Palak Paneer',
+  //     price: 22.00,
+  //     category: 'Mains',
+  //     tag: 'Classic',
+  //     description: 'Fresh cottage cheese cubes simmered in a spiced spinach gravy, touched with fresh cream.',
+  //     image: 'palak-paneer.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '20 min',
+  //     spiceLevel: 'Medium'
+  //   },
+  //   // RICE & BIRYANI
+  //   {
+  //     id: 'veg-biryani',
+  //     name: 'Royal Dum Veg Biryani',
+  //     price: 28.00,
+  //     category: 'Rice & Biryani',
+  //     tag: 'Royal Veg',
+  //     description: 'Slow-cooked basmati rice with assorted seasonal vegetables, mint, and saffron.',
+  //     image: 'royal-dum-veg-biryani.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '30 min',
+  //     spiceLevel: 'Medium'
+  //   },
+  //   {
+  //     id: 'mutton-biryani',
+  //     name: 'Nawabi Mutton Biryani',
+  //     price: 38.00,
+  //     category: 'Rice & Biryani',
+  //     tag: 'Awadhi Heritage',
+  //     description: 'Aromatic basmati rice layered with tender lamb, house-secret spices, and saffron, dum-cooked for six hours.',
+  //     image: 'nawabi-mutton-biryani.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Non Vegetarian',
+  //     prepTime: '45 min',
+  //     spiceLevel: 'Medium'
+  //   },
+  //   {
+  //     id: 'jeera-rice',
+  //     name: 'Jeera Rice',
+  //     price: 12.00,
+  //     category: 'Rice & Biryani',
+  //     tag: 'Simple Side',
+  //     description: 'Long grain basmati rice tempered with cumin seeds and fresh ghee.',
+  //     image: 'jeera-rice.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '15 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'kashmiri-pulao',
+  //     name: 'Kashmiri Pulao',
+  //     price: 16.00,
+  //     category: 'Rice & Biryani',
+  //     tag: 'Fragrant',
+  //     description: 'Saffron-scented pulao loaded with walnuts, almonds, raisins, and fresh pomegranate.',
+  //     image: 'kashmiri-pulao.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '15 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   // BREADS
+  //   {
+  //     id: 'butter-naan',
+  //     name: 'Butter Naan',
+  //     price: 5.00,
+  //     category: 'Breads',
+  //     tag: 'Freshly Baked',
+  //     description: 'Traditional leavened flatbread baked in the tandoor, brushed with rich butter.',
+  //     image: 'butter-naan.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '10 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'garlic-naan',
+  //     name: 'Garlic Naan',
+  //     price: 6.00,
+  //     category: 'Breads',
+  //     tag: 'Freshly Baked',
+  //     description: 'Traditional leavened flatbread topped with minced garlic and coriander.',
+  //     image: 'garlic-naan.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '10 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'paratha',
+  //     name: 'Laccha Paratha',
+  //     price: 7.00,
+  //     category: 'Breads',
+  //     tag: 'Layered',
+  //     description: 'Crispy, multi-layered whole wheat flatbread roasted in the tandoor.',
+  //     image: 'laccha-paratha.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '10 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   // DESSERTS
+  //   {
+  //     id: 'brownie',
+  //     name: 'Belgian Chocolate Brownie',
+  //     price: 14.00,
+  //     category: 'Desserts',
+  //     tag: 'Decadent',
+  //     description: 'Warm, gooey Belgian chocolate brownie served with a scoop of Madagascar vanilla bean gelato.',
+  //     image: 'belgian-chocolate-brownie.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '10 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'panna-cotta',
+  //     name: 'Golden Leaf Panna Cotta',
+  //     price: 15.00,
+  //     category: 'Desserts',
+  //     tag: 'Signature',
+  //     description: 'Creamy vanilla bean panna cotta topped with organic rose water reduction and 24k gold leaf details.',
+  //     image: 'golden-leaf-panna-cotta.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '10 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'rose-mahal',
+  //     name: 'Saffron Rose Mahal',
+  //     price: 18.00,
+  //     category: 'Desserts',
+  //     tag: 'Michelin Style',
+  //     description: 'A deconstructed dessert featuring rose-scented milk reduction, Iranian saffron strands, and 24k edible gold leaf.',
+  //     image: 'saffron-rose-mahal.jpg',
+  //     available: true,
+  //     special: true,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '15 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'gulab-jamun',
+  //     name: 'Gulab Jamun',
+  //     price: 10.00,
+  //     category: 'Desserts',
+  //     tag: 'Traditional',
+  //     description: 'Warm dumplings made of milk solids, soaked in cardamom-flavored rose water syrup.',
+  //     image: 'gulab-jamun.jpg',
+  //     available: true,
+  //     special: false,
+  //     foodType: 'Vegetarian',
+  //     prepTime: '10 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   // SIGNATURE COCKTAILS
+  //   {
+  //     id: 'garden-elixir',
+  //     name: 'The Garden Elixir',
+  //     price: 18.00,
+  //     category: 'Signature Cocktails',
+  //     tag: 'Mixology',
+  //     description: 'Botanical gin, elderflower liqueur, cucumber cloud, fresh garden mint, and organic sparkling tonic.',
+  //     image: 'garden-elixir.jpg',
+  //     available: true,
+  //     special: true,
+  //     foodType: 'Vegan',
+  //     prepTime: '10 min',
+  //     spiceLevel: 'Mild'
+  //   },
+  //   {
+  //     id: 'krug-champagne',
+  //     name: 'Vintage Krug 2008',
+  //     price: 240.00,
+  //     category: 'Signature Cocktails',
+  //     tag: 'Sommelier Pick',
+  //     description: 'Rare vintage champagne with toasted notes, vibrant citrus acidity, and an incredibly smooth, creamy finish.',
+  //     image: 'vintage-krug-2008.jpg',
+  //     available: true,
+  //     special: true,
+  //     foodType: 'Vegan',
+  //     prepTime: '10 min',
+  //     spiceLevel: 'Mild'
+  //   }
+  // ]);
 
   // Unified Tables Floor Map state
   const [tables, setTables] = useState([]);
@@ -659,19 +660,24 @@ export function StaffProvider({ children }) {
   }, []);
 
   const loadPublicData = useCallback(async () => {
-    if (isFetchingPublicRef.current) return;
-    isFetchingPublicRef.current = true;
-    
-    try {
-      const rawMenuItems = await fetchMenuItems();
-      if (rawMenuItems && rawMenuItems.length > 0) {
-        setMenuItems(rawMenuItems);
-      }
-    } catch (err) {
-      console.warn('Failed to fetch public menu data. Falling back to local mock data.', err);
-    } finally {
-      isFetchingPublicRef.current = false;
+  if (isFetchingPublicRef.current) return;
+  isFetchingPublicRef.current = true;
+
+  try {
+    const rawMenuItems = await fetchMenuItems();
+    if (rawMenuItems && rawMenuItems.length > 0) {
+      setMenuItems(rawMenuItems);
     }
+  } catch (err) {
+    console.error('Menu fetch failed, retrying in 3s:', err);
+    setTimeout(() => {
+      isFetchingPublicRef.current = false;
+      loadPublicData();
+    }, 3000);
+    return;
+  } finally {
+    isFetchingPublicRef.current = false;
+  }
   }, [fetchMenuItems]);
 
   const loadStaffData = useCallback(async () => {
