@@ -38,6 +38,10 @@ const invoiceSchema = new mongoose.Schema({
     type: String,
     default: "Guest"
   },
+  guestPhone: {
+    type: String,
+    default: ""
+  },
   items: [invoiceItemSchema],
   subtotal: { type: Number, required: true },
   serviceCharge: { type: Number, required: true },

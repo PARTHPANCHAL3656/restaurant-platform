@@ -7,7 +7,7 @@ import { io } from "../index.js"
 export const addItems = async (req, res) => {
   try {
     const { tableId, sessionId } = req.tableSession
-    const { items } = req.body
+    const { items, guestPhone } = req.body
 
     if (!items || items.length === 0) {
       return res.status(400).json({ error: "No items provided." })
@@ -18,6 +18,12 @@ export const addItems = async (req, res) => {
 
     if (!order) {
       return res.status(404).json({ error: "No active order found for this table." })
+    }
+
+    // Only set on first capture - never overwrite a phone we already have
+    // (e.g. one already copied in from a reservation)
+    if (guestPhone && !order.guestPhone) {
+      order.guestPhone = guestPhone
     }
 
     const round = order.currentRound

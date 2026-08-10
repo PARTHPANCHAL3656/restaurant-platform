@@ -2,6 +2,8 @@ import Invoice from "../models/Invoice.js"
 import Table from "../models/Table.js"
 import Order from "../models/Order.js"
 import Reservation from "../models/Reservation.js"
+import Customer from "../models/Customer.js"
+import { normalizePhone } from "../utils/normalizePhone.js"
 import { io } from "../index.js"
 
 // POST /api/invoices/table/:id
@@ -44,6 +46,7 @@ export const generateInvoiceForTable = async (req, res) => {
       tableId: table._id,
       tableNumber: table.tableNumber,
       guestName: table.guestName || "Guest",
+      guestPhone: order.guestPhone || "",
       items: order.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
       subtotal,
       serviceCharge,
@@ -94,10 +97,26 @@ export const updateInvoiceStatus = async (req, res) => {
     if (status) update.status = status
     if (paymentMethod) update.paymentMethod = paymentMethod
 
+    const wasAlreadyPaid = (await Invoice.findById(req.params.id))?.status === "paid"
+
     const invoice = await Invoice.findByIdAndUpdate(req.params.id, update, { new: true })
     if (!invoice) return res.status(404).json({ error: "Invoice not found." })
 
     if (invoice.status === "paid") {
+      // Only record a visit the first time this invoice is marked paid -
+      // guards against double-counting if staff toggle status back and forth.
+      const phone = normalizePhone(invoice.guestPhone)
+      if (phone && !wasAlreadyPaid) {
+        await Customer.findOneAndUpdate(
+          { phone },
+          {
+            $set: { name: invoice.guestName || "", lastVisit: new Date() },
+            $setOnInsert: { firstVisit: new Date() },
+            $inc: { visitCount: 1, totalSpend: invoice.total }
+          },
+          { upsert: true, new: true }
+        )
+      }
       io.emit("invoice:paid", invoice)
     } else {
       io.emit("invoice:updated", invoice)

@@ -264,7 +264,7 @@ export function CartProvider({ children }) {
     return sub + getServiceCharge(sub) + getGST(sub);
   };
 
-  const placeOrder = async () => {
+  const placeOrder = async (guestPhone) => {
     if (cartItems.length === 0) return;
     
     try {
@@ -276,12 +276,18 @@ export function CartProvider({ children }) {
           qty: item.quantity
         }))
       };
+      if (guestPhone) {
+        payload.guestPhone = guestPhone;
+      }
       
       const response = await api.post('/api/orders/add-items', payload);
       const order = response.data.order;
       if (order && order._id) {
         setOrderId(order._id);
         localStorage.setItem('lastOrderId', order._id);
+      }
+      if (guestPhone) {
+        sessionStorage.setItem('guestPhoneCaptured', 'true');
       }
       clearCart();
     } catch (err) {

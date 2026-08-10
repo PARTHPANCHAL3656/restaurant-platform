@@ -46,6 +46,10 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  guestPhone: {
+    type: String,
+    default: ""
+  },
   reservationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Reservation",

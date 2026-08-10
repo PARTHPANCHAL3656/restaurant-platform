@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Footer from '../components/Footer';
@@ -25,8 +25,12 @@ export default function CartPage() {
   const gst = getGST(subtotal);
   const total = getGrandTotal();
 
+  // Only ask once per table session - skip the field entirely on "order more" rounds
+  const alreadyCaptured = sessionStorage.getItem('guestPhoneCaptured') === 'true';
+  const [phoneInput, setPhoneInput] = useState('');
+
   const handleCheckout = () => {
-    placeOrder();
+    placeOrder(alreadyCaptured ? undefined : phoneInput.trim());
     navigate('/order-status');
   };
 
@@ -143,6 +147,18 @@ export default function CartPage() {
                   <span className="text-saffron-gold text-2xl">{formatINR(total)}</span>
                 </div>
               </div>
+
+              {!alreadyCaptured && (
+                <div className="pt-2">
+                  <input
+                    type="tel"
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    placeholder="Phone number (optional) - to track your order status"
+                    className="w-full bg-transparent border-b border-[#D4AF37]/20 py-2 focus:outline-none focus:border-saffron-gold font-body-md text-sm placeholder:text-subtle-text/40 placeholder:italic text-ink-navy outline-none"
+                  />
+                </div>
+              )}
 
               <div className="flex flex-col space-y-4 pt-4">
                 <button 

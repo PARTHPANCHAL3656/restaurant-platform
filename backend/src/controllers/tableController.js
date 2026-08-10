@@ -59,6 +59,7 @@ export const assignTable = async (req, res) => {
 
     const { reservationId } = req.body
     let guestName = `Table ${table.tableNumber} Guest`
+    let guestPhone = ""
     let guestCount = 2
     let notes = ""
     let resId = null
@@ -71,6 +72,7 @@ export const assignTable = async (req, res) => {
         await reservation.save()
 
         guestName = reservation.name
+        guestPhone = reservation.phone || ""
         guestCount = reservation.guests
         notes = reservation.notes || ""
         resId = reservation._id
@@ -87,6 +89,7 @@ export const assignTable = async (req, res) => {
       items: [],
       status: "Received",
       guestName,
+      guestPhone,
       reservationId: resId
     })
 
