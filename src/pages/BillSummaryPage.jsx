@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
 import { useCart } from '../context/CartContext';
 import BrandLogo from '../components/BrandLogo';

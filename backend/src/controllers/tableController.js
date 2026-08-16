@@ -132,7 +132,14 @@ export const freeTable = async (req, res) => {
 
     // Verify invoice is paid before freeing, if there was a session
     if (table.currentSessionId) {
+      const order = table.currentOrderId ? await Order.findById(table.currentOrderId) : null
+      const hasUnbilledItems = order && order.items && order.items.length > 0
+
       const invoice = await Invoice.findOne({ sessionId: table.currentSessionId })
+
+      if (hasUnbilledItems && !invoice) {
+        return res.status(400).json({ error: "This table has unbilled items. Generate an invoice before releasing the table." })
+      }
       if (invoice && invoice.status !== "paid") {
         return res.status(400).json({ error: "Cannot release table. Invoice has not been paid." })
       }
