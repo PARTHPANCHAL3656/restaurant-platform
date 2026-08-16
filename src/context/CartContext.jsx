@@ -12,7 +12,7 @@ export function useCart() {
 export function CartProvider({ children }) {
   const { orders, addOrder } = useStaff();
   const [cartItems, setCartItems] = useState([]);
-  const [orderId, setOrderId] = useState(() => localStorage.getItem('lastOrderId') || null);
+  const [orderId, setOrderId] = useState(() => sessionStorage.getItem('lastOrderId') || null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [tableId, setTableId] = useState(null);
   const [tableSessionId, setTableSessionId] = useState(null);
@@ -37,11 +37,12 @@ export function CartProvider({ children }) {
     const urlToken = new URLSearchParams(window.location.search).get('token');
     if (urlToken) {
       sessionStorage.setItem('tableToken', urlToken);
+      window.history.replaceState({}, '', window.location.pathname);
       return urlToken;
     }
     return sessionStorage.getItem('tableToken') || '';
   });
-
+  
   const [tableNumber, setTableNumber] = useState(() => {
     const urlToken = new URLSearchParams(window.location.search).get('token');
     const token = urlToken || sessionStorage.getItem('tableToken');
@@ -123,7 +124,7 @@ export function CartProvider({ children }) {
   // Session reset
   useEffect(() => {
     if (sessionExpired) {
-      localStorage.removeItem('lastOrderId');
+      sessionStorage.removeItem('lastOrderId');
       localStorage.removeItem('lastReservationId');
       localStorage.removeItem('reservationId');
       sessionStorage.removeItem('tableToken');
@@ -284,7 +285,7 @@ export function CartProvider({ children }) {
       const order = response.data.order;
       if (order && order._id) {
         setOrderId(order._id);
-        localStorage.setItem('lastOrderId', order._id);
+        sessionStorage.setItem('lastOrderId', order._id);
       }
       if (guestPhone) {
         sessionStorage.setItem('guestPhoneCaptured', 'true');
