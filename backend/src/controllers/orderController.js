@@ -126,13 +126,17 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ error: "Invalid status value." })
     }
 
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    )
-
+    const order = await Order.findById(req.params.id)
     if (!order) return res.status(404).json({ error: "Order not found." })
+
+    order.status = status
+    if (status === "Served") {
+      // Everything ordered up to this point is now considered served.
+      // If the guest orders again later, only that new round will show
+      // as needing prep - this round won't reappear in the queue.
+      order.servedThroughRound = order.currentRound - 1
+    }
+    await order.save()
 
     // Notify customer — their status page updates live
     io.emit("order:statusChanged", {

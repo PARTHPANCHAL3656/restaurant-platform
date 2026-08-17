@@ -33,6 +33,12 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     default: 1   // increments each time customer clicks "Order More"
   },
+  // Every round up to and including this number has already been served.
+  // A new round added after this stays clearly separated in the kitchen view.
+  servedThroughRound: {
+    type: Number,
+    default: 0
+  },
   status: {
     type: String,
     enum: ["Received", "Preparing", "Ready", "Served"],

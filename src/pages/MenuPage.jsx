@@ -11,7 +11,7 @@ const CATEGORIES = ['Starters', 'Mains', 'Rice & Biryani', 'Breads', 'Desserts',
 
 export default function MenuPage({ onCartToggle }) {
   const { menuItems, isMenuLoading } = useStaff();
-  const { cartItems, addToCart, removeFromCart, getSubtotal, tableNumber, tableToken, sessionExpired, setSessionExpired } = useCart();
+  const { cartItems, addToCart, removeFromCart, getSubtotal, tableNumber, tableToken, sessionExpired, setSessionExpired, orderId } = useCart();
   const previewMode = !tableToken;
   const [selectedCategory, setSelectedCategory] = useState('Starters');
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,6 +73,16 @@ export default function MenuPage({ onCartToggle }) {
               </>
             )}
           </div>
+
+          {!previewMode && orderId && (
+            <a
+              href="/order-status"
+              className="inline-flex items-center gap-2 bg-saffron-gold/10 border border-saffron-gold/30 text-ink-navy font-label-caps text-[10px] font-bold tracking-widest uppercase px-4 py-2.5 hover:bg-saffron-gold/20 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">receipt_long</span>
+              View My Order
+            </a>
+          )}
 
           {/* Search bar */}
           <div className="relative w-full md:w-72">

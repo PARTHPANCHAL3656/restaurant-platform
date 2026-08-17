@@ -48,7 +48,7 @@ export default function StaffOrdersPage() {
                 </div>
                 <p className="text-[11px] text-subtle-text font-semibold uppercase tracking-wider">{o.section}</p>
                 <p className="text-xs text-ink-navy mt-2 line-clamp-1">
-                  {o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
+                  {o.items.filter(i => i.round > o.servedThroughRound).map(i => `${i.qty}x ${i.name}`).join(', ') || o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
                 </p>
               </div>
             ))}
@@ -78,7 +78,7 @@ export default function StaffOrdersPage() {
                 </div>
                 <p className="text-[11px] text-subtle-text font-semibold uppercase tracking-wider">{o.section}</p>
                 <p className="text-xs text-ink-navy mt-2 line-clamp-1">
-                  {o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
+                  {o.items.filter(i => i.round > o.servedThroughRound).map(i => `${i.qty}x ${i.name}`).join(', ') || o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
                 </p>
               </div>
             ))}
@@ -108,7 +108,7 @@ export default function StaffOrdersPage() {
                 </div>
                 <p className="text-[11px] text-subtle-text font-semibold uppercase tracking-wider">{o.section}</p>
                 <p className="text-xs text-ink-navy mt-2 line-clamp-1">
-                  {o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
+                  {o.items.filter(i => i.round > o.servedThroughRound).map(i => `${i.qty}x ${i.name}`).join(', ') || o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
                 </p>
               </div>
             ))}
@@ -167,9 +167,11 @@ export default function StaffOrdersPage() {
               </div>
 
               <div className="space-y-4">
-                <h4 className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest font-bold">Ordered Dishes</h4>
+                <h4 className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest font-bold">
+                  New This Round
+                </h4>
                 <ul className="space-y-3.5 text-xs text-ink-navy divide-y divide-[#E5E1DA]/50">
-                  {selectedOrder.items.map((item, idx) => (
+                  {selectedOrder.items.filter(item => item.round > selectedOrder.servedThroughRound).map((item, idx) => (
                     <li key={idx} className="flex justify-between items-center pt-3.5 first:pt-0">
                       <div>
                         <span className="font-bold text-saffron-gold mr-3">{item.qty}x</span>
@@ -184,6 +186,25 @@ export default function StaffOrdersPage() {
                     </li>
                   ))}
                 </ul>
+
+                {selectedOrder.items.some(item => item.round <= selectedOrder.servedThroughRound) && (
+                  <details className="pt-2">
+                    <summary className="font-label-caps text-[10px] text-subtle-text/70 uppercase tracking-widest font-bold cursor-pointer">
+                      Already Served (do not re-cook)
+                    </summary>
+                    <ul className="space-y-3.5 text-xs text-subtle-text/60 divide-y divide-[#E5E1DA]/50 mt-3">
+                      {selectedOrder.items.filter(item => item.round <= selectedOrder.servedThroughRound).map((item, idx) => (
+                        <li key={idx} className="flex justify-between items-center pt-3.5 first:pt-0 line-through decoration-1">
+                          <div>
+                            <span className="font-bold mr-3">{item.qty}x</span>
+                            <span className="font-medium">{item.name}</span>
+                          </div>
+                          <span className="font-bold font-mono">{formatINR((item.price * item.qty))}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
               </div>
 
               {/* Notes */}

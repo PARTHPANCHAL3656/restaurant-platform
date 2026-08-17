@@ -521,6 +521,7 @@ export function StaffProvider({ children }) {
         price: i.price,
         round: i.round
       })),
+      servedThroughRound: o.servedThroughRound || 0,
       notes: o.notes || '',
       isCustomerOrder: true,
       createdAt: o.createdAt,
