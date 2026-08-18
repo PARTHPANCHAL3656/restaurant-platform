@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Footer from '../components/Footer';
-
 import { getImage } from '../utils/assetHelper';
 import { formatINR } from '../utils/currency';
 
