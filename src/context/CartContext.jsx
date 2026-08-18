@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useStaff } from './StaffContext';
 import api from '../utils/api';
 import socket from '../utils/socket';
@@ -33,11 +33,14 @@ export function CartProvider({ children }) {
     };
   }, []);
   
+  const isFreshScanRef = useRef(false);
+
   const [tableToken, setTableToken] = useState(() => {
     const urlToken = new URLSearchParams(window.location.search).get('token');
     if (urlToken) {
       sessionStorage.setItem('tableToken', urlToken);
       window.history.replaceState({}, '', window.location.pathname);
+      isFreshScanRef.current = true;
       return urlToken;
     }
     return sessionStorage.getItem('tableToken') || '';
@@ -150,8 +153,8 @@ export function CartProvider({ children }) {
     return 'T-14';
   };
 
-  useEffect(() => {
-    if (!orderId || !tableToken) {
+    useEffect(() => {
+    if (!tableToken) {
       setActiveOrder(null);
       return;
     }
@@ -160,8 +163,18 @@ export function CartProvider({ children }) {
       try {
         const res = await api.get('/api/orders/my-order');
         setActiveOrder(res.data);
+        // Rediscover orderId if it was lost (e.g. a full tab close cleared
+        // sessionStorage) but the table session itself is still valid.
+        if (res.data && res.data._id && res.data._id !== orderId) {
+          setOrderId(res.data._id);
+          sessionStorage.setItem('lastOrderId', res.data._id);
+        }
       } catch (err) {
-        console.error('Error fetching my-order in CartContext:', err);
+        if (err.response?.status === 404) {
+          setActiveOrder(null);
+        } else {
+          console.error('Error fetching my-order in CartContext:', err);
+        }
       }
     };
 
@@ -309,6 +322,11 @@ export function CartProvider({ children }) {
       activeOrderItems,
       activeOrderTotal,
       activeOrderTime,
+      consumeFreshScan: () => {
+        const was = isFreshScanRef.current;
+        isFreshScanRef.current = false;
+        return was;
+      },
       addToCart,
       removeFromCart,
       deleteFromCart,

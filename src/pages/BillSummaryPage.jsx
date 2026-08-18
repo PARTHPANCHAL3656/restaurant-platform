@@ -36,24 +36,35 @@ export default function BillSummaryPage() {
   const gst = hasActiveOrder ? subtotal * 0.075 : 0;
   const grandTotal = hasActiveOrder ? activeOrderTotal : 0;
 
-  const handleDownloadPDF = () => {
+    const handleDownloadPDF = () => {
     const element = receiptRef.current;
     if (!element) return;
 
-    // Use html2canvas to capture the receipt element
+    // windowHeight/scrollY ensure we capture the FULL receipt regardless of
+    // where the page happens to be scrolled to when the button is tapped -
+    // without this, only whatever's in the current viewport gets captured.
     html2canvas(element, {
       scale: 2,
       useCORS: true,
-      backgroundColor: '#FDFCFB'
+      backgroundColor: '#FDFCFB',
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
+      scrollX: 0,
+      scrollY: -window.scrollY
     }).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
+      // JPEG at 0.92 quality instead of uncompressed PNG - same visual
+      // result for a receipt, a fraction of the file size.
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
       const pdf = new jsPDF('p', 'mm', 'a4');
       const imgWidth = 190;
       const pageHeight = 295;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
       pdf.save(`spice_garden_bill_${displayOrderId}.pdf`);
+    }).catch((err) => {
+      console.error('Receipt download failed:', err);
+      alert('Could not generate the receipt PDF. Please try again or ask staff for a printed copy.');
     });
   };
 
@@ -105,7 +116,7 @@ export default function BillSummaryPage() {
 
             <div className="space-y-4">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between items-start font-body-md">
+                <div key={item.name} className="flex justify-between items-start font-body-md">
                   <div className="flex flex-col">
                     <span className="font-serif text-base text-ink-navy font-semibold">{item.name}</span>
                     <span className="font-sans text-xs text-subtle-text">Qty: {String(item.quantity).padStart(2, '0')}</span>

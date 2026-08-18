@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import Footer from '../components/Footer';
@@ -11,7 +12,19 @@ const CATEGORIES = ['Starters', 'Mains', 'Rice & Biryani', 'Breads', 'Desserts',
 
 export default function MenuPage({ onCartToggle }) {
   const { menuItems, isMenuLoading } = useStaff();
-  const { cartItems, addToCart, removeFromCart, getSubtotal, tableNumber, tableToken, sessionExpired, setSessionExpired, orderId } = useCart();
+  const { cartItems, addToCart, removeFromCart, getSubtotal, tableNumber, tableToken, sessionExpired, setSessionExpired, orderId, activeOrderItems, consumeFreshScan } = useCart();
+  const navigate = useNavigate();
+  const previewMode = !tableToken;
+
+  // If this page load came from an actual QR (re)scan - not from clicking
+  // "Order More" internally - and the guest already has an order sitting
+  // here, send them straight to their order status instead of a blank menu.
+  useEffect(() => {
+    if (orderId && activeOrderItems && activeOrderItems.length > 0 && cartItems.length === 0 && consumeFreshScan()) {
+      navigate('/order-status');
+    }
+  }, [orderId, activeOrderItems, cartItems.length, consumeFreshScan, navigate]);
+  
   const previewMode = !tableToken;
   const [selectedCategory, setSelectedCategory] = useState('Starters');
   const [searchQuery, setSearchQuery] = useState('');
