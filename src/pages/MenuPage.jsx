@@ -23,9 +23,8 @@ export default function MenuPage({ onCartToggle }) {
     if (orderId && activeOrderItems && activeOrderItems.length > 0 && cartItems.length === 0 && consumeFreshScan()) {
       navigate('/order-status');
     }
-  }, [orderId, activeOrderItems, cartItems.length, consumeFreshScan, navigate]);
+    }, [orderId, activeOrderItems, cartItems.length, consumeFreshScan, navigate]);
   
-  const previewMode = !tableToken;
   const [selectedCategory, setSelectedCategory] = useState('Starters');
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState({ visible: false, itemName: '', count: 0 });
