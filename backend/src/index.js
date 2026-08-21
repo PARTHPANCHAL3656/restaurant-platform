@@ -15,6 +15,8 @@ import authRoutes from "./routes/auth.js"
 import paymentRoutes from "./routes/payments.js"
 import invoiceRoutes from "./routes/invoices.js"
 import analyticsRoutes from "./routes/analytics.js"
+import crmRoutes from "./routes/crm.js"
+
 dotenv.config()
 connectDB()
 
@@ -68,6 +70,7 @@ app.use("/api/menu", menuRoutes)
 app.use("/api/payments", paymentRoutes)
 app.use("/api/invoices", invoiceRoutes)
 app.use("/api/analytics", analyticsRoutes)
+app.use("/api/crm", crmRoutes)
 
 app.get("/", (req, res) => {
   res.json({ message: "Restaurant API is running" })
