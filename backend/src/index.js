@@ -10,10 +10,11 @@ import orderRoutes from "./routes/orders.js"
 import reservationRoutes from "./routes/reservations.js"
 import menuRoutes from "./routes/menu.js"
 import { setMenuIo } from "./controllers/menuController.js"
+
 import authRoutes from "./routes/auth.js"
 import paymentRoutes from "./routes/payments.js"
 import invoiceRoutes from "./routes/invoices.js"
-
+import analyticsRoutes from "./routes/analytics.js"
 dotenv.config()
 connectDB()
 
@@ -66,6 +67,7 @@ app.use("/api/reservations", reservationRoutes)
 app.use("/api/menu", menuRoutes)
 app.use("/api/payments", paymentRoutes)
 app.use("/api/invoices", invoiceRoutes)
+app.use("/api/analytics", analyticsRoutes)
 
 app.get("/", (req, res) => {
   res.json({ message: "Restaurant API is running" })
