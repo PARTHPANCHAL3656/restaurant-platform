@@ -55,12 +55,20 @@ export default function BillSummaryPage() {
       // JPEG at 0.92 quality instead of uncompressed PNG - same visual
       // result for a receipt, a fraction of the file size.
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
-      const pdf = new jsPDF('p', 'mm', 'a4');
       const imgWidth = 190;
-      const pageHeight = 295;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+      const margin = 10;
+
+      // Custom page sized to fit the WHOLE receipt in one page, no matter
+      // how long the order is — a fixed 'a4' page silently clipped anything
+      // past 295mm, which is why long receipts looked "cut in half."
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [imgWidth + margin * 2, imgHeight + margin * 2]
+      });
+
+      pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
       pdf.save(`spice_garden_bill_${displayOrderId}.pdf`);
     }).catch((err) => {
       console.error('Receipt download failed:', err);

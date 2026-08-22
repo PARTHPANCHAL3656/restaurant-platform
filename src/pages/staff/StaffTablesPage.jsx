@@ -384,13 +384,17 @@ export default function StaffTablesPage() {
                           <span className="text-subtle-text">Section:</span>
                           <span className="font-bold">{selectedTableId === 'T-14' ? 'Garden Terrace' : 'Dining Room'}</span>
                         </div>
-                        <div className="flex justify-between">
+                          <div className="flex justify-between">
                           <span className="text-subtle-text">Capacity:</span>
                           <span className="font-bold">{currentTable.seats} Guests</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-subtle-text">Assigned Waiter:</span>
-                          <span className="font-bold">{currentTable.waiter || 'Floor Staff'}</span>
+                          <span className="text-subtle-text">Party Size:</span>
+                          <span className="font-bold">{currentTable.guestCount || '—'} Guests</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-subtle-text">Host:</span>
+                          <span className="font-bold">{currentTable.guestName || 'Walk-in Guest'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Arrival Time:</span>

@@ -68,7 +68,7 @@ export const assignTable = async (req, res) => {
       const reservation = await Reservation.findById(reservationId)
       if (reservation) {
         reservation.status = "seated"
-        reservation.arrivalTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        reservation.arrivalTime = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })
         await reservation.save()
 
         guestName = reservation.name
@@ -100,7 +100,7 @@ export const assignTable = async (req, res) => {
     table.guestCount = guestCount
     table.notes = notes
     table.reservationId = resId
-    table.arrivalTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    table.arrivalTime = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute:'2-digit' })
     table.qrDataUrl = qrDataUrl
     table.token = token
     await table.save()

@@ -531,11 +531,17 @@ export function StaffProvider({ children }) {
       sessionId: o.sessionId || ''
     };
   }, []);
-
+  
   const mapBackendTable = useCallback((t, currentOrders) => {
     const tableStr = "T-" + String(t.tableNumber).padStart(2, '0');
-    const associatedOrder = currentOrders.find(o => o.table === tableStr && o.status !== 'served');
-    
+    // Match on the table's actual currentOrderId pointer, not order status.
+    // Matching by status !== 'served' was wrong: once the kitchen marked an
+    // order served, it silently vanished from the bill view even though the
+    // guest was still seated and the invoice hadn't been generated yet.
+    const associatedOrder = t.currentOrderId
+      ? currentOrders.find(o => o.id === t.currentOrderId)
+      : currentOrders.find(o => o.table === tableStr && o.status !== 'served');
+
     const items = associatedOrder ? associatedOrder.items : [];
     const subtotal = items.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
     const total = subtotal > 0 ? subtotal * 1.175 : 0;

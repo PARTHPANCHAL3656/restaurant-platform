@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import html2canvas from 'html2canvas-pro';
+import jsPDF from 'jspdf';
 import { useStaff } from '../../context/StaffContext';
 import { formatINR } from '../../utils/currency';
 
 export default function StaffBillingPage() {
   const { invoices, markInvoicePaid } = useStaff();
+  const receiptRef = useRef(null);
   const location = useLocation();
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(
     location.state?.selectInvoiceId || invoices[0]?.id || ''
@@ -53,8 +56,41 @@ export default function StaffBillingPage() {
     }
   };
 
-  const handleMarkAsPaid = (invoiceId) => {
-    markInvoicePaid(invoiceId);
+  const handleMarkAsPaid = (invoiceId, paymentMethod = 'Cash') => {
+    markInvoicePaid(invoiceId, paymentMethod);
+  };
+
+  // Generates a real downloadable PDF of the selected invoice — same
+  // approach as the customer-facing BillSummaryPage, sized to the actual
+  // content height so long bills don't get clipped.
+  const handleDownloadInvoiceChit = () => {
+    const element = receiptRef.current;
+    if (!element || !selectedInvoice) return;
+
+    html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#FDFCFB',
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight
+    }).then((canvas) => {
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const imgWidth = 190;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const margin = 10;
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [imgWidth + margin * 2, imgHeight + margin * 2]
+      });
+
+      pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
+      pdf.save(`spice_garden_invoice_${selectedInvoice.invoiceNumber || selectedInvoice.id}.pdf`);
+    }).catch((err) => {
+      console.error('Invoice chit download failed:', err);
+      alert('Could not generate the invoice PDF. Please try again.');
+    });
   };
 
   // Motion stagger settings
@@ -260,15 +296,23 @@ export default function StaffBillingPage() {
             {/* Actions */}
             <div className="p-6 border-t border-[#E5E1DA] bg-[#fdfcfb] space-y-3 shrink-0">
               {selectedInvoice.status !== 'paid' && (
-                <button 
-                  onClick={() => handleMarkAsPaid(selectedInvoice.id)}
-                  className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer"
-                >
-                  Mark as Paid (Direct Cash)
-                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    onClick={() => handleMarkAsPaid(selectedInvoice.id, 'Cash')}
+                    className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer"
+                  >
+                    Mark Paid (Cash)
+                  </button>
+                  <button 
+                    onClick={() => handleMarkAsPaid(selectedInvoice.id, 'Online')}
+                    className="w-full bg-ink-navy text-canvas-cream font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-125 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer"
+                  >
+                    Mark Paid (Online)
+                  </button>
+                </div>
               )}
               <button 
-                onClick={() => alert('Sending print command to reception terminal...')}
+                onClick={handleDownloadInvoiceChit}
                 className="w-full h-[56px] border border-ink-navy text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:bg-ink-navy hover:text-canvas-cream transition-all duration-300 cursor-pointer rounded-none text-center"
               >
                 Print Invoice Chit
@@ -277,6 +321,57 @@ export default function StaffBillingPage() {
           </div>
         )}
       </div>
+
+      {/* Hidden receipt template used only for PDF generation via html2canvas.
+          Rendered off-screen (not display:none) so html2canvas can lay it out. */}
+      {selectedInvoice && (
+        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+          <div ref={receiptRef} className="w-[380px] bg-[#FDFCFB] p-8 text-ink-navy font-sans">
+            <div className="text-center mb-6">
+              <h2 className="font-serif text-xl font-bold">SPICE GARDEN</h2>
+              <p className="text-[10px] text-subtle-text uppercase tracking-widest">Modern Indian Fine Dining</p>
+            </div>
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-subtle-text">Invoice</span>
+              <span className="font-bold">{selectedInvoice.invoiceNumber || selectedInvoice.id}</span>
+            </div>
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-subtle-text">Table</span>
+              <span className="font-bold">{selectedInvoice.table}</span>
+            </div>
+            <div className="flex justify-between text-xs mb-4">
+              <span className="text-subtle-text">Date</span>
+              <span className="font-bold">{selectedInvoice.date}</span>
+            </div>
+            <div className="border-t border-[#E5E1DA] pt-4 space-y-2">
+              {selectedInvoice.items.map((item, i) => (
+                <div key={i} className="flex justify-between text-xs">
+                  <span>{item.qty}x {item.name}</span>
+                  <span className="font-mono">{formatINR(item.price * item.qty)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-[#E5E1DA] mt-4 pt-4 space-y-1 text-xs">
+              <div className="flex justify-between text-subtle-text">
+                <span>Subtotal</span>
+                <span>{formatINR(selectedInvoice.subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-subtle-text">
+                <span>Service Charge</span>
+                <span>{formatINR(selectedInvoice.serviceCharge)}</span>
+              </div>
+              <div className="flex justify-between text-subtle-text">
+                <span>GST</span>
+                <span>{formatINR(selectedInvoice.gst)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-sm pt-2 border-t border-[#E5E1DA] mt-2">
+                <span>Total</span>
+                <span>{formatINR(selectedInvoice.amount)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
