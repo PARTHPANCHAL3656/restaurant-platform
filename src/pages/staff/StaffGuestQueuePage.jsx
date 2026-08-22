@@ -110,6 +110,7 @@ export default function StaffGuestQueuePage() {
                       value={newGuestData.phone} 
                       onChange={e => setNewGuestData({ ...newGuestData, phone: e.target.value })}
                       className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-2.5 text-xs outline-none" 
+                      required
                     />
                   </div>
                 </div>
