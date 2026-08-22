@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../../utils/api';
 import { formatINR } from '../../utils/currency';
+import { exportAnalyticsToExcel, exportAnalyticsToPDF } from '../../utils/analyticsExport';
 
 // Small helper: format a Mongo $dateTrunc ISO string as "12 Aug"
 const formatDay = (isoString) => {
@@ -11,9 +12,13 @@ const formatDay = (isoString) => {
 
 export default function AnalyticsOverview() {
   const [revenue, setRevenue] = useState(null);
+  const [aov, setAov] = useState(null);
+  const [footfall, setFootfall] = useState(null);
   const [items, setItems] = useState(null);
   const [rushHours, setRushHours] = useState(null);
   const [repeatCustomers, setRepeatCustomers] = useState(null);
+  const [retention, setRetention] = useState(null);
+  const [churnList, setChurnList] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -22,18 +27,26 @@ export default function AnalyticsOverview() {
 
     async function loadAnalytics() {
       try {
-        const [revenueRes, itemsRes, rushRes, crmRes] = await Promise.all([
+        const [revenueRes, aovRes, footfallRes, itemsRes, rushRes, crmRes, retentionRes, churnRes] = await Promise.all([
           api.get('/api/analytics/revenue', { params: { period: 'day', range: 14 } }),
+          api.get('/api/analytics/aov', { params: { period: 'day', range: 14 } }),
+          api.get('/api/analytics/footfall', { params: { range: 30 } }),
           api.get('/api/analytics/items', { params: { limit: 5 } }),
           api.get('/api/analytics/rush-hours'),
           api.get('/api/crm/discount-eligible'),
+          api.get('/api/crm/retention-rate'),
+          api.get('/api/crm/churn-list'),
         ]);
 
         if (cancelled) return;
         setRevenue(revenueRes.data);
+        setAov(aovRes.data);
+        setFootfall(footfallRes.data);
         setItems(itemsRes.data);
         setRushHours(rushRes.data);
         setRepeatCustomers(crmRes.data);
+        setRetention(retentionRes.data);
+        setChurnList(churnRes.data);
       } catch (err) {
         if (!cancelled) setError(err.message || 'Could not load analytics.');
       } finally {
@@ -71,8 +84,30 @@ export default function AnalyticsOverview() {
     revenue: s.revenue
   }));
 
+  // Single bundle passed to both export functions — same data already
+  // rendered on this page, just handed off as raw JSON for Part 5.
+  const exportData = { revenue, aov, footfall, rushHours, items, repeatCustomers, retention, churnList };
+
   return (
     <div className="space-y-8">
+
+      {/* Export Actions */}
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => exportAnalyticsToExcel(exportData)}
+          className="flex items-center gap-2 border border-[#D4AF37]/40 text-ink-navy font-label-caps text-[10px] uppercase tracking-wider px-4 py-2.5 hover:bg-[#D4AF37]/10 transition-colors duration-300 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-sm">table_view</span>
+          Export Excel
+        </button>
+        <button
+          onClick={() => exportAnalyticsToPDF(exportData)}
+          className="flex items-center gap-2 border border-[#D4AF37]/40 text-ink-navy font-label-caps text-[10px] uppercase tracking-wider px-4 py-2.5 hover:bg-[#D4AF37]/10 transition-colors duration-300 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+          Export PDF
+        </button>
+      </div>
 
       {/* Today vs Previous Period */}
       <div className="bg-[#FDFCFB] border border-[#D4AF37]/15 p-6 shadow-xs flex items-center justify-between">
