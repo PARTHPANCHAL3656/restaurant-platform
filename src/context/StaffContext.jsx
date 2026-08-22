@@ -526,6 +526,7 @@ export function StaffProvider({ children }) {
       isCustomerOrder: true,
       createdAt: o.createdAt,
       guestName: o.guestName || `Table ${o.tableNumber} Guest`,
+      guestPhone: o.guestPhone || '',
       reservationId: o.reservationId || '',
       sessionId: o.sessionId || ''
     };
@@ -1081,7 +1082,7 @@ export function StaffProvider({ children }) {
   };
 
   // Finalize table invoice manually
-  const finalizeTableBill = async (tableId) => {
+  const finalizeTableBill = async (tableId, guestPhone) => {
     const table = tables.find(t => t.id === tableId);
     if (!table || !table._id) return null;
 
@@ -1115,7 +1116,10 @@ export function StaffProvider({ children }) {
     }
 
     try {
-      const res = await api.post(`/api/invoices/table/${table._id}`, { guestName: table.guestName });
+      const res = await api.post(`/api/invoices/table/${table._id}`, {
+        guestName: table.guestName,
+        ...(guestPhone ? { guestPhone } : {})
+      });
       const newInvoice = mapBackendInvoice(res.data);
       await loadAllData();
 

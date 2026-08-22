@@ -37,6 +37,8 @@ export default function StaffTablesPage() {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showReleaseConfirm, setShowReleaseConfirm] = useState(false);
   const [showAssignForm, setShowAssignForm] = useState(false);
+  const [showPhoneCaptureModal, setShowPhoneCaptureModal] = useState(false);
+  const [billingPhoneInput, setBillingPhoneInput] = useState('');
 
   // Real upcoming reservations from backend
   const upcomingReservations = reservations
@@ -134,13 +136,37 @@ export default function StaffTablesPage() {
   // Find or generate invoice ID for current table and redirect to Billing page
   const handleGenerateInvoice = async () => {
     if (!selectedTableId || !currentTable) return;
-    
+
+    // If this guest's order has no phone on file yet (walk-in who skipped
+    // the optional field on their own cart page), give staff one last
+    // chance to add it before the invoice — and the Customer link — locks in.
+    if (currentTableOrder && !currentTableOrder.guestPhone) {
+      setBillingPhoneInput('');
+      setShowPhoneCaptureModal(true);
+      return;
+    }
+
     const invoice = await finalizeTableBill(selectedTableId);
     if (invoice) {
       navigate('/staff/billing', { 
         state: { 
           selectInvoiceId: invoice.id 
         } 
+      });
+    }
+  };
+
+  // Called from the phone-capture modal — with or without a phone typed in
+  const handleConfirmGenerateInvoice = async (phone) => {
+    setShowPhoneCaptureModal(false);
+    if (!selectedTableId) return;
+
+    const invoice = await finalizeTableBill(selectedTableId, phone || undefined);
+    if (invoice) {
+      navigate('/staff/billing', {
+        state: {
+          selectInvoiceId: invoice.id
+        }
       });
     }
   };

@@ -29,6 +29,14 @@ export const generateInvoiceForTable = async (req, res) => {
       return res.status(400).json({ error: "No items to invoice for this table." })
     }
 
+    // Backup phone capture: if the guest skipped the optional phone field
+    // on their own cart page, staff can supply it here right before billing.
+    // Never overwrite a phone that's already on file — same rule orderController uses.
+    if (req.body?.guestPhone && !order.guestPhone) {
+      order.guestPhone = req.body.guestPhone
+      await order.save()
+    }
+
     const subtotal = Math.round(order.items.reduce((sum, i) => sum + i.price * i.qty, 0))
     const serviceCharge = Math.round(subtotal * 0.10)
     const gst = Math.round(subtotal * 0.075)

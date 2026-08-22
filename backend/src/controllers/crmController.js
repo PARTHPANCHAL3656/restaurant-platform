@@ -62,6 +62,33 @@ export const getDiscountEligible = async (req, res) => {
   }
 }
 
+// GET /api/crm/retention-rate
+// Industry-standard loyalty metric: % of all known customers who are
+// repeat visitors. Uses the SAME threshold as discount eligibility
+// (visitCount >= 3) — deliberately, so "retained" and "discount eligible"
+// always mean the same customer segment across the whole app.
+export const getRetentionRate = async (req, res) => {
+  try {
+    const totalCustomers = await Customer.countDocuments({})
+    const repeatCustomers = await Customer.countDocuments({
+      visitCount: { $gte: REPEAT_VISIT_THRESHOLD }
+    })
+
+    const retentionRate = totalCustomers === 0
+      ? 0
+      : Number(((repeatCustomers / totalCustomers) * 100).toFixed(1))
+
+    res.json({
+      threshold: REPEAT_VISIT_THRESHOLD,
+      totalCustomers,
+      repeatCustomers,
+      retentionRate
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 // GET /api/crm/churn-list
 // Customers who were real visitors (visitCount >= 1, i.e. not junk records)
 // but haven't been seen in 30+ days. Sorted so the longest-gone / highest
