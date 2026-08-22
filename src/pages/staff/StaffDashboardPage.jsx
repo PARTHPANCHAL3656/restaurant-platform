@@ -2,10 +2,11 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
 import { formatINR } from '../../utils/currency';
+import AnalyticsOverview from '../../components/staff/AnalyticsOverview';
 
 export default function StaffDashboardPage() {
   const navigate = useNavigate();
-  const { tables, orders, invoices, queue, activities, staffProfile, reservations } = useStaff();
+  const { tables, orders, invoices, queue, staffProfile, reservations } = useStaff();
 
   // Computations based on shared context state
   const totalTables = tables.length;
@@ -195,57 +196,27 @@ export default function StaffDashboardPage() {
         </div>
       </section>
 
-      {/* Quick Actions & Recent Activity Lower Grid */}
-      <section className="grid grid-cols-12 gap-8">
-        
-        {/* Quick Actions */}
-        <div className="col-span-12 lg:col-span-6 space-y-6">
-          <h4 className="font-serif text-headline-sm text-ink-navy border-l-2 border-[#D4AF37] pl-4">Quick Actions</h4>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {quickActions.map((action) => (
-              <button 
-                key={action.name}
-                onClick={() => navigate(action.path)}
-                className="flex flex-col items-center justify-center p-6 border border-[#E5E1DA] bg-[#FDFCFB] hover:bg-[#1A1F2C] hover:text-canvas-cream transition-all duration-300 cursor-pointer shadow-xs focus:outline-none"
-              >
-                <span className="material-symbols-outlined text-[#D4AF37] mb-3 text-3xl">{action.icon}</span>
-                <span className="font-label-caps text-[10px] tracking-wider uppercase font-semibold text-center">{action.name}</span>
-              </button>
-            ))}
-          </div>
+            {/* Quick Actions */}
+      <section className="space-y-6">
+        <h4 className="font-serif text-headline-sm text-ink-navy border-l-2 border-[#D4AF37] pl-4">Quick Actions</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          {quickActions.map((action) => (
+            <button 
+              key={action.name}
+              onClick={() => navigate(action.path)}
+              className="flex flex-col items-center justify-center p-6 border border-[#E5E1DA] bg-[#FDFCFB] hover:bg-[#1A1F2C] hover:text-canvas-cream transition-all duration-300 cursor-pointer shadow-xs focus:outline-none"
+            >
+              <span className="material-symbols-outlined text-[#D4AF37] mb-3 text-3xl">{action.icon}</span>
+              <span className="font-label-caps text-[10px] tracking-wider uppercase font-semibold text-center">{action.name}</span>
+            </button>
+          ))}
         </div>
+      </section>
 
-        {/* Recent Activity Timeline */}
-        <div className="col-span-12 lg:col-span-6 space-y-6">
-          <h4 className="font-serif text-headline-sm text-ink-navy border-l-2 border-[#D4AF37] pl-4">Recent Activity</h4>
-          <div className="relative border-l border-[#E5E1DA] ml-4 pl-6 space-y-8 py-2">
-            {activities.map((act) => (
-              <div 
-                key={act.id} 
-                onClick={() => navigate(act.link)}
-                className="relative group cursor-pointer hover:translate-x-1 transition-transform duration-300"
-              >
-                {/* Marker Dot */}
-                <div className="absolute -left-[31px] top-1 bg-[#faf9f8] border border-[#D4AF37] w-2.5 h-2.5 rounded-full flex items-center justify-center group-hover:scale-120 transition-all duration-300">
-                  <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full" />
-                </div>
-                
-                {/* Details */}
-                <div className="space-y-1 bg-white p-4 border border-[#E5E1DA]/50 shadow-2xs hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-center">
-                    <h5 className="font-semibold text-xs text-ink-navy flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-sm text-[#D4AF37]">{act.icon}</span>
-                      {act.title}
-                    </h5>
-                    <span className="text-[10px] text-subtle-text">{act.time}</span>
-                  </div>
-                  <p className="text-xs text-subtle-text leading-relaxed">{act.detail}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
+      {/* Analytics Overview */}
+      <section className="space-y-6">
+        <h4 className="font-serif text-headline-sm text-ink-navy border-l-2 border-[#D4AF37] pl-4">Analytics</h4>
+        <AnalyticsOverview />
       </section>
 
     </div>
