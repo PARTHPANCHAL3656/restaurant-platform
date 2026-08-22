@@ -10,6 +10,7 @@ export default function StaffSidebar({ isOpen, onClose }) {
 
   const menuItems = [
     { name: 'Dashboard', path: '/staff/dashboard', icon: 'dashboard' },
+    { name: 'Analytics', path: '/staff/analytics', icon: 'monitoring' },
     { name: 'Tables & Reservations', path: '/staff/tables', icon: 'event_seat' },
     { name: 'Order Management', path: '/staff/orders', icon: 'receipt_long' },
     { name: 'Billing & Invoices', path: '/staff/billing', icon: 'payments' },

@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
 import { formatINR } from '../../utils/currency';
-import AnalyticsOverview from '../../components/staff/AnalyticsOverview';
 
 export default function StaffDashboardPage() {
   const navigate = useNavigate();
@@ -211,12 +210,6 @@ export default function StaffDashboardPage() {
             </button>
           ))}
         </div>
-      </section>
-
-      {/* Analytics Overview */}
-      <section className="space-y-6">
-        <h4 className="font-serif text-headline-sm text-ink-navy border-l-2 border-[#D4AF37] pl-4">Analytics</h4>
-        <AnalyticsOverview />
       </section>
 
     </div>

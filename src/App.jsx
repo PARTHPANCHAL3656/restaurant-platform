@@ -24,6 +24,7 @@ const CartPage = React.lazy(() => import('./pages/CartPage'));
 // Staff Pages (Lazy Loaded)
 const StaffLoginPage = React.lazy(() => import('./pages/staff/StaffLoginPage'));
 const StaffDashboardPage = React.lazy(() => import('./pages/staff/StaffDashboardPage'));
+const StaffAnalyticsPage = React.lazy(() => import('./pages/staff/StaffAnalyticsPage'));
 const StaffTablesPage = React.lazy(() => import('./pages/staff/StaffTablesPage'));
 const StaffOrdersPage = React.lazy(() => import('./pages/staff/StaffOrdersPage'));
 const StaffBillingPage = React.lazy(() => import('./pages/staff/StaffBillingPage'));
@@ -150,6 +151,7 @@ function MainAppRouter() {
           <Route path="/staff/login" element={<StaffLoginPage />} />
           <Route element={<StaffLayout />}>
             <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
+            <Route path="/staff/analytics" element={<StaffAnalyticsPage />} />
             <Route path="/staff/tables" element={<StaffTablesPage />} />
             <Route path="/staff/orders" element={<StaffOrdersPage />} />
             <Route path="/staff/billing" element={<StaffBillingPage />} />
