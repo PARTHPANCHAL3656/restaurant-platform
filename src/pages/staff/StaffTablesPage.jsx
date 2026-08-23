@@ -77,15 +77,15 @@ export default function StaffTablesPage() {
   const getTableStatusClass = (status) => {
     switch (status) {
       case 'available':
-        return 'border border-[#D4AF37] text-[#D4AF37] bg-white';
+        return 'border border-saffron-gold text-saffron-gold bg-white';
       case 'occupied':
-        return 'bg-[#1A1F2C] text-canvas-cream border border-[#1A1F2C]';
+        return 'bg-ink-navy text-canvas-cream border border-ink-navy';
       case 'reserved':
-        return 'bg-[#f4f3f2] border border-[#E5E1DA] text-ink-navy/70';
+        return 'bg-surface-container-low border border-muted-border text-ink-navy/70';
       case 'cleaning':
-        return 'bg-[#D4AF37]/10 border border-dashed border-[#D4AF37]/50 text-subtle-text';
+        return 'bg-saffron-gold/10 border border-dashed border-saffron-gold/50 text-subtle-text';
       default:
-        return 'bg-white border border-[#E5E1DA] text-[#1a1c1c]';
+        return 'bg-white border border-muted-border text-[#1a1c1c]';
     }
   };
 
@@ -179,14 +179,14 @@ export default function StaffTablesPage() {
         <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setLeftDrawerOpen(false)} />
       )}
       {/* Left Drawer (Collapsible Reservations Summary) */}
-      <div className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto bg-white border-r border-[#E5E1DA] flex flex-col shrink-0 transition-all duration-300 ${
+      <div className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto bg-white border-r border-muted-border flex flex-col shrink-0 transition-all duration-300 ${
         leftDrawerOpen ? 'w-80 translate-x-0' : 'w-80 -translate-x-full md:-translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
-        <div className="p-6 flex justify-between items-center border-b border-[#E5E1DA] shrink-0">
+        <div className="p-6 flex justify-between items-center border-b border-muted-border shrink-0">
           <h3 className="font-serif text-md text-ink-navy font-semibold">Upcoming Reservations</h3>
           <button 
             onClick={() => setLeftDrawerOpen(false)}
-            className="text-subtle-text hover:text-[#D4AF37] focus:outline-none cursor-pointer"
+            className="text-subtle-text hover:text-saffron-gold focus:outline-none cursor-pointer"
           >
             <span className="material-symbols-outlined text-xl">first_page</span>
           </button>
@@ -203,12 +203,12 @@ export default function StaffTablesPage() {
               upcomingReservations.map((res, i) => (
                 <div 
                   key={i}
-                  className="pb-4 border-b border-[#E5E1DA] last:border-b-0 space-y-2 text-xs"
+                  className="pb-4 border-b border-muted-border last:border-b-0 space-y-2 text-xs"
                 >
                   <div className="flex justify-between items-center">
                     <span className="font-serif font-bold text-ink-navy text-sm">{res.time}</span>
                     {res.vip && (
-                      <span className="bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-black tracking-widest px-2 py-0.5 uppercase">
+                      <span className="bg-saffron-gold/10 text-saffron-gold text-[8px] font-black tracking-widest px-2 py-0.5 uppercase">
                         VIP Priority
                       </span>
                     )}
@@ -216,13 +216,13 @@ export default function StaffTablesPage() {
                   <h4 className="font-body-md font-semibold text-ink-navy">{res.guest}</h4>
                   <div className="flex justify-between text-subtle-text text-[11px] font-label-caps">
                     <span>Party of {res.partySize}</span>
-                    <span className="text-[#D4AF37] font-bold">
+                    <span className="text-saffron-gold font-bold">
                       {res.table !== 'T-??' && res.table !== '' ? `Table ${res.table}` : 'Unassigned'}
                     </span>
                   </div>
                   <div className="text-[10px] text-subtle-text italic mt-0.5">Date: {res.date}</div>
                   {res.status === 'pending' && (
-                    <div className="flex gap-2 mt-2 pt-2 border-t border-[#E5E1DA]">
+                    <div className="flex gap-2 mt-2 pt-2 border-t border-muted-border">
                       <button 
                         onClick={() => updateReservationStatus(res.id, 'confirmed')}
                         className="flex-1 py-1 bg-saffron-gold text-ink-navy font-bold text-[10px] uppercase tracking-widest hover:brightness-110 cursor-pointer"
@@ -244,7 +244,7 @@ export default function StaffTablesPage() {
         </div>
 
         {/* View full queue button */}
-        <div className="p-4 border-t border-[#E5E1DA] shrink-0">
+        <div className="p-4 border-t border-muted-border shrink-0">
           <button 
             onClick={() => navigate('/staff/guest-queue')}
             className="w-full h-[56px] border border-ink-navy text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:bg-ink-navy hover:text-canvas-cream transition-all duration-300 cursor-pointer rounded-none text-center"
@@ -255,34 +255,34 @@ export default function StaffTablesPage() {
       </div>
 
       {/* Hero Workspace: Floor Map Grid */}
-      <div className="flex-grow bg-[#fdfcfb] overflow-auto p-4 md:p-8 lg:p-16 flex flex-col items-center relative min-h-[500px]">
+      <div className="flex-grow bg-canvas-cream overflow-auto p-4 md:p-8 lg:p-16 flex flex-col items-center relative min-h-[500px]">
         
         {/* Toggle Left Drawer Button */}
         {!leftDrawerOpen && (
           <button 
             onClick={() => setLeftDrawerOpen(true)}
-            className="absolute top-6 left-6 bg-white border border-[#E5E1DA] p-3 shadow-md hover:text-[#D4AF37] transition-all focus:outline-none cursor-pointer"
+            className="absolute top-6 left-6 bg-white border border-muted-border p-3 shadow-md hover:text-saffron-gold transition-all focus:outline-none cursor-pointer"
           >
             <span className="material-symbols-outlined">last_page</span>
           </button>
         )}
 
         {/* Floor Map Legend */}
-        <div className="mb-10 flex flex-wrap items-center justify-center gap-6 md:gap-10 bg-white/70 backdrop-blur-md px-6 py-3.5 border border-[#E5E1DA] shadow-xs">
+        <div className="mb-10 flex flex-wrap items-center justify-center gap-6 md:gap-10 bg-white/70 backdrop-blur-md px-6 py-3.5 border border-muted-border shadow-xs">
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 border border-[#D4AF37]" />
+            <div className="w-2.5 h-2.5 border border-saffron-gold" />
             <span className="text-[10px] font-label-caps uppercase tracking-wider text-subtle-text">Available</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 bg-[#f4f3f2]" />
+            <div className="w-2.5 h-2.5 bg-surface-container-low" />
             <span className="text-[10px] font-label-caps uppercase tracking-wider text-subtle-text">Reserved</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 bg-[#1A1F2C]" />
+            <div className="w-2.5 h-2.5 bg-ink-navy" />
             <span className="text-[10px] font-label-caps uppercase tracking-wider text-subtle-text">Occupied</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 bg-[#D4AF37]/20 border border-[#D4AF37]/50 animate-pulse" />
+            <div className="w-2.5 h-2.5 bg-saffron-gold/20 border border-saffron-gold/50 animate-pulse" />
             <span className="text-[10px] font-label-caps uppercase tracking-wider text-subtle-text">Cleaning</span>
           </div>
         </div>
@@ -301,11 +301,11 @@ export default function StaffTablesPage() {
                 key={tbl.id}
                 onClick={() => setSelectedTableId(tbl.id)}
                 className={`w-40 h-40 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-xs hover:shadow-lg hover:-translate-y-0.5 cursor-pointer relative ${getTableStatusClass(tbl.status)} ${
-                  selectedTableId === tbl.id ? 'ring-4 ring-[#D4AF37]/30 scale-103' : ''
+                  selectedTableId === tbl.id ? 'ring-4 ring-saffron-gold/30 scale-103' : ''
                 }`}
               >
                 {selectedTableId === tbl.id && (
-                  <div className="absolute -top-3 bg-[#D4AF37] text-[#030612] text-[8px] font-black px-2.5 py-0.5 uppercase tracking-wider">
+                  <div className="absolute -top-3 bg-saffron-gold text-[#030612] text-[8px] font-black px-2.5 py-0.5 uppercase tracking-wider">
                     Selected
                   </div>
                 )}
@@ -351,15 +351,15 @@ export default function StaffTablesPage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="fixed right-0 top-0 bottom-0 z-50 bg-white border-l border-[#E5E1DA] shadow-2xl flex flex-col w-full sm:w-[75vw] lg:w-[440px] h-screen overflow-hidden"
+              className="fixed right-0 top-0 bottom-0 z-50 bg-white border-l border-muted-border shadow-2xl flex flex-col w-full sm:w-[75vw] lg:w-[440px] h-screen overflow-hidden"
             >
               <div className="h-full flex flex-col justify-between">
                 
                 {/* Drawer Header */}
-                <div className="p-6 bg-[#1A1F2C] text-canvas-cream shrink-0 flex justify-between items-start">
+                <div className="p-6 bg-ink-navy text-canvas-cream shrink-0 flex justify-between items-start">
                   <div>
                     <h3 className="font-serif text-2xl">Table {selectedTableId}</h3>
-                    <p className="text-[#D4AF37] font-label-caps text-[9px] tracking-widest mt-1 uppercase font-bold">
+                    <p className="text-saffron-gold font-label-caps text-[9px] tracking-widest mt-1 uppercase font-bold">
                       {currentTable.status} • {selectedTableId === 'T-14' ? 'Garden Terrace' : 'Dining Room'}
                     </p>
                   </div>
@@ -379,7 +379,7 @@ export default function StaffTablesPage() {
                     <div className="space-y-6">
                       
                       {/* Section details */}
-                      <div className="space-y-3.5 border-b border-[#E5E1DA] pb-6">
+                      <div className="space-y-3.5 border-b border-muted-border pb-6">
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Section:</span>
                           <span className="font-bold">{selectedTableId === 'T-14' ? 'Garden Terrace' : 'Dining Room'}</span>
@@ -402,14 +402,14 @@ export default function StaffTablesPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Estimated Finish:</span>
-                          <span className="font-bold text-[#D4AF37]">{getEstimatedFinish(currentTable.arrivalTime)}</span>
+                          <span className="font-bold text-saffron-gold">{getEstimatedFinish(currentTable.arrivalTime)}</span>
                         </div>
                       </div>
 
                       {/* Guest Notes */}
                       {currentTable.notes && (
-                        <div className="p-4 bg-[#D4AF37]/5 border border-[#D4AF37]/20 italic rounded-xs">
-                          <span className="font-label-caps text-[9px] text-[#D4AF37] uppercase font-bold tracking-widest block mb-1">Diner Preferences</span>
+                        <div className="p-4 bg-saffron-gold/5 border border-saffron-gold/20 italic rounded-xs">
+                          <span className="font-label-caps text-[9px] text-saffron-gold uppercase font-bold tracking-widest block mb-1">Diner Preferences</span>
                           <p>"{currentTable.notes}"</p>
                         </div>
                       )}
@@ -418,7 +418,7 @@ export default function StaffTablesPage() {
                       <div className="space-y-4">
                         <h4 className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest font-bold">Current Bill Items</h4>
                         {currentTable.items.length > 0 ? (
-                          <ul className="space-y-3 border-b border-[#E5E1DA] pb-4">
+                          <ul className="space-y-3 border-b border-muted-border pb-4">
                             {currentTable.items.map((item, i) => (
                               <li key={i} className="flex justify-between items-center">
                                 <span>{item.qty}x {item.name}</span>
@@ -427,7 +427,7 @@ export default function StaffTablesPage() {
                             ))}
                           </ul>
                         ) : (
-                          <div className="text-center py-6 text-subtle-text italic border border-[#E5E1DA]">
+                          <div className="text-center py-6 text-subtle-text italic border border-muted-border">
                             No items ordered yet.
                           </div>
                         )}
@@ -444,7 +444,7 @@ export default function StaffTablesPage() {
                     <div className="space-y-6">
                       
                       {/* Reservation Info */}
-                      <div className="space-y-3.5 border-b border-[#E5E1DA] pb-6">
+                      <div className="space-y-3.5 border-b border-muted-border pb-6">
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Reserved Guest:</span>
                           <span className="font-bold">{currentTable.guestName}</span>
@@ -455,7 +455,7 @@ export default function StaffTablesPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Arrival Time:</span>
-                          <span className="font-bold text-[#D4AF37]">{currentTable.arrivalTime}</span>
+                          <span className="font-bold text-saffron-gold">{currentTable.arrivalTime}</span>
                         </div>
                       </div>
 
@@ -474,7 +474,7 @@ export default function StaffTablesPage() {
                     <div className="space-y-6">
                       
                       {/* Available table stats */}
-                      <div className="space-y-3.5 border-b border-[#E5E1DA] pb-6">
+                      <div className="space-y-3.5 border-b border-muted-border pb-6">
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Section:</span>
                           <span className="font-bold">{selectedTableId === 'T-14' ? 'Garden Terrace' : 'Dining Room'}</span>
@@ -491,7 +491,7 @@ export default function StaffTablesPage() {
 
                       {/* Assign waitlist party selector */}
                       {showAssignForm ? (
-                        <div className="p-4 border border-[#E5E1DA] bg-[#fdfcfb] space-y-4">
+                        <div className="p-4 border border-muted-border bg-canvas-cream space-y-4">
                           <h4 className="font-serif text-sm font-semibold">Seat Party / Reservation</h4>
                           {assignableParties.length === 0 ? (
                             <p className="text-xs text-subtle-text italic">No parties currently in queue or confirmed reservations.</p>
@@ -499,7 +499,7 @@ export default function StaffTablesPage() {
                             <div className="space-y-3">
                               <select 
                                 id="seat_party_select"
-                                className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-3 text-xs focus:outline-none cursor-pointer"
+                                className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none cursor-pointer"
                               >
                                 {assignableParties.map(guest => (
                                   <option key={guest.id} value={guest.id}>
@@ -514,7 +514,7 @@ export default function StaffTablesPage() {
                                     const selectEl = document.getElementById('seat_party_select');
                                     if (selectEl) handleSeatParty(selectEl.value);
                                   }}
-                                  className="py-2 px-4 bg-[#D4AF37] text-[#030612] font-label-caps text-[10px] uppercase font-bold tracking-wider hover:bg-[#B8962F] transition-all cursor-pointer"
+                                  className="py-2 px-4 bg-saffron-gold text-[#030612] font-label-caps text-[10px] uppercase font-bold tracking-wider hover:bg-[#B8962F] transition-all cursor-pointer"
                                 >
                                   Assign Table
                                 </button>
@@ -540,7 +540,7 @@ export default function StaffTablesPage() {
                     <div className="space-y-6">
                       
                       {/* Cleaning stats */}
-                      <div className="space-y-3.5 border-b border-[#E5E1DA] pb-6">
+                      <div className="space-y-3.5 border-b border-muted-border pb-6">
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Section:</span>
                           <span className="font-bold">{selectedTableId === 'T-14' ? 'Garden Terrace' : 'Dining Room'}</span>
@@ -551,7 +551,7 @@ export default function StaffTablesPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Status:</span>
-                          <span className="font-bold text-[#D4AF37] animate-pulse">Staff Sanitizing...</span>
+                          <span className="font-bold text-saffron-gold animate-pulse">Staff Sanitizing...</span>
                         </div>
                       </div>
 
@@ -561,7 +561,7 @@ export default function StaffTablesPage() {
                 </div>
 
                 {/* Drawer Footer Actions */}
-                <div className="p-6 border-t border-[#E5E1DA] bg-[#fdfcfb] shrink-0 space-y-3">
+                <div className="p-6 border-t border-muted-border bg-canvas-cream shrink-0 space-y-3">
                   
                   {currentTable.status === 'occupied' && (
                     <>
@@ -693,15 +693,15 @@ export default function StaffTablesPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-[#E5E1DA] max-w-sm w-full p-8 shadow-2xl relative text-center text-ink-navy space-y-6"
+              className="bg-white border border-muted-border max-w-sm w-full p-8 shadow-2xl relative text-center text-ink-navy space-y-6"
             >
               <div>
                 <h3 className="font-serif text-2xl font-bold">Table {selectedTableId}</h3>
-                <p className="font-label-caps text-[9px] text-[#D4AF37] uppercase tracking-widest font-bold mt-1">Scan to Order</p>
+                <p className="font-label-caps text-[9px] text-saffron-gold uppercase tracking-widest font-bold mt-1">Scan to Order</p>
               </div>
 
               {/* QR Image */}
-              <div className="w-48 h-48 mx-auto border border-[#E5E1DA] p-3 bg-white flex items-center justify-center">
+              <div className="w-48 h-48 mx-auto border border-muted-border p-3 bg-white flex items-center justify-center">
                 <img 
                   src={liveQr ? liveQr.qrDataUrl : (currentTable && currentTable.qrImage && currentTable.qrImage.startsWith('data:') ? currentTable.qrImage : getQrImage(selectedTableId))} 
                   alt={`QR for Table ${selectedTableId}`} 
@@ -720,7 +720,7 @@ export default function StaffTablesPage() {
                       navigator.clipboard.writeText(sessionMenuUrl);
                       alert('Menu link copied — paste it in a browser to test without scanning.');
                     }}
-                    className="font-mono text-[10px] text-[#D4AF37] underline break-all cursor-pointer hover:text-ink-navy transition-colors"
+                    className="font-mono text-[10px] text-saffron-gold underline break-all cursor-pointer hover:text-ink-navy transition-colors"
                   >
                     {sessionMenuUrl}
                   </button>
@@ -767,9 +767,9 @@ export default function StaffTablesPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-[#E5E1DA] max-w-md w-full p-8 shadow-2xl relative text-ink-navy space-y-6"
+              className="bg-white border border-muted-border max-w-md w-full p-8 shadow-2xl relative text-ink-navy space-y-6"
             >
-              <div className="flex justify-between items-start border-b border-[#E5E1DA] pb-4">
+              <div className="flex justify-between items-start border-b border-muted-border pb-4">
                 <div>
                   <h3 className="font-serif text-xl font-bold">Kitchen Order Details</h3>
                   <p className="font-mono text-[10px] text-subtle-text uppercase mt-0.5">
@@ -791,7 +791,7 @@ export default function StaffTablesPage() {
                   <span>Kitchen Status</span>
                 </div>
 
-                <div className="space-y-3 divide-y divide-[#E5E1DA]/50 max-h-48 overflow-y-auto pr-2">
+                <div className="space-y-3 divide-y divide-muted-border/50 max-h-48 overflow-y-auto pr-2">
                   {currentTable && currentTable.items.length > 0 ? (
                     currentTable.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center pt-3 first:pt-0">
@@ -816,7 +816,7 @@ export default function StaffTablesPage() {
                   </div>
                 )}
 
-                <div className="flex justify-between pt-4 border-t border-[#E5E1DA] font-serif text-lg font-bold">
+                <div className="flex justify-between pt-4 border-t border-muted-border font-serif text-lg font-bold">
                   <span>Subtotal:</span>
                   <span>{currentTable ? formatINR(currentTable.billTotal) : '₹0'}</span>
                 </div>
@@ -854,7 +854,7 @@ export default function StaffTablesPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-[#E5E1DA] max-w-sm w-full p-8 shadow-2xl relative text-ink-navy text-center space-y-6"
+              className="bg-white border border-muted-border max-w-sm w-full p-8 shadow-2xl relative text-ink-navy text-center space-y-6"
             >
               <div className="space-y-3">
                 <span className="material-symbols-outlined text-red-500 text-4xl">logout</span>

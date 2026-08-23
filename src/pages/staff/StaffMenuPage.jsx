@@ -185,25 +185,25 @@ export default function StaffMenuPage() {
 
   if (isLoading) {
     return (
-      <div className="relative select-none bg-[#faf9f8] min-h-screen pt-20">
+      <div className="relative select-none bg-surface min-h-screen pt-20">
         <div className="px-6 md:px-12 py-8 space-y-6 max-w-5xl mx-auto">
           {/* Header Skeleton */}
-          <div className="bg-white p-6 border border-[#E5E1DA] space-y-6 animate-pulse">
+          <div className="bg-white p-6 border border-muted-border space-y-6 animate-pulse">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2">
-                <div className="h-6 bg-[#E5E1DA] w-48 rounded" />
-                <div className="h-4 bg-[#E5E1DA] w-64 rounded" />
+                <div className="h-6 bg-muted-border w-48 rounded" />
+                <div className="h-4 bg-muted-border w-64 rounded" />
               </div>
-              <div className="h-14 bg-[#E5E1DA] w-40 rounded" />
+              <div className="h-14 bg-muted-border w-40 rounded" />
             </div>
           </div>
           {/* Grid Skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="bg-white border border-[#E5E1DA] h-72 animate-pulse space-y-4 p-6">
-                <div className="w-full h-40 bg-[#E5E1DA]" />
-                <div className="h-6 bg-[#E5E1DA] w-3/4 rounded" />
-                <div className="h-4 bg-[#E5E1DA] w-1/2 rounded" />
+              <div key={n} className="bg-white border border-muted-border h-72 animate-pulse space-y-4 p-6">
+                <div className="w-full h-40 bg-muted-border" />
+                <div className="h-6 bg-muted-border w-3/4 rounded" />
+                <div className="h-4 bg-muted-border w-1/2 rounded" />
               </div>
             ))}
           </div>
@@ -214,8 +214,8 @@ export default function StaffMenuPage() {
 
   if (networkError) {
     return (
-      <div className="relative select-none bg-[#faf9f8] min-h-screen flex items-center justify-center p-6 pt-20">
-        <div className="bg-white border border-[#E5E1DA] max-w-md w-full p-8 shadow-md text-center space-y-6">
+      <div className="relative select-none bg-surface min-h-screen flex items-center justify-center p-6 pt-20">
+        <div className="bg-white border border-muted-border max-w-md w-full p-8 shadow-md text-center space-y-6">
           <span className="material-symbols-outlined text-red-500 text-4xl">cloud_off</span>
           <h3 className="font-serif text-xl text-ink-navy font-bold">Failed to Load Menu</h3>
           <p className="font-sans text-xs text-subtle-text leading-relaxed">
@@ -233,13 +233,13 @@ export default function StaffMenuPage() {
   }
 
   return (
-    <div className="relative select-none bg-[#faf9f8] min-h-screen">
+    <div className="relative select-none bg-surface min-h-screen">
       
       {/* Main Catalog Viewport */}
       <div className="px-6 md:px-12 py-8 space-y-6 max-w-5xl mx-auto">
 
           {/* Header Controls: Categories, Search, and Action */}
-          <div className="bg-white p-6 border border-[#E5E1DA] space-y-6">
+          <div className="bg-white p-6 border border-muted-border space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div>
                 <h3 className="font-serif text-lg text-ink-navy font-semibold">Menu Catalog</h3>
@@ -255,7 +255,7 @@ export default function StaffMenuPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search signature dishes..." 
-                    className="w-full bg-transparent border-b border-[#D4AF37]/20 py-2 pl-9 pr-4 focus:outline-none focus:border-saffron-gold focus:ring-1 focus:ring-[#D4AF37]/15 font-body-md text-xs placeholder:text-subtle-text/30 outline-none transition-all duration-300"
+                    className="w-full bg-transparent border-b border-saffron-gold/20 py-2 pl-9 pr-4 focus:outline-none focus:border-saffron-gold focus:ring-1 focus:ring-saffron-gold/15 font-body-md text-xs placeholder:text-subtle-text/30 outline-none transition-all duration-300"
                   />
                 </div>
 
@@ -267,7 +267,7 @@ export default function StaffMenuPage() {
                   <span className="material-symbols-outlined text-lg">add</span>
                   Add New Dish
                 </button>
-                <button onClick={handleResyncDemoMenu} disabled={isResyncing} title="Refreshes the built-in demo dishes to their current  default prices. Does not touch dishes you've added yourself." className="h-[56px] px-5 border border-[#E5E1DA] text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:border-saffron-gold transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                <button onClick={handleResyncDemoMenu} disabled={isResyncing} title="Refreshes the built-in demo dishes to their current  default prices. Does not touch dishes you've added yourself." className="h-[56px] px-5 border border-muted-border text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:border-saffron-gold transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
                   <span className={`material-symbols-outlined text-lg ${isResyncing ? 'animate-spin' : ''}`}>sync</span>
                   {isResyncing ? 'Syncing...' : 'Sync Demo Prices'}
                 </button>
@@ -276,7 +276,7 @@ export default function StaffMenuPage() {
 
             {/* Category Navigation Pills */}
             <div className="overflow-x-auto hide-scrollbar whitespace-nowrap pt-2">
-              <div className="flex gap-6 border-b border-[#E5E1DA]">
+              <div className="flex gap-6 border-b border-muted-border">
                 {categories.map((cat) => {
                   const active = selectedCategory === cat;
                   return (
@@ -304,7 +304,7 @@ export default function StaffMenuPage() {
 
           {/* Cards Grid */}
           {filteredDishes.length === 0 ? (
-            <div className="bg-white p-16 text-center border border-[#E5E1DA] text-subtle-text">
+            <div className="bg-white p-16 text-center border border-muted-border text-subtle-text">
               <span className="material-symbols-outlined text-4xl mb-2 opacity-30">restaurant_menu</span>
               <p className="font-serif text-md">No dishes matching the filters were found</p>
             </div>
@@ -313,11 +313,11 @@ export default function StaffMenuPage() {
               {filteredDishes.map((dish) => (
                 <article 
                   key={dish.id} 
-                  className="bg-white border border-[#E5E1DA] flex flex-col justify-between hover:shadow-xl group transition-all duration-300"
+                  className="bg-white border border-muted-border flex flex-col justify-between hover:shadow-xl group transition-all duration-300"
                 >
                   <div>
                     {/* Image block */}
-                    <div className="relative aspect-[16/9] overflow-hidden bg-surface-container border-b border-[#E5E1DA] flex items-center justify-center">
+                    <div className="relative aspect-[16/9] overflow-hidden bg-surface-container border-b border-muted-border flex items-center justify-center">
                       <img 
                         src={getImage(dish.image)} 
                         alt={dish.name}
@@ -328,12 +328,12 @@ export default function StaffMenuPage() {
                       {/* Badge overlays */}
                       <div className="absolute top-4 left-4 flex gap-2">
                         {dish.special && (
-                          <span className="bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 px-3 py-1 font-label-caps text-[9px] tracking-widest uppercase font-bold">
+                          <span className="bg-saffron-gold/10 text-saffron-gold border border-saffron-gold/30 px-3 py-1 font-label-caps text-[9px] tracking-widest uppercase font-bold">
                             Chef Special
                           </span>
                         )}
                         {!dish.available ? (
-                          <span className="bg-[#f4f3f2] text-[#8B6B3F] border border-[#C2B29A] px-3 py-1 font-label-caps text-[9px] tracking-widest uppercase font-bold">
+                          <span className="bg-surface-container-low text-[#8B6B3F] border border-[#C2B29A] px-3 py-1 font-label-caps text-[9px] tracking-widest uppercase font-bold">
                             Out of Stock
                           </span>
                         ) : (
@@ -361,11 +361,11 @@ export default function StaffMenuPage() {
                   </div>
 
                   {/* Actions Bar */}
-                  <div className="px-6 py-4 border-t border-[#E5E1DA]/40 flex justify-between items-center text-xs">
+                  <div className="px-6 py-4 border-t border-muted-border/40 flex justify-between items-center text-xs">
                     <div className="flex gap-4">
                       <button 
                         onClick={() => handleOpenPreview(dish)}
-                        className="text-subtle-text hover:text-[#D4AF37] transition-colors focus:outline-none font-semibold uppercase tracking-wider text-[10px]"
+                        className="text-subtle-text hover:text-saffron-gold transition-colors focus:outline-none font-semibold uppercase tracking-wider text-[10px]"
                       >
                         Preview
                       </button>
@@ -380,7 +380,7 @@ export default function StaffMenuPage() {
                     <div className="flex gap-4">
                       <button 
                         onClick={() => handleDuplicate(dish)}
-                        className="text-subtle-text hover:text-[#D4AF37] transition-colors focus:outline-none font-semibold uppercase tracking-wider text-[10px]"
+                        className="text-subtle-text hover:text-saffron-gold transition-colors focus:outline-none font-semibold uppercase tracking-wider text-[10px]"
                       >
                         Duplicate
                       </button>
@@ -419,14 +419,14 @@ export default function StaffMenuPage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="fixed right-0 top-0 bottom-0 z-50 bg-white border-l border-[#E5E1DA] shadow-2xl flex flex-col w-full sm:w-[70vw] lg:w-[40vw] h-screen overflow-hidden"
+              className="fixed right-0 top-0 bottom-0 z-50 bg-white border-l border-muted-border shadow-2xl flex flex-col w-full sm:w-[70vw] lg:w-[40vw] h-screen overflow-hidden"
             >
               {drawerMode === 'preview' && activeItem ? (
                 <div className="h-full flex flex-col justify-between">
                   {/* Header */}
-                  <div className="p-6 bg-[#1A1F2C] text-canvas-cream shrink-0 flex justify-between items-start">
+                  <div className="p-6 bg-ink-navy text-canvas-cream shrink-0 flex justify-between items-start">
                     <div>
-                      <span className="font-label-caps text-[9px] text-[#D4AF37] tracking-widest font-bold uppercase block mb-1">
+                      <span className="font-label-caps text-[9px] text-saffron-gold tracking-widest font-bold uppercase block mb-1">
                         Dish Preview
                       </span>
                       <h3 className="font-serif text-2xl">{activeItem.name}</h3>
@@ -441,7 +441,7 @@ export default function StaffMenuPage() {
 
                   {/* Body Preview */}
                   <div className="flex-grow overflow-y-auto p-6 space-y-6 text-xs">
-                    <div className="aspect-[16/10] overflow-hidden bg-[#faf9f8] border border-[#E5E1DA] flex items-center justify-center">
+                    <div className="aspect-[16/10] overflow-hidden bg-surface border border-muted-border flex items-center justify-center">
                       {activeItem.image ? (
                         <img 
                           src={getImage(activeItem.image)} 
@@ -453,7 +453,7 @@ export default function StaffMenuPage() {
                       )}
                     </div>
 
-                    <div className="flex justify-between items-end border-b border-[#E5E1DA] pb-4">
+                    <div className="flex justify-between items-end border-b border-muted-border pb-4">
                       <div>
                         <span className="font-label-caps text-[9px] text-subtle-text uppercase block mb-1">Category</span>
                         <span className="font-serif text-md text-ink-navy font-bold">{activeItem.category}</span>
@@ -468,7 +468,7 @@ export default function StaffMenuPage() {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6 pt-4 border-t border-[#E5E1DA]/40">
+                    <div className="grid grid-cols-2 gap-6 pt-4 border-t border-muted-border/40">
                       <div>
                         <span className="font-label-caps text-[9px] text-subtle-text uppercase block mb-1">Preparation Time</span>
                         <span className="font-body-md text-ink-navy font-bold">{activeItem.prepTime}</span>
@@ -488,7 +488,7 @@ export default function StaffMenuPage() {
                             Available
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#f4f3f2] text-[#8B6B3F] border border-[#C2B29A] text-[10px] font-label-caps uppercase tracking-widest font-bold">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container-low text-[#8B6B3F] border border-[#C2B29A] text-[10px] font-label-caps uppercase tracking-widest font-bold">
                             Out of Stock
                           </span>
                         )}
@@ -497,7 +497,7 @@ export default function StaffMenuPage() {
                   </div>
 
                   {/* Footer Actions */}
-                  <div className="p-6 border-t border-[#E5E1DA] bg-[#fdfcfb] shrink-0 flex gap-4">
+                  <div className="p-6 border-t border-muted-border bg-canvas-cream shrink-0 flex gap-4">
                     <button 
                       onClick={() => handleOpenEdit(activeItem)}
                       className="flex-grow h-[56px] bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center font-bold"
@@ -516,7 +516,7 @@ export default function StaffMenuPage() {
                 /* Add / Edit Form */
                 <form onSubmit={handleFormSubmit} className="h-full flex flex-col justify-between">
                   {/* Header */}
-                  <div className="p-6 border-b border-[#E5E1DA] shrink-0 flex justify-between items-start">
+                  <div className="p-6 border-b border-muted-border shrink-0 flex justify-between items-start">
                     <div>
                       <h3 className="font-serif text-lg text-ink-navy font-semibold">
                         {drawerMode === 'add' ? 'Add New Dish' : 'Edit Dish'}
@@ -528,7 +528,7 @@ export default function StaffMenuPage() {
                     <button 
                       type="button"
                       onClick={() => setDrawerMode(null)}
-                      className="p-1 hover:bg-[#f4f3f2] rounded-full transition-colors focus:outline-none text-subtle-text"
+                      className="p-1 hover:bg-surface-container-low rounded-full transition-colors focus:outline-none text-subtle-text"
                     >
                       <span className="material-symbols-outlined">close</span>
                     </button>
@@ -540,10 +540,10 @@ export default function StaffMenuPage() {
                     {/* Image Upload Area */}
                     <div className="space-y-2">
                       <label className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest font-bold block">Dish Image</label>
-                      <div className="border-2 border-dashed border-[#C2B29A] p-6 text-center hover:border-saffron-gold transition-colors relative flex flex-col items-center justify-center bg-[#fdfcfb]">
+                      <div className="border-2 border-dashed border-[#C2B29A] p-6 text-center hover:border-saffron-gold transition-colors relative flex flex-col items-center justify-center bg-canvas-cream">
                         {formState.image ? (
                           <div className="space-y-4 w-full">
-                            <img src={getImage(formState.image)} alt="Preview" className="max-h-48 mx-auto object-cover border border-[#E5E1DA]" />
+                            <img src={getImage(formState.image)} alt="Preview" className="max-h-48 mx-auto object-cover border border-muted-border" />
                             <label className="inline-flex py-2 px-4 bg-ink-navy text-canvas-cream font-label-caps text-[9px] uppercase tracking-widest hover:bg-black transition-all cursor-pointer">
                               Replace Photo
                               <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
@@ -567,7 +567,7 @@ export default function StaffMenuPage() {
                         value={formState.name}
                         onChange={(e) => setFormState({ ...formState, name: e.target.value })}
                         placeholder="E.g. Truffle Butter Chicken"
-                        className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-3 text-xs focus:outline-none focus:border-ink-navy outline-none"
+                        className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy outline-none"
                         required
                       />
                     </div>
@@ -578,7 +578,7 @@ export default function StaffMenuPage() {
                       <select 
                         value={formState.category}
                         onChange={(e) => setFormState({ ...formState, category: e.target.value })}
-                        className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-3 text-xs focus:outline-none focus:border-ink-navy cursor-pointer"
+                        className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy cursor-pointer"
                       >
                         <option value="Starters">Starters</option>
                         <option value="Soups">Soups</option>
@@ -600,7 +600,7 @@ export default function StaffMenuPage() {
                         value={formState.price}
                         onChange={(e) => setFormState({ ...formState, price: e.target.value })}
                         placeholder="Price in ₹"
-                        className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-3 text-xs focus:outline-none focus:border-ink-navy outline-none"
+                        className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy outline-none"
                         required
                       />
                     </div>
@@ -617,7 +617,7 @@ export default function StaffMenuPage() {
                               value={type}
                               checked={formState.foodType === type}
                               onChange={() => setFormState({ ...formState, foodType: type })}
-                              className="form-radio text-[#D4AF37] focus:ring-0"
+                              className="form-radio text-saffron-gold focus:ring-0"
                             />
                             <span className="font-label-caps text-[9px] uppercase tracking-wider text-subtle-text">{type}</span>
                           </label>
@@ -631,7 +631,7 @@ export default function StaffMenuPage() {
                       <select 
                         value={formState.prepTime}
                         onChange={(e) => setFormState({ ...formState, prepTime: e.target.value })}
-                        className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-3 text-xs focus:outline-none focus:border-ink-navy cursor-pointer"
+                        className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy cursor-pointer"
                       >
                         <option value="10 min">10 min</option>
                         <option value="15 min">15 min</option>
@@ -654,7 +654,7 @@ export default function StaffMenuPage() {
                               value={level}
                               checked={formState.spiceLevel === level}
                               onChange={() => setFormState({ ...formState, spiceLevel: level })}
-                              className="form-radio text-[#D4AF37] focus:ring-0"
+                              className="form-radio text-saffron-gold focus:ring-0"
                             />
                             <span className="font-label-caps text-[9px] uppercase tracking-wider text-subtle-text">{level}</span>
                           </label>
@@ -663,13 +663,13 @@ export default function StaffMenuPage() {
                     </div>
 
                     {/* Availability Toggles */}
-                    <div className="grid grid-cols-2 gap-6 pt-4 border-t border-[#E5E1DA]/40">
+                    <div className="grid grid-cols-2 gap-6 pt-4 border-t border-muted-border/40">
                       <label className="flex items-center gap-3 cursor-pointer select-none">
                         <input 
                           type="checkbox"
                           checked={formState.available}
                           onChange={(e) => setFormState({ ...formState, available: e.target.checked })}
-                          className="form-checkbox text-[#D4AF37] focus:ring-0 rounded-xs"
+                          className="form-checkbox text-saffron-gold focus:ring-0 rounded-xs"
                         />
                         <div>
                           <span className="font-label-caps text-[9px] uppercase tracking-wider text-ink-navy font-bold block">Available</span>
@@ -682,7 +682,7 @@ export default function StaffMenuPage() {
                           type="checkbox"
                           checked={formState.special}
                           onChange={(e) => setFormState({ ...formState, special: e.target.checked })}
-                          className="form-checkbox text-[#D4AF37] focus:ring-0 rounded-xs"
+                          className="form-checkbox text-saffron-gold focus:ring-0 rounded-xs"
                         />
                         <div>
                           <span className="font-label-caps text-[9px] uppercase tracking-wider text-ink-navy font-bold block">Chef Special</span>
@@ -698,14 +698,14 @@ export default function StaffMenuPage() {
                         value={formState.description}
                         onChange={(e) => setFormState({ ...formState, description: e.target.value })}
                         placeholder="Provide details about culinary preparation, ingredients, and texture..."
-                        className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-3 text-xs focus:outline-none focus:border-ink-navy resize-none h-24 outline-none"
+                        className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy resize-none h-24 outline-none"
                       />
                     </div>
 
                   </div>
 
                   {/* Form Actions */}
-                  <div className="p-6 border-t border-[#E5E1DA] bg-[#fdfcfb] shrink-0 flex gap-4">
+                  <div className="p-6 border-t border-muted-border bg-canvas-cream shrink-0 flex gap-4">
                     <button 
                       type="submit"
                       className="flex-grow h-[56px] bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center font-bold"
@@ -735,7 +735,7 @@ export default function StaffMenuPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-[#E5E1DA] max-w-md w-full p-8 shadow-2xl relative"
+              className="bg-white border border-muted-border max-w-md w-full p-8 shadow-2xl relative"
             >
               <div className="text-center space-y-4">
                 <span className="material-symbols-outlined text-red-500 text-4xl">archive</span>

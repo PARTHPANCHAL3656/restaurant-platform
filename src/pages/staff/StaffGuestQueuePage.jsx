@@ -45,20 +45,20 @@ export default function StaffGuestQueuePage() {
     <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
       {/* Queue Grid Dashboard */}
-      <div className="flex-grow flex flex-col bg-[#faf9f8] p-4 md:p-6 overflow-y-auto">
+      <div className="flex-grow flex flex-col bg-surface p-4 md:p-6 overflow-y-auto">
         <div className="max-w-4xl w-full mx-auto space-y-8">
           
           {/* Summary counters */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="bg-white p-6 border border-[#E5E1DA] shadow-xs">
-              <span className="font-label-caps text-[9px] text-[#D4AF37] tracking-widest uppercase font-bold">Total Waiting</span>
+            <div className="bg-white p-6 border border-muted-border shadow-xs">
+              <span className="font-label-caps text-[9px] text-saffron-gold tracking-widest uppercase font-bold">Total Waiting</span>
               <p className="font-serif text-3xl text-ink-navy mt-2">{queue.length} Parties</p>
             </div>
-            <div className="bg-white p-6 border border-[#E5E1DA] shadow-xs">
+            <div className="bg-white p-6 border border-muted-border shadow-xs">
               <span className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase font-bold">Longest Wait</span>
               <p className="font-serif text-3xl text-ink-navy mt-2">{longestWait}</p>
             </div>
-            <div className="bg-white p-6 border border-[#E5E1DA] shadow-xs">
+            <div className="bg-white p-6 border border-muted-border shadow-xs">
               <span className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase font-bold">Average Wait</span>
               <p className="font-serif text-3xl text-ink-navy mt-2">{averageWait}</p>
             </div>
@@ -67,7 +67,7 @@ export default function StaffGuestQueuePage() {
           {/* Cards List */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="font-serif text-lg text-ink-navy border-l-2 border-[#D4AF37] pl-4">Queue Directory</h3>
+              <h3 className="font-serif text-lg text-ink-navy border-l-2 border-saffron-gold pl-4">Queue Directory</h3>
               <button 
                 onClick={() => setShowAddForm(!showAddForm)}
                 className="py-3 px-6 bg-ink-navy text-canvas-cream font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 rounded-none cursor-pointer text-center"
@@ -78,7 +78,7 @@ export default function StaffGuestQueuePage() {
 
             {/* Add walk-in form */}
             {showAddForm && (
-              <form onSubmit={handleAddSubmit} className="bg-white border border-[#E5E1DA] p-6 space-y-4 max-w-md">
+              <form onSubmit={handleAddSubmit} className="bg-white border border-muted-border p-6 space-y-4 max-w-md">
                 <h4 className="font-serif text-sm font-semibold">New Waitlist Guest</h4>
                 
                 <div className="space-y-1">
@@ -87,7 +87,7 @@ export default function StaffGuestQueuePage() {
                     type="text" 
                     value={newGuestData.name} 
                     onChange={e => setNewGuestData({ ...newGuestData, name: e.target.value })}
-                    className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-2.5 text-xs outline-none focus:border-ink-navy" 
+                    className="w-full bg-surface-container-low border border-muted-border p-2.5 text-xs outline-none focus:border-ink-navy" 
                     required
                   />
                 </div>
@@ -99,7 +99,7 @@ export default function StaffGuestQueuePage() {
                       type="number" 
                       value={newGuestData.partySize} 
                       onChange={e => setNewGuestData({ ...newGuestData, partySize: e.target.value })}
-                      className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-2.5 text-xs outline-none focus:border-ink-navy" 
+                      className="w-full bg-surface-container-low border border-muted-border p-2.5 text-xs outline-none focus:border-ink-navy" 
                       required
                     />
                   </div>
@@ -109,7 +109,7 @@ export default function StaffGuestQueuePage() {
                       type="tel" 
                       value={newGuestData.phone} 
                       onChange={e => setNewGuestData({ ...newGuestData, phone: e.target.value })}
-                      className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-2.5 text-xs outline-none" 
+                      className="w-full bg-surface-container-low border border-muted-border p-2.5 text-xs outline-none" 
                       required
                     />
                   </div>
@@ -120,7 +120,7 @@ export default function StaffGuestQueuePage() {
                     type="checkbox" 
                     checked={newGuestData.vip} 
                     onChange={e => setNewGuestData({ ...newGuestData, vip: e.target.checked })}
-                    className="form-checkbox text-[#D4AF37] focus:ring-0 rounded-xs"
+                    className="form-checkbox text-saffron-gold focus:ring-0 rounded-xs"
                   />
                   <span className="font-label-caps text-[9px] uppercase tracking-wider text-subtle-text">VIP Priority Guest</span>
                 </label>
@@ -130,7 +130,7 @@ export default function StaffGuestQueuePage() {
                   <textarea 
                     value={newGuestData.notes} 
                     onChange={e => setNewGuestData({ ...newGuestData, notes: e.target.value })}
-                    className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-2.5 text-xs h-16 resize-none" 
+                    className="w-full bg-surface-container-low border border-muted-border p-2.5 text-xs h-16 resize-none" 
                   />
                 </div>
 
@@ -144,7 +144,7 @@ export default function StaffGuestQueuePage() {
             )}
             
             {queue.length === 0 ? (
-              <div className="bg-white p-12 text-center border border-[#E5E1DA] text-subtle-text">
+              <div className="bg-white p-12 text-center border border-muted-border text-subtle-text">
                 <span className="material-symbols-outlined text-4xl mb-2">hourglass_disabled</span>
                 <p className="font-serif text-md">Queue is currently clear</p>
               </div>
@@ -154,12 +154,12 @@ export default function StaffGuestQueuePage() {
                   <div 
                     key={guest.id}
                     onClick={() => setSelectedGuestId(guest.id)}
-                    className={`p-6 bg-white border border-[#E5E1DA] hover:border-[#D4AF37] cursor-pointer transition-all duration-300 relative ${
-                      selectedGuestId === guest.id ? 'ring-2 ring-[#D4AF37]/30 border-[#D4AF37]' : ''
+                    className={`p-6 bg-white border border-muted-border hover:border-saffron-gold cursor-pointer transition-all duration-300 relative ${
+                      selectedGuestId === guest.id ? 'ring-2 ring-saffron-gold/30 border-saffron-gold' : ''
                     }`}
                   >
                     {guest.vip && (
-                      <span className="absolute top-4 right-4 bg-[#D4AF37]/10 text-[#D4AF37] text-[8px] font-black tracking-widest px-2 py-0.5 uppercase">
+                      <span className="absolute top-4 right-4 bg-saffron-gold/10 text-saffron-gold text-[8px] font-black tracking-widest px-2 py-0.5 uppercase">
                         VIP Priority
                       </span>
                     )}
@@ -171,10 +171,10 @@ export default function StaffGuestQueuePage() {
                         <span className="font-semibold block text-ink-navy">Party Size</span>
                         <span>{guest.partySize} Guests</span>
                       </div>
-                      <div className="h-6 w-px bg-[#E5E1DA]" />
+                      <div className="h-6 w-px bg-muted-border" />
                       <div>
                         <span className="font-semibold block text-ink-navy">Time elapsed</span>
-                        <span className="text-[#D4AF37] font-bold">{guest.waitTime}</span>
+                        <span className="text-saffron-gold font-bold">{guest.waitTime}</span>
                       </div>
                     </div>
                   </div>
@@ -192,16 +192,16 @@ export default function StaffGuestQueuePage() {
         <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedGuestId(null)} />
       )}
       {/* Right Drawer details */}
-      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-[#E5E1DA] shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
+      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
         selectedGuest ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         {selectedGuest && (
           <div className="h-full flex flex-col justify-between">
             {/* Header */}
-            <div className="p-6 bg-[#1A1F2C] text-canvas-cream shrink-0">
+            <div className="p-6 bg-ink-navy text-canvas-cream shrink-0">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <span className="font-label-caps text-[9px] text-[#D4AF37] tracking-widest font-bold uppercase block mb-1">
+                  <span className="font-label-caps text-[9px] text-saffron-gold tracking-widest font-bold uppercase block mb-1">
                     Waiting List
                   </span>
                   <h3 className="font-serif text-2xl">{selectedGuest.name}</h3>
@@ -217,7 +217,7 @@ export default function StaffGuestQueuePage() {
 
             {/* Content */}
             <div className="flex-grow p-6 space-y-6 overflow-y-auto hide-scrollbar text-xs">
-              <div className="space-y-3.5 border-b border-[#E5E1DA] pb-6">
+              <div className="space-y-3.5 border-b border-muted-border pb-6">
                 <div className="flex justify-between">
                   <span className="text-subtle-text">Reservation ID:</span>
                   <span className="font-mono font-bold text-ink-navy">{selectedGuest.id}</span>
@@ -228,7 +228,7 @@ export default function StaffGuestQueuePage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-subtle-text">Status:</span>
-                  <span className="font-bold text-[#D4AF37]">{selectedGuest.status}</span>
+                  <span className="font-bold text-saffron-gold">{selectedGuest.status}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-subtle-text">Party Size:</span>
@@ -252,7 +252,7 @@ export default function StaffGuestQueuePage() {
                 )}
                 <div className="flex justify-between">
                   <span className="text-subtle-text">Wait/Time:</span>
-                  <span className="text-[#D4AF37] font-bold">{selectedGuest.waitTime}</span>
+                  <span className="text-saffron-gold font-bold">{selectedGuest.waitTime}</span>
                 </div>
                 {selectedGuest.arrivalTime && (
                   <div className="flex justify-between">
@@ -278,7 +278,7 @@ export default function StaffGuestQueuePage() {
                 ) : (
                   <select 
                     id="table_assign_select"
-                    className="w-full bg-[#f4f3f2] border border-[#E5E1DA] p-3 text-xs focus:outline-none focus:border-ink-navy cursor-pointer"
+                    className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy cursor-pointer"
                   >
                     {availableTables.map(t => (
                       <option key={t.id} value={t.id}>Table {t.id} ({t.seats} Seats Available)</option>
@@ -290,7 +290,7 @@ export default function StaffGuestQueuePage() {
             </div>
 
             {/* Actions */}
-            <div className="p-6 border-t border-[#E5E1DA] bg-[#fdfcfb] shrink-0">
+            <div className="p-6 border-t border-muted-border bg-canvas-cream shrink-0">
               {selectedGuest.status === 'pending' ? (
                 <div className="flex gap-4">
                   <button 

@@ -35,8 +35,8 @@ export default function StaffBillingPage() {
     switch (status) {
       case 'paid':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#1B1F2B] text-[#D4AF37] border border-[#D4AF37]/30 text-[10px] font-label-caps uppercase tracking-widest font-bold">
-            <span className="w-1 h-1 rounded-full bg-[#D4AF37]" /> Paid
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#1B1F2B] text-saffron-gold border border-saffron-gold/30 text-[10px] font-label-caps uppercase tracking-widest font-bold">
+            <span className="w-1 h-1 rounded-full bg-saffron-gold" /> Paid
           </span>
         );
       case 'unpaid':
@@ -47,7 +47,7 @@ export default function StaffBillingPage() {
         );
       case 'partially-paid':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F4F3F2] text-[#4A4A4A] border border-[#C2B29A] text-[10px] font-label-caps uppercase tracking-widest font-bold">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container-low text-[#4A4A4A] border border-[#C2B29A] text-[10px] font-label-caps uppercase tracking-widest font-bold">
             <span className="w-1 h-1 rounded-full bg-[#4A4A4A]" /> Partially Paid
           </span>
         );
@@ -111,10 +111,10 @@ export default function StaffBillingPage() {
     <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
       {/* Left side: Invoice List */}
-      <div className="flex-grow flex flex-col bg-[#faf9f8] p-4 md:p-6 overflow-y-auto">
+      <div className="flex-grow flex flex-col bg-surface p-4 md:p-6 overflow-y-auto">
         <div className="max-w-4xl w-full mx-auto space-y-6">
           
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white p-6 border border-[#E5E1DA]">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white p-6 border border-muted-border">
             <div>
               <h3 className="font-serif text-lg text-ink-navy font-semibold">Transactions Ledger</h3>
               <p className="text-xs text-subtle-text">Review and settle digital order invoices.</p>
@@ -127,7 +127,7 @@ export default function StaffBillingPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search invoice, guest or table..." 
-                className="w-full bg-transparent border-b border-[#D4AF37]/20 py-2 pl-9 pr-4 focus:outline-none focus:border-saffron-gold focus:ring-1 focus:ring-[#D4AF37]/15 font-body-md text-xs placeholder:text-subtle-text/30 outline-none transition-all duration-300"
+                className="w-full bg-transparent border-b border-saffron-gold/20 py-2 pl-9 pr-4 focus:outline-none focus:border-saffron-gold focus:ring-1 focus:ring-saffron-gold/15 font-body-md text-xs placeholder:text-subtle-text/30 outline-none transition-all duration-300"
               />
             </div>
           </div>
@@ -138,8 +138,8 @@ export default function StaffBillingPage() {
               <div
                 key={inv.id}
                 onClick={() => setSelectedInvoiceId(inv.id)}
-                className={`bg-white border border-[#E5E1DA] p-4 cursor-pointer transition-all duration-200 ${
-                  selectedInvoiceId === inv.id ? 'border-[#D4AF37] ring-1 ring-[#D4AF37]/30' : 'hover:border-[#D4AF37]/50'
+                className={`bg-white border border-muted-border p-4 cursor-pointer transition-all duration-200 ${
+                  selectedInvoiceId === inv.id ? 'border-saffron-gold ring-1 ring-saffron-gold/30' : 'hover:border-saffron-gold/50'
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
@@ -151,18 +151,18 @@ export default function StaffBillingPage() {
                     <p className="font-label-caps text-[9px] text-subtle-text uppercase tracking-wider">{inv.table} • {inv.guest}</p>
                     <p className="font-label-caps text-[9px] text-subtle-text mt-0.5">{inv.date}</p>
                   </div>
-                  <span className="font-serif text-lg text-[#D4AF37] font-bold">{formatINR(inv.amount)}</span>
+                  <span className="font-serif text-lg text-saffron-gold font-bold">{formatINR(inv.amount)}</span>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Desktop: Ledger Table (sm and above) */}
-          <div className="hidden sm:block bg-white border border-[#E5E1DA] overflow-hidden">
+          <div className="hidden sm:block bg-white border border-muted-border overflow-hidden">
             <div className="overflow-x-auto w-full">
               <table className="w-full text-left border-collapse text-xs min-w-[600px]">
                 <thead>
-                  <tr className="bg-[#f4f3f2] border-b border-[#E5E1DA] font-label-caps text-subtle-text uppercase tracking-wider text-[10px]">
+                  <tr className="bg-surface-container-low border-b border-muted-border font-label-caps text-subtle-text uppercase tracking-wider text-[10px]">
                     <th className="p-4 pl-5">Invoice</th>
                     <th className="p-4">Table</th>
                     <th className="p-4">Guest</th>
@@ -175,7 +175,7 @@ export default function StaffBillingPage() {
                   variants={containerVariants}
                   initial="hidden"
                   animate="show"
-                  className="divide-y divide-[#E5E1DA]"
+                  className="divide-y divide-muted-border"
                 >
                   {filteredInvoices.map((inv) => (
                     <motion.tr 
@@ -183,11 +183,11 @@ export default function StaffBillingPage() {
                       variants={rowVariants}
                       onClick={() => setSelectedInvoiceId(inv.id)}
                       className={`cursor-pointer hover:bg-[#FBF8F2] hover:shadow-[0_4px_20px_rgba(212,175,55,0.04)] transition-all duration-300 group ${
-                        selectedInvoiceId === inv.id ? 'bg-[#D4AF37]/5 font-semibold' : ''
+                        selectedInvoiceId === inv.id ? 'bg-saffron-gold/5 font-semibold' : ''
                       }`}
                     >
                       <td className={`p-4 pl-5 font-mono font-bold text-ink-navy border-l-2 transition-all duration-300 ${
-                        selectedInvoiceId === inv.id ? 'border-l-[#D4AF37]' : 'border-l-transparent group-hover:border-l-[#D4AF37]'
+                        selectedInvoiceId === inv.id ? 'border-l-saffron-gold' : 'border-l-transparent group-hover:border-l-saffron-gold'
                       }`}>
                         {inv.invoiceNumber || inv.id}
                       </td>
@@ -211,13 +211,13 @@ export default function StaffBillingPage() {
         <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedInvoiceId(null)} />
       )}
       {/* Right side: Invoice Preview */}
-      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-[#E5E1DA] shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
+      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
         selectedInvoice ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         {selectedInvoice && (
           <div className="h-full flex flex-col justify-between">
             {/* Header */}
-            <div className="p-6 border-b border-[#E5E1DA] shrink-0">
+            <div className="p-6 border-b border-muted-border shrink-0">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-serif text-lg text-ink-navy font-semibold">Invoice Details</h3>
@@ -225,7 +225,7 @@ export default function StaffBillingPage() {
                 </div>
                 <button 
                   onClick={() => setSelectedInvoiceId(null)}
-                  className="p-1 hover:bg-[#f4f3f2] rounded-full transition-colors focus:outline-none text-subtle-text"
+                  className="p-1 hover:bg-surface-container-low rounded-full transition-colors focus:outline-none text-subtle-text"
                 >
                   <span className="material-symbols-outlined">close</span>
                 </button>
@@ -234,7 +234,7 @@ export default function StaffBillingPage() {
 
             {/* Invoice Breakdown */}
             <div className="flex-grow p-6 space-y-6 overflow-y-auto hide-scrollbar text-xs">
-              <div className="space-y-2 border-b border-[#E5E1DA] pb-4">
+              <div className="space-y-2 border-b border-muted-border pb-4">
                 <div className="flex justify-between">
                   <span className="text-subtle-text">Table:</span>
                   <span className="font-bold text-ink-navy">{selectedInvoice.table}</span>
@@ -255,7 +255,7 @@ export default function StaffBillingPage() {
 
               {/* Ordered Items */}
               {selectedInvoice.items && selectedInvoice.items.length > 0 && (
-                <div className="space-y-3 pb-6 border-b border-[#E5E1DA]">
+                <div className="space-y-3 pb-6 border-b border-muted-border">
                   <h4 className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase font-bold">Ordered Items</h4>
                   <ul className="space-y-2 text-ink-navy">
                     {selectedInvoice.items.map((item, idx) => (
@@ -271,7 +271,7 @@ export default function StaffBillingPage() {
               {/* Tally */}
               <div className="space-y-3">
                 <h4 className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase font-bold">Tally Summary</h4>
-                <div className="space-y-2 border-b border-[#E5E1DA] pb-4">
+                <div className="space-y-2 border-b border-muted-border pb-4">
                   <div className="flex justify-between text-subtle-text">
                     <span>Menu Subtotal</span>
                     <span>{formatINR((selectedInvoice.subtotal || selectedInvoice.amount / 1.175))}</span>
@@ -287,14 +287,14 @@ export default function StaffBillingPage() {
                 </div>
                 <div className="flex justify-between items-end pt-2">
                   <span className="font-serif text-sm text-ink-navy font-bold uppercase">Total Charges</span>
-                  <span className="font-serif text-2xl text-[#D4AF37] font-bold">{formatINR(selectedInvoice.amount)}</span>
+                  <span className="font-serif text-2xl text-saffron-gold font-bold">{formatINR(selectedInvoice.amount)}</span>
                 </div>
               </div>
 
             </div>
 
             {/* Actions */}
-            <div className="p-6 border-t border-[#E5E1DA] bg-[#fdfcfb] space-y-3 shrink-0">
+            <div className="p-6 border-t border-muted-border bg-canvas-cream space-y-3 shrink-0">
               {selectedInvoice.status !== 'paid' && (
                 <div className="grid grid-cols-2 gap-3">
                   <button 
@@ -326,7 +326,7 @@ export default function StaffBillingPage() {
           Rendered off-screen (not display:none) so html2canvas can lay it out. */}
       {selectedInvoice && (
         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-          <div ref={receiptRef} className="w-[380px] bg-[#FDFCFB] p-8 text-ink-navy font-sans">
+          <div ref={receiptRef} className="w-[380px] bg-canvas-cream p-8 text-ink-navy font-sans">
             <div className="text-center mb-6">
               <h2 className="font-serif text-xl font-bold">SPICE GARDEN</h2>
               <p className="text-[10px] text-subtle-text uppercase tracking-widest">Modern Indian Fine Dining</p>
@@ -343,7 +343,7 @@ export default function StaffBillingPage() {
               <span className="text-subtle-text">Date</span>
               <span className="font-bold">{selectedInvoice.date}</span>
             </div>
-            <div className="border-t border-[#E5E1DA] pt-4 space-y-2">
+            <div className="border-t border-muted-border pt-4 space-y-2">
               {selectedInvoice.items.map((item, i) => (
                 <div key={i} className="flex justify-between text-xs">
                   <span>{item.qty}x {item.name}</span>
@@ -351,7 +351,7 @@ export default function StaffBillingPage() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-[#E5E1DA] mt-4 pt-4 space-y-1 text-xs">
+            <div className="border-t border-muted-border mt-4 pt-4 space-y-1 text-xs">
               <div className="flex justify-between text-subtle-text">
                 <span>Subtotal</span>
                 <span>{formatINR(selectedInvoice.subtotal)}</span>
@@ -364,7 +364,7 @@ export default function StaffBillingPage() {
                 <span>GST</span>
                 <span>{formatINR(selectedInvoice.gst)}</span>
               </div>
-              <div className="flex justify-between font-bold text-sm pt-2 border-t border-[#E5E1DA] mt-2">
+              <div className="flex justify-between font-bold text-sm pt-2 border-t border-muted-border mt-2">
                 <span>Total</span>
                 <span>{formatINR(selectedInvoice.amount)}</span>
               </div>

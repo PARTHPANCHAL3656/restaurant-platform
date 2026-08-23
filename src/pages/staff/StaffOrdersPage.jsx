@@ -23,11 +23,11 @@ export default function StaffOrdersPage() {
     <div className="flex flex-col-reverse md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
       {/* 3-Column Service Pipeline */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-6 overflow-y-auto bg-[#faf9f8]">
+      <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-6 overflow-y-auto bg-surface">
         
         {/* Column 1: New Orders */}
-        <div className="flex flex-col bg-white border border-[#E5E1DA] p-4">
-          <div className="flex justify-between items-center pb-4 border-b border-[#E5E1DA] mb-4 shrink-0">
+        <div className="flex flex-col bg-white border border-muted-border p-4">
+          <div className="flex justify-between items-center pb-4 border-b border-muted-border mb-4 shrink-0">
             <h3 className="font-serif text-md text-ink-navy font-semibold">New Orders</h3>
             <span className="bg-saffron-gold/15 text-saffron-gold text-xs px-2.5 py-0.5 font-bold rounded-full">
               {getOrdersByStatus('new').length}
@@ -38,8 +38,8 @@ export default function StaffOrdersPage() {
               <div 
                 key={o.id}
                 onClick={() => setSelectedOrderId(o.id)}
-                className={`p-4 border border-[#E5E1DA] hover:border-[#D4AF37] cursor-pointer bg-[#FDFCFB] transition-all duration-300 ${
-                  selectedOrderId === o.id ? 'ring-2 ring-[#D4AF37]/30 border-[#D4AF37]' : ''
+                className={`p-4 border border-muted-border hover:border-saffron-gold cursor-pointer bg-canvas-cream transition-all duration-300 ${
+                  selectedOrderId === o.id ? 'ring-2 ring-saffron-gold/30 border-saffron-gold' : ''
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
@@ -56,8 +56,8 @@ export default function StaffOrdersPage() {
         </div>
 
         {/* Column 2: In Preparation */}
-        <div className="flex flex-col bg-white border border-[#E5E1DA] p-4">
-          <div className="flex justify-between items-center pb-4 border-b border-[#E5E1DA] mb-4 shrink-0">
+        <div className="flex flex-col bg-white border border-muted-border p-4">
+          <div className="flex justify-between items-center pb-4 border-b border-muted-border mb-4 shrink-0">
             <h3 className="font-serif text-md text-ink-navy font-semibold">In Preparation</h3>
             <span className="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 font-bold rounded-full">
               {getOrdersByStatus('preparing').length}
@@ -68,8 +68,8 @@ export default function StaffOrdersPage() {
               <div 
                 key={o.id}
                 onClick={() => setSelectedOrderId(o.id)}
-                className={`p-4 border border-[#E5E1DA] hover:border-[#D4AF37] cursor-pointer bg-[#FDFCFB] transition-all duration-300 ${
-                  selectedOrderId === o.id ? 'ring-2 ring-[#D4AF37]/30 border-[#D4AF37]' : ''
+                className={`p-4 border border-muted-border hover:border-saffron-gold cursor-pointer bg-canvas-cream transition-all duration-300 ${
+                  selectedOrderId === o.id ? 'ring-2 ring-saffron-gold/30 border-saffron-gold' : ''
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
@@ -86,8 +86,8 @@ export default function StaffOrdersPage() {
         </div>
 
         {/* Column 3: Ready to Serve */}
-        <div className="flex flex-col bg-white border border-[#E5E1DA] p-4">
-          <div className="flex justify-between items-center pb-4 border-b border-[#E5E1DA] mb-4 shrink-0">
+        <div className="flex flex-col bg-white border border-muted-border p-4">
+          <div className="flex justify-between items-center pb-4 border-b border-muted-border mb-4 shrink-0">
             <h3 className="font-serif text-md text-ink-navy font-semibold">Ready to Serve</h3>
             <span className="bg-green-100 text-green-800 text-xs px-2.5 py-0.5 font-bold rounded-full">
               {getOrdersByStatus('ready').length}
@@ -98,8 +98,8 @@ export default function StaffOrdersPage() {
               <div 
                 key={o.id}
                 onClick={() => setSelectedOrderId(o.id)}
-                className={`p-4 border border-[#E5E1DA] hover:border-[#D4AF37] cursor-pointer bg-[#FDFCFB] transition-all duration-300 ${
-                  selectedOrderId === o.id ? 'ring-2 ring-[#D4AF37]/30 border-[#D4AF37]' : ''
+                className={`p-4 border border-muted-border hover:border-saffron-gold cursor-pointer bg-canvas-cream transition-all duration-300 ${
+                  selectedOrderId === o.id ? 'ring-2 ring-saffron-gold/30 border-saffron-gold' : ''
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
@@ -119,17 +119,17 @@ export default function StaffOrdersPage() {
 
       {/* Detail Slide-over Panel (Order Drawer) */}
       {selectedOrder && <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedOrderId(null)} />}
-      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-[#E5E1DA] shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
+      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
         selectedOrder ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         {selectedOrder && (
           <div className="h-full flex flex-col justify-between">
             
             {/* Header */}
-            <div className="p-6 bg-[#1A1F2C] text-canvas-cream shrink-0">
+            <div className="p-6 bg-ink-navy text-canvas-cream shrink-0">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <span className="font-label-caps text-[9px] text-[#D4AF37] tracking-widest font-bold uppercase block mb-1">
+                  <span className="font-label-caps text-[9px] text-saffron-gold tracking-widest font-bold uppercase block mb-1">
                     {selectedOrder.id}
                   </span>
                   <h3 className="font-serif text-2xl">Table {selectedOrder.table}</h3>
@@ -149,7 +149,7 @@ export default function StaffOrdersPage() {
             {/* List */}
             <div className="flex-grow overflow-y-auto p-6 space-y-6 hide-scrollbar">
               {/* Order Session Metadata */}
-              <div className="space-y-3 pb-6 border-b border-[#E5E1DA] text-xs">
+              <div className="space-y-3 pb-6 border-b border-muted-border text-xs">
                 <div className="flex justify-between">
                   <span className="text-subtle-text">Guest Name:</span>
                   <span className="font-bold text-ink-navy">{selectedOrder.guestName}</span>
@@ -170,14 +170,14 @@ export default function StaffOrdersPage() {
                 <h4 className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest font-bold">
                   New This Round
                 </h4>
-                <ul className="space-y-3.5 text-xs text-ink-navy divide-y divide-[#E5E1DA]/50">
+                <ul className="space-y-3.5 text-xs text-ink-navy divide-y divide-muted-border/50">
                   {selectedOrder.items.filter(item => item.round > selectedOrder.servedThroughRound).map((item, idx) => (
                     <li key={idx} className="flex justify-between items-center pt-3.5 first:pt-0">
                       <div>
                         <span className="font-bold text-saffron-gold mr-3">{item.qty}x</span>
                         <span className="font-medium">{item.name}</span>
                         {item.round && (
-                          <span className="text-[9px] text-subtle-text ml-2 bg-[#f4f3f2] px-1.5 py-0.5 font-sans font-semibold rounded-sm">
+                          <span className="text-[9px] text-subtle-text ml-2 bg-surface-container-low px-1.5 py-0.5 font-sans font-semibold rounded-sm">
                             Round {item.round}
                           </span>
                         )}
@@ -192,7 +192,7 @@ export default function StaffOrdersPage() {
                     <summary className="font-label-caps text-[10px] text-subtle-text/70 uppercase tracking-widest font-bold cursor-pointer">
                       Already Served (do not re-cook)
                     </summary>
-                    <ul className="space-y-3.5 text-xs text-subtle-text/60 divide-y divide-[#E5E1DA]/50 mt-3">
+                    <ul className="space-y-3.5 text-xs text-subtle-text/60 divide-y divide-muted-border/50 mt-3">
                       {selectedOrder.items.filter(item => item.round <= selectedOrder.servedThroughRound).map((item, idx) => (
                         <li key={idx} className="flex justify-between items-center pt-3.5 first:pt-0 line-through decoration-1">
                           <div>
@@ -217,7 +217,7 @@ export default function StaffOrdersPage() {
             </div>
 
             {/* Actions Footer */}
-            <div className="p-6 border-t border-[#E5E1DA] bg-[#fdfcfb] shrink-0">
+            <div className="p-6 border-t border-muted-border bg-canvas-cream shrink-0">
               <button 
                 onClick={() => handleAdvanceStatus(selectedOrder.id, selectedOrder.status)}
                 className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer"
