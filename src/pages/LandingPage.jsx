@@ -153,7 +153,7 @@ export default function LandingPage() {
       </section>
 
       {/* Menu Highlights Section */}
-      <section className="bg-[#f4f3f2] py-section-gap px-margin-mobile md:px-margin-desktop overflow-hidden">
+      <section className="bg-surface-container-low py-section-gap px-margin-mobile md:px-margin-desktop overflow-hidden">
         <div className="max-w-container-max mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
             <motion.div
@@ -305,7 +305,7 @@ export default function LandingPage() {
       </section>
 
       {/* Guest Reviews Section */}
-      <section className="py-section-gap px-margin-mobile md:px-margin-desktop bg-[#f4f3f2]" id="reviews">
+      <section className="py-section-gap px-margin-mobile md:px-margin-desktop bg-surface-container-low" id="reviews">
         <div className="max-w-container-max mx-auto">
           <div className="text-center mb-16">
             <span className="font-label-caps text-label-caps text-saffron-gold mb-2 block tracking-[0.25em] uppercase">What Guests Are Saying</span>

@@ -119,7 +119,7 @@ export default function CartPage() {
             </div>
 
             {/* Calculations Card */}
-            <div className="lg:col-span-4 bg-[#f4f3f2] border border-muted-border p-8 md:p-10 space-y-8 shadow-sm">
+            <div className="lg:col-span-4 bg-surface-container-low border border-muted-border p-8 md:p-10 space-y-8 shadow-sm">
               <div className="space-y-4">
                 <h3 className="font-serif text-headline-sm text-ink-navy">Total Calculation</h3>
                 <div className="h-px bg-muted-border w-16"></div>
@@ -154,7 +154,7 @@ export default function CartPage() {
                     value={phoneInput}
                     onChange={(e) => setPhoneInput(e.target.value)}
                     placeholder="Phone number (optional) - to track your order status"
-                    className="w-full bg-transparent border-b border-[#D4AF37]/20 py-2 focus:outline-none focus:border-saffron-gold font-body-md text-sm placeholder:text-subtle-text/40 placeholder:italic text-ink-navy outline-none"
+                    className="w-full bg-transparent border-b border-saffron-gold/20 py-2 focus:outline-none focus:border-saffron-gold font-body-md text-sm placeholder:text-subtle-text/40 placeholder:italic text-ink-navy outline-none"
                   />
                 </div>
               )}

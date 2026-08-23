@@ -57,7 +57,7 @@ export default function StaffLoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#030612] text-canvas-cream flex items-center justify-center overflow-hidden">
+    <div className="relative min-h-screen bg-midnight-black text-canvas-cream flex items-center justify-center overflow-hidden">
       
       {/* Background Image Panel (Fidelity from Stitch) */}
       <div className="absolute inset-0 z-0 overflow-hidden select-none pointer-events-none">
@@ -68,7 +68,7 @@ export default function StaffLoginPage() {
           }}
         />
         {/* Luxury Navy overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#030612]/98 via-[#030612]/85 to-[#030612]/40" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-midnight-black/98 via-midnight-black/85 to-midnight-black/40" />
       </div>
 
       {/* Main Content Card Wrapper */}

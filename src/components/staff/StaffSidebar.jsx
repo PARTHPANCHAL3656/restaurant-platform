@@ -35,12 +35,12 @@ export default function StaffSidebar({ isOpen, onClose }) {
         />
       )}
 
-      <aside className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-[#030612] border-r border-[#E5E1DA]/10 w-[300px] h-screen transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      <aside className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-midnight-black border-r border-muted-border/10 w-[300px] h-screen transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         
         {/* Branding header */}
-        <div className="p-6 border-b border-[#E5E1DA]/10 shrink-0 relative">
+        <div className="p-6 border-b border-muted-border/10 shrink-0 relative">
           <StaffLogo heightClass="h-[76px]" colorClassName="text-canvas-cream" />
           <button 
             onClick={onClose}
@@ -75,7 +75,7 @@ export default function StaffSidebar({ isOpen, onClose }) {
         </nav>
 
         {/* Footer Support & Logout */}
-        <div className="p-6 pl-8 border-t border-[#E5E1DA]/10 space-y-6 shrink-0">
+        <div className="p-6 pl-8 border-t border-muted-border/10 space-y-6 shrink-0">
           <Link
             to="#"
             className="flex items-center gap-4 text-canvas-cream/60 hover:text-saffron-gold transition-colors group"

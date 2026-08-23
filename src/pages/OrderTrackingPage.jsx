@@ -381,7 +381,7 @@ export default function OrderTrackingPage() {
             </p>
             
             <div className="flex items-center gap-4 pt-4">
-              <div className="w-14 h-14 rounded-full overflow-hidden border border-muted-border flex items-center justify-center bg-[#f4f3f2]">
+              <div className="w-14 h-14 rounded-full overflow-hidden border border-muted-border flex items-center justify-center bg-surface-container-low">
                 <svg 
                   viewBox="0 0 24 24" 
                   fill="none" 

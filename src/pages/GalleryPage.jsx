@@ -147,7 +147,7 @@ export default function GalleryPage() {
       </section>
 
       {/* Narrative Quote Banner */}
-      <section className="bg-[#f4f3f2] py-section-gap px-margin-mobile md:px-margin-desktop my-12 border-t border-b border-muted-border">
+      <section className="bg-surface-container-low py-section-gap px-margin-mobile md:px-margin-desktop my-12 border-t border-b border-muted-border">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <span className="material-symbols-outlined text-saffron-gold text-5xl">format_quote</span>
           <blockquote className="font-serif text-headline-md md:text-headline-lg text-ink-navy leading-snug italic">

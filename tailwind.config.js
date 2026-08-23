@@ -9,6 +9,7 @@ export default {
       colors: {
         "brand-navy": "#1A1F2C",
         "ink-navy": "#1A1F2C",
+        "midnight-black": "#030612",
         "saffron-gold": "#D4AF37",
         "canvas-cream": "#FDFCFB",
         "muted-border": "#E5E1DA",

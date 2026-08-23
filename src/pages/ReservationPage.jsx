@@ -263,7 +263,7 @@ export default function ReservationPage() {
 
           {/* Summary Sidebar Column */}
           <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-8">
-            <div className="bg-[#f4f3f2] border border-muted-border p-8 md:p-12 space-y-8 shadow-sm">
+            <div className="bg-surface-container-low border border-muted-border p-8 md:p-12 space-y-8 shadow-sm">
               <div className="space-y-4">
                 <h3 className="font-serif text-headline-sm text-ink-navy">Reservation Summary</h3>
                 <div className="h-px bg-muted-border w-16"></div>
