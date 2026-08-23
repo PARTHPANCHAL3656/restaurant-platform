@@ -30,7 +30,7 @@ export default function StaffLayout() {
           <p className="mt-4 font-serif italic text-xs text-subtle-text tracking-widest animate-pulse">Syncing Staff Portal...</p>
         </div>
       ) : (
-      <div className="bg-[#faf9f8] text-[#1a1c1c] font-sans min-h-screen flex overflow-x-hidden">
+      <div className="bg-surface text-[#1a1c1c] font-sans min-h-screen flex overflow-x-hidden">
         
         {/* Responsive Drawer Sidebar */}
         <StaffSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />

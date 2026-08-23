@@ -305,7 +305,7 @@ export default function StaffTablesPage() {
                 }`}
               >
                 {selectedTableId === tbl.id && (
-                  <div className="absolute -top-3 bg-saffron-gold text-[#030612] text-[8px] font-black px-2.5 py-0.5 uppercase tracking-wider">
+                  <div className="absolute -top-3 bg-saffron-gold text-midnight-black text-[8px] font-black px-2.5 py-0.5 uppercase tracking-wider">
                     Selected
                   </div>
                 )}
@@ -514,7 +514,7 @@ export default function StaffTablesPage() {
                                     const selectEl = document.getElementById('seat_party_select');
                                     if (selectEl) handleSeatParty(selectEl.value);
                                   }}
-                                  className="py-2 px-4 bg-saffron-gold text-[#030612] font-label-caps text-[10px] uppercase font-bold tracking-wider hover:bg-[#B8962F] transition-all cursor-pointer"
+                                  className="py-2 px-4 bg-saffron-gold text-midnight-black font-label-caps text-[10px] uppercase font-bold tracking-wider hover:bg-[#B8962F] transition-all cursor-pointer"
                                 >
                                   Assign Table
                                 </button>

@@ -30,7 +30,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="w-full mt-section-gap border-t border-muted-border bg-[#faf9f8] text-ink-navy">
+    <footer className="w-full mt-section-gap border-t border-muted-border bg-surface text-ink-navy">
       <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-section-gap grid grid-cols-1 md:grid-cols-12 gap-gutter">
         
         {/* 1. Brand Section */}

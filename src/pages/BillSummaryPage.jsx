@@ -160,7 +160,7 @@ export default function BillSummaryPage() {
           </div>
 
           {/* Payment Status */}
-          <div className="p-6 bg-[#f4f3f2] border border-muted-border flex flex-col items-center justify-center text-center">
+          <div className="p-6 bg-surface-container-low border border-muted-border flex flex-col items-center justify-center text-center">
             <p className="font-label-caps text-label-caps text-subtle-text mb-2 uppercase tracking-widest text-[10px]">
               PAYMENT STATUS
             </p>

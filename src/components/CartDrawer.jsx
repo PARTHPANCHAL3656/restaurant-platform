@@ -177,7 +177,7 @@ export default function CartDrawer({ isOpen, onClose }) {
                         value={specialNotes}
                         onChange={(e) => setSpecialNotes(e.target.value)}
                         placeholder="E.g. No onions, extra saffron, allergy warnings..."
-                        className="w-full bg-[#f4f3f2] border border-muted-border p-3 text-xs font-body-md focus:outline-none focus:border-ink-navy resize-none h-16 outline-none"
+                        className="w-full bg-surface-container-low border border-muted-border p-3 text-xs font-body-md focus:outline-none focus:border-ink-navy resize-none h-16 outline-none"
                       />
                     </div>
                   </>

@@ -113,7 +113,7 @@ export default function ContactPage() {
 
       {/* CTA Reservation Banner */}
       <section className="px-margin-mobile md:px-margin-desktop py-12 max-w-container-max mx-auto">
-        <div className="bg-[#f4f3f2] p-8 md:p-16 flex flex-col items-center text-center space-y-8 border border-muted-border shadow-sm">
+        <div className="bg-surface-container-low p-8 md:p-16 flex flex-col items-center text-center space-y-8 border border-muted-border shadow-sm">
           <h2 className="font-serif text-headline-md md:text-headline-lg text-ink-navy">Secure Your Table</h2>
           <p className="font-sans text-body-lg text-subtle-text max-w-xl leading-relaxed">
             We recommend booking in advance to ensure the best experience. For parties larger than 8, please contact our events team directly.

@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function StaffAvatar({ className = 'w-10 h-10' }) {
   return (
-    <div className={`rounded-full bg-[#f4f3f2] border border-[#E5E1DA] overflow-hidden flex items-center justify-center ${className}`}>
+    <div className={`rounded-full bg-surface-container-low border border-muted-border overflow-hidden flex items-center justify-center ${className}`}>
       <svg 
         viewBox="0 0 24 24" 
         fill="none" 
