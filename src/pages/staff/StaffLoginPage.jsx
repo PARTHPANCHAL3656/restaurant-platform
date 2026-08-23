@@ -75,20 +75,20 @@ export default function StaffLoginPage() {
       <main className="relative z-10 w-full max-w-[480px] px-6 py-12 md:py-16">
         
         {/* Centered Panel */}
-        <div className="bg-[#1A1F2C]/80 backdrop-blur-xl border border-[#E5E1DA]/10 p-8 md:p-12 shadow-2xl rounded-sm">
+        <div className="bg-ink-navy/80 backdrop-blur-xl border border-muted-border/10 p-8 md:p-12 shadow-2xl rounded-sm">
           
           {/* Logo & Subtitle */}
           <div className="flex flex-col items-center mb-10 text-center select-none">
             <StaffLogo heightClass="h-[76px]" colorClassName="text-canvas-cream" />
             <div className="mt-6 space-y-1.5">
-              <p className="font-label-caps text-[10px] text-[#D4AF37] tracking-[0.2em] uppercase font-bold">
+              <p className="font-label-caps text-[10px] text-saffron-gold tracking-[0.2em] uppercase font-bold">
                 Secure Staff Portal
               </p>
               <p className="font-sans text-[11px] text-canvas-cream/50 leading-relaxed max-w-xs">
                 Authorized restaurant personnel only
               </p>
             </div>
-            <div className="w-12 h-[0.5px] bg-[#D4AF37] mt-5 opacity-60" />
+            <div className="w-12 h-[0.5px] bg-saffron-gold mt-5 opacity-60" />
           </div>
 
           {/* Form */}
@@ -124,12 +124,12 @@ export default function StaffLoginPage() {
                 className="w-full bg-transparent border-b border-canvas-cream/20 py-3 focus:outline-none focus:border-saffron-gold transition-colors font-body-md text-canvas-cream outline-none animate-none cursor-pointer appearance-none"
                 required
               >
-                <option value="" className="bg-[#1A1F2C]">Select your role</option>
-                <option value="Restaurant Manager" className="bg-[#1A1F2C]">Restaurant Manager</option>
-                <option value="Operations Manager" className="bg-[#1A1F2C]">Operations Manager</option>
-                <option value="Floor Manager" className="bg-[#1A1F2C]">Floor Manager</option>
-                <option value="Maitre D'" className="bg-[#1A1F2C]">Maitre D'</option>
-                <option value="Head Chef" className="bg-[#1A1F2C]">Head Chef</option>
+                <option value="" className="bg-ink-navy">Select your role</option>
+                <option value="Restaurant Manager" className="bg-ink-navy">Restaurant Manager</option>
+                <option value="Operations Manager" className="bg-ink-navy">Operations Manager</option>
+                <option value="Floor Manager" className="bg-ink-navy">Floor Manager</option>
+                <option value="Maitre D'" className="bg-ink-navy">Maitre D'</option>
+                <option value="Head Chef" className="bg-ink-navy">Head Chef</option>
               </select>
             </div>
 
@@ -162,7 +162,7 @@ export default function StaffLoginPage() {
               <button 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-0 bottom-3 text-canvas-cream/40 hover:text-[#D4AF37] transition-colors focus:outline-none"
+                className="absolute right-0 bottom-3 text-canvas-cream/40 hover:text-saffron-gold transition-colors focus:outline-none"
               >
                 <span className="material-symbols-outlined text-lg">
                   {showPassword ? 'visibility_off' : 'visibility'}
@@ -177,7 +177,7 @@ export default function StaffLoginPage() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="form-checkbox rounded-xs bg-transparent border-canvas-cream/30 text-[#D4AF37] focus:ring-0 focus:ring-offset-0 transition-all cursor-pointer"
+                  className="form-checkbox rounded-xs bg-transparent border-canvas-cream/30 text-saffron-gold focus:ring-0 focus:ring-offset-0 transition-all cursor-pointer"
                 />
                 <span className="ml-3 font-label-caps text-[10px] text-canvas-cream/60 uppercase tracking-widest group-hover:text-canvas-cream transition-colors">
                   Remember Me
@@ -186,7 +186,7 @@ export default function StaffLoginPage() {
               <a 
                 href="#" 
                 onClick={(e) => { e.preventDefault(); setError('Contact administration to reset your portal password.'); }}
-                className="font-label-caps text-[10px] text-canvas-cream/60 uppercase tracking-widest hover:text-[#D4AF37] transition-colors border-b border-transparent hover:border-[#D4AF37]/50 pb-0.5"
+                className="font-label-caps text-[10px] text-canvas-cream/60 uppercase tracking-widest hover:text-saffron-gold transition-colors border-b border-transparent hover:border-saffron-gold/50 pb-0.5"
               >
                 Reset Access
               </a>

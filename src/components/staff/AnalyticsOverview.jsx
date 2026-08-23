@@ -68,7 +68,7 @@ export default function AnalyticsOverview() {
 
   if (error) {
     return (
-      <div className="bg-[#FDFCFB] border border-red-200 p-6 text-xs text-red-600">
+      <div className="bg-canvas-cream border border-red-200 p-6 text-xs text-red-600">
         Could not load analytics: {error}
       </div>
     );
@@ -95,14 +95,14 @@ export default function AnalyticsOverview() {
       <div className="flex justify-end gap-3">
         <button
           onClick={() => exportAnalyticsToExcel(exportData)}
-          className="flex items-center gap-2 border border-[#D4AF37]/40 text-ink-navy font-label-caps text-[10px] uppercase tracking-wider px-4 py-2.5 hover:bg-[#D4AF37]/10 transition-colors duration-300 cursor-pointer"
+          className="flex items-center gap-2 border border-saffron-gold/40 text-ink-navy font-label-caps text-[10px] uppercase tracking-wider px-4 py-2.5 hover:bg-saffron-gold/10 transition-colors duration-300 cursor-pointer"
         >
           <span className="material-symbols-outlined text-sm">table_view</span>
           Export Excel
         </button>
         <button
           onClick={() => exportAnalyticsToPDF(exportData)}
-          className="flex items-center gap-2 border border-[#D4AF37]/40 text-ink-navy font-label-caps text-[10px] uppercase tracking-wider px-4 py-2.5 hover:bg-[#D4AF37]/10 transition-colors duration-300 cursor-pointer"
+          className="flex items-center gap-2 border border-saffron-gold/40 text-ink-navy font-label-caps text-[10px] uppercase tracking-wider px-4 py-2.5 hover:bg-saffron-gold/10 transition-colors duration-300 cursor-pointer"
         >
           <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
           Export PDF
@@ -110,7 +110,7 @@ export default function AnalyticsOverview() {
       </div>
 
       {/* Today vs Previous Period */}
-      <div className="bg-[#FDFCFB] border border-[#D4AF37]/15 p-6 shadow-xs flex items-center justify-between">
+      <div className="bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs flex items-center justify-between">
         <div>
           <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-1">Today's Revenue</p>
           <p className="font-serif text-3xl text-ink-navy">{formatINR(revenue?.currentPeriodRevenue)}</p>
@@ -124,7 +124,7 @@ export default function AnalyticsOverview() {
       </div>
 
       {/* Revenue Trend Chart */}
-      <div className="bg-[#FDFCFB] border border-[#D4AF37]/15 p-6 shadow-xs">
+      <div className="bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs">
         <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-4">Revenue — Last 14 Days</p>
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
@@ -144,14 +144,14 @@ export default function AnalyticsOverview() {
       <div className="grid grid-cols-12 gap-6">
 
         {/* Top Items */}
-        <div className="col-span-12 lg:col-span-6 bg-[#FDFCFB] border border-[#D4AF37]/15 p-6 shadow-xs">
+        <div className="col-span-12 lg:col-span-6 bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs">
           <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-4">Top Items by Revenue</p>
           {items?.topByRevenue?.length > 0 ? (
             <div className="space-y-3">
               {items.topByRevenue.map((it, i) => (
                 <div key={it.name} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-3">
-                    <span className="font-serif text-[#D4AF37] w-4">{i + 1}</span>
+                    <span className="font-serif text-saffron-gold w-4">{i + 1}</span>
                     <span className="text-ink-navy font-semibold">{it.name}</span>
                   </div>
                   <div className="text-right">
@@ -167,19 +167,19 @@ export default function AnalyticsOverview() {
         </div>
 
         {/* Repeat Customers */}
-        <div className="col-span-12 lg:col-span-6 bg-[#FDFCFB] border border-[#D4AF37]/15 p-6 shadow-xs">
+        <div className="col-span-12 lg:col-span-6 bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs">
           <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-4">
             Repeat Customers {repeatCustomers ? `(≥ ${repeatCustomers.threshold} visits)` : ''}
           </p>
           {repeatCustomers?.customers?.filter(c => c.discountEligible).length > 0 ? (
             <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
               {repeatCustomers.customers.filter(c => c.discountEligible).map((c) => (
-                <div key={c.phone} className="flex items-center justify-between text-xs border-b border-[#E5E1DA]/50 pb-2 last:border-0">
+                <div key={c.phone} className="flex items-center justify-between text-xs border-b border-muted-border/50 pb-2 last:border-0">
                   <div>
                     <p className="text-ink-navy font-semibold">{c.name || c.phone}</p>
                     <p className="text-subtle-text">{c.visitCount} visits · {formatINR(c.totalSpend)} spent</p>
                   </div>
-                  <span className="font-label-caps text-[9px] bg-[#D4AF37]/15 text-[#8a6f1f] px-2 py-1 uppercase tracking-wider">
+                  <span className="font-label-caps text-[9px] bg-saffron-gold/15 text-[#8a6f1f] px-2 py-1 uppercase tracking-wider">
                     Eligible
                   </span>
                 </div>
@@ -192,7 +192,7 @@ export default function AnalyticsOverview() {
       </div>
 
       {/* Rush Hour Heatmap */}
-      <div className="bg-[#FDFCFB] border border-[#D4AF37]/15 p-6 shadow-xs overflow-x-auto">
+      <div className="bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs overflow-x-auto">
         <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-4">Rush Hours</p>
         {rushHours && (
           <table className="min-w-full text-[9px] border-collapse">

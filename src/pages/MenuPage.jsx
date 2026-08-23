@@ -64,7 +64,7 @@ export default function MenuPage({ onCartToggle }) {
     <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20">
 
       {/* Search & Category Tabs sticky header */}
-      <nav className="sticky top-12 lg:top-0 bg-gradient-to-b from-[#FBF7EE] to-[#F7F2E2] z-25 border-b border-[#D4AF37]/15 shadow-[0_8px_30px_rgba(212,175,55,0.03)]">
+      <nav className="sticky top-12 lg:top-0 bg-gradient-to-b from-[#FBF7EE] to-[#F7F2E2] z-25 border-b border-saffron-gold/15 shadow-[0_8px_30px_rgba(212,175,55,0.03)]">
         <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-8 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           
           {/* Table Header Details (Clean & Premium Editorial) */}
@@ -104,14 +104,14 @@ export default function MenuPage({ onCartToggle }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search signature dishes..." 
-              className="w-full bg-transparent border-b border-[#D4AF37]/20 py-2 pl-9 pr-4 focus:outline-none focus:border-saffron-gold font-body-md text-xs placeholder:text-subtle-text/30 placeholder:italic text-ink-navy outline-none"
+              className="w-full bg-transparent border-b border-saffron-gold/20 py-2 pl-9 pr-4 focus:outline-none focus:border-saffron-gold font-body-md text-xs placeholder:text-subtle-text/30 placeholder:italic text-ink-navy outline-none"
             />
           </div>
         </div>
 
         {/* Category Tabs */}
         <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop overflow-x-auto hide-scrollbar whitespace-nowrap pt-4 pb-4">
-          <div className="flex gap-8 border-b border-[#D4AF37]/15">
+          <div className="flex gap-8 border-b border-saffron-gold/15">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
@@ -208,7 +208,7 @@ export default function MenuPage({ onCartToggle }) {
                           Order at your table
                         </span>
                       ) : !item.available ? (
-                      <span className="font-label-caps text-xs text-subtle-text/50 uppercase tracking-widest px-6 py-3 border border-muted-border/30 bg-[#f4f3f2] select-none cursor-not-allowed">
+                      <span className="font-label-caps text-xs text-subtle-text/50 uppercase tracking-widest px-6 py-3 border border-muted-border/30 bg-surface-container-low select-none cursor-not-allowed">
                         Out of Stock
                       </span>
                     ) : qty > 0 ? (

@@ -68,7 +68,7 @@ export default function StaffHeader({ onMenuToggle }) {
   const formattedDate = time.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <header className="h-16 md:h-20 border-b border-[#E5E1DA] bg-[#FDFCFB]/85 backdrop-blur-md fixed top-0 right-0 left-0 lg:left-[300px] z-30 px-4 sm:px-6 md:px-8 flex items-center justify-between overflow-visible">
+    <header className="h-16 md:h-20 border-b border-muted-border bg-canvas-cream/85 backdrop-blur-md fixed top-0 right-0 left-0 lg:left-[300px] z-30 px-4 sm:px-6 md:px-8 flex items-center justify-between overflow-visible">
       
       {/* Left side: Hamburger (mobile/tablet) + Page Title */}
       <div className="flex items-center gap-4">
@@ -94,7 +94,7 @@ export default function StaffHeader({ onMenuToggle }) {
           <span className="font-sans text-[11px] text-subtle-text mt-0.5">{formattedDate} • {formattedTime}</span>
         </div>
 
-        <div className="h-6 w-px bg-[#E5E1DA] hidden md:block" />
+        <div className="h-6 w-px bg-muted-border hidden md:block" />
 
         {/* Search Field (Understated) */}
         <div className="relative hidden lg:block w-64">
@@ -102,7 +102,7 @@ export default function StaffHeader({ onMenuToggle }) {
           <input 
             type="text" 
             placeholder="Search portal..." 
-            className="w-full bg-transparent border-b border-[#D4AF37]/20 py-1.5 pl-9 pr-4 focus:outline-none focus:border-saffron-gold font-body-md text-xs placeholder:text-subtle-text/30 outline-none"
+            className="w-full bg-transparent border-b border-saffron-gold/20 py-1.5 pl-9 pr-4 focus:outline-none focus:border-saffron-gold font-body-md text-xs placeholder:text-subtle-text/30 outline-none"
           />
         </div>
 
@@ -142,18 +142,18 @@ export default function StaffHeader({ onMenuToggle }) {
                 <Link 
                   to="#" 
                   onClick={() => setDropdownOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-xs font-label-caps text-ink-navy hover:bg-[#f4f3f2] transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-xs font-label-caps text-ink-navy hover:bg-surface-container-low transition-colors"
                 >
-                  <span className="material-symbols-outlined text-lg text-[#D4AF37]">person</span>
+                  <span className="material-symbols-outlined text-lg text-saffron-gold">person</span>
                   <span>My Profile</span>
                 </Link>
 
                 <Link 
                   to="#" 
                   onClick={() => setDropdownOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-xs font-label-caps text-ink-navy hover:bg-[#f4f3f2] transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-xs font-label-caps text-ink-navy hover:bg-surface-container-low transition-colors"
                 >
-                  <span className="material-symbols-outlined text-lg text-[#D4AF37]">settings</span>
+                  <span className="material-symbols-outlined text-lg text-saffron-gold">settings</span>
                   <span>Settings</span>
                 </Link>
 

@@ -55,29 +55,29 @@ export default function StaffDashboardPage() {
     <div className="px-4 md:px-6 lg:px-12 py-6 md:py-8 space-y-8 md:space-y-10 max-w-container-max mx-auto">
       
       {/* Hero Welcome Row */}
-      <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#E5E1DA] pb-6">
+      <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-muted-border pb-6">
         <div>
-          <p className="font-label-caps text-[10px] text-[#D4AF37] tracking-[0.25em] uppercase font-bold mb-1">Shift active</p>
+          <p className="font-label-caps text-[10px] text-saffron-gold tracking-[0.25em] uppercase font-bold mb-1">Shift active</p>
           <h1 className="font-serif text-display-lg-mobile md:text-headline-md text-ink-navy">Welcome Back, {(sessionStorage.getItem('staffName') || staffProfile.name).split(' ')[0]}</h1>
         </div>
         <div className="flex items-center gap-2.5 text-subtle-text font-body-md text-xs font-semibold">
-          <span className="material-symbols-outlined text-lg text-[#D4AF37]">calendar_today</span>
+          <span className="material-symbols-outlined text-lg text-saffron-gold">calendar_today</span>
           <span>Today is {new Date().toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
         </div>
       </section>
 
       {/* Today's Overview Grid */}
       <section className="space-y-6">
-        <h3 className="font-serif text-headline-sm text-ink-navy border-l-2 border-[#D4AF37] pl-4">Today's Overview</h3>
+        <h3 className="font-serif text-headline-sm text-ink-navy border-l-2 border-saffron-gold pl-4">Today's Overview</h3>
         
         <div className="grid grid-cols-12 gap-6">
           {/* Main Card: Restaurant Floor Operations */}
           <div 
             onClick={() => navigate('/staff/tables')}
-          className="col-span-12 lg:col-span-7 bg-[#FDFCFB] border border-[#D4AF37]/25 p-8 shadow-sm flex flex-col justify-between min-h-[300px] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+          className="col-span-12 lg:col-span-7 bg-canvas-cream border border-saffron-gold/25 p-8 shadow-sm flex flex-col justify-between min-h-[300px] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
           >
             <div className="flex justify-between items-start">
-              <span className="font-label-caps text-[10px] text-[#D4AF37] tracking-widest uppercase font-bold">Restaurant Operations</span>
+              <span className="font-label-caps text-[10px] text-saffron-gold tracking-widest uppercase font-bold">Restaurant Operations</span>
               <span className="material-symbols-outlined text-saffron-gold text-2xl">table_restaurant</span>
             </div>
             
@@ -86,7 +86,7 @@ export default function StaffDashboardPage() {
                 <p className="font-serif text-4xl md:text-6xl text-ink-navy leading-none mb-1">{occupiedTables}</p>
                 <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider">Occupied Tables</p>
               </div>
-              <div className="h-14 w-[1px] bg-[#E5E1DA] self-end mb-1" />
+              <div className="h-14 w-[1px] bg-muted-border self-end mb-1" />
               <div>
                 <p className="font-serif text-4xl md:text-6xl text-subtle-text leading-none mb-1">{availableTables}</p>
                 <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider">Available</p>
@@ -98,9 +98,9 @@ export default function StaffDashboardPage() {
                 <span>Occupancy Rate</span>
                 <span className="font-bold text-ink-navy">{occupancyRate}%</span>
               </div>
-              <div className="w-full bg-[#f4f3f2] h-[2px] relative">
+              <div className="w-full bg-surface-container-low h-[2px] relative">
                 <div 
-                  className="absolute top-0 left-0 bg-[#D4AF37] h-[2px] transition-all duration-500" 
+                  className="absolute top-0 left-0 bg-saffron-gold h-[2px] transition-all duration-500" 
                   style={{ width: `${occupancyRate}%` }}
                 />
               </div>
@@ -115,14 +115,14 @@ export default function StaffDashboardPage() {
               {/* Bookings */}
               <div 
                 onClick={() => navigate('/staff/guest-queue')}
-                className="bg-[#FDFCFB] border border-[#D4AF37]/15 p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex justify-between items-center cursor-pointer"
+                className="bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex justify-between items-center cursor-pointer"
               >
                 <div>
                   <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-1">Today's Reservations</p>
                   <p className="font-serif text-3xl text-ink-navy">{todayReservationsCount}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-xs text-[#D4AF37] font-label-caps">{queue.length} In Queue</p>
+                  <p className="font-semibold text-xs text-saffron-gold font-label-caps">{queue.length} In Queue</p>
                   <p className="font-sans text-[11px] text-subtle-text">Floor mapping</p>
                 </div>
               </div>
@@ -130,12 +130,12 @@ export default function StaffDashboardPage() {
               {/* Kitchen */}
               <div 
                 onClick={() => navigate('/staff/orders')}
-                className="bg-[#FDFCFB] border border-[#D4AF37]/15 p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex justify-between items-center cursor-pointer"
+                className="bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex justify-between items-center cursor-pointer"
               >
                 <div>
                   <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-1">Active Orders</p>
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-saffron-gold animate-pulse" />
                     <p className="font-serif text-xl text-ink-navy">{activeOrdersCount}</p>
                   </div>
                 </div>
@@ -150,7 +150,7 @@ export default function StaffDashboardPage() {
             {/* Revenue */}
             <div 
               onClick={() => navigate('/staff/billing')}
-              className="bg-[#FDFCFB] border border-[#D4AF37]/15 p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+              className="bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between cursor-pointer"
             >
               <div className="flex justify-between items-end mb-4">
                 <div>
@@ -158,13 +158,13 @@ export default function StaffDashboardPage() {
                   <p className="font-serif text-3xl text-ink-navy">{formatINR(todayRevenue)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-label-caps text-[9px] text-[#D4AF37] uppercase tracking-wider mb-0.5">Pending Revenue</p>
+                  <p className="font-label-caps text-[9px] text-saffron-gold uppercase tracking-wider mb-0.5">Pending Revenue</p>
                   <p className="font-serif text-md text-ink-navy">{formatINR(revenuePending)}</p>
                 </div>
               </div>
 
               {/* Dynamic Billing Sub-Ledger Metrics */}
-              <div className="grid grid-cols-4 gap-2 pt-4 border-t border-[#E5E1DA]/50 text-center text-ink-navy shrink-0">
+              <div className="grid grid-cols-4 gap-2 pt-4 border-t border-muted-border/50 text-center text-ink-navy shrink-0">
                 <div>
                   <p className="font-serif text-sm font-bold">{completedBills}</p>
                   <p className="text-[7.5px] font-label-caps text-subtle-text uppercase tracking-wider">Paid Bills</p>
@@ -183,9 +183,9 @@ export default function StaffDashboardPage() {
                 </div>
               </div>
 
-              <div className="w-full bg-[#f4f3f2] h-[2px] relative mt-4">
+              <div className="w-full bg-surface-container-low h-[2px] relative mt-4">
                 <div 
-                  className="absolute top-0 left-0 bg-[#D4AF37] h-[2px]" 
+                  className="absolute top-0 left-0 bg-saffron-gold h-[2px]" 
                   style={{ width: `${Math.min(100, (todayRevenue / 1500) * 100)}%` }}
                 />
               </div>
@@ -197,15 +197,15 @@ export default function StaffDashboardPage() {
 
             {/* Quick Actions */}
       <section className="space-y-6">
-        <h4 className="font-serif text-headline-sm text-ink-navy border-l-2 border-[#D4AF37] pl-4">Quick Actions</h4>
+        <h4 className="font-serif text-headline-sm text-ink-navy border-l-2 border-saffron-gold pl-4">Quick Actions</h4>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {quickActions.map((action) => (
             <button 
               key={action.name}
               onClick={() => navigate(action.path)}
-              className="flex flex-col items-center justify-center p-6 border border-[#E5E1DA] bg-[#FDFCFB] hover:bg-[#1A1F2C] hover:text-canvas-cream transition-all duration-300 cursor-pointer shadow-xs focus:outline-none"
+              className="flex flex-col items-center justify-center p-6 border border-muted-border bg-canvas-cream hover:bg-ink-navy hover:text-canvas-cream transition-all duration-300 cursor-pointer shadow-xs focus:outline-none"
             >
-              <span className="material-symbols-outlined text-[#D4AF37] mb-3 text-3xl">{action.icon}</span>
+              <span className="material-symbols-outlined text-saffron-gold mb-3 text-3xl">{action.icon}</span>
               <span className="font-label-caps text-[10px] tracking-wider uppercase font-semibold text-center">{action.name}</span>
             </button>
           ))}
