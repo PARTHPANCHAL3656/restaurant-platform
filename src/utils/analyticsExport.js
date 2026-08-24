@@ -79,6 +79,33 @@ export function exportAnalyticsToExcel(data) {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(retentionRows), 'Retention');
   }
 
+  // Customer Summary — new vs returning, a broader split (visitCount >= 2)
+  // than the >= 3 discount-eligibility threshold used in Retention above.
+  if (data.customerOverview) {
+    const summaryRows = [{
+      'Total Customers': data.customerOverview.totalCustomers,
+      'New Customers': data.customerOverview.newCustomers,
+      'New (%)': data.customerOverview.newPercent,
+      'Returning Customers': data.customerOverview.returningCustomers,
+      'Returning (%)': data.customerOverview.returningPercent
+    }];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'Customer Summary');
+  }
+
+  // All Customers — every phone-captured customer, not filtered to
+  // discount-eligible ones like the "Repeat Customers" sheet above.
+  const allCustomerRows = (data.customerOverview?.customers || []).map((c) => ({
+    Name: c.name || '—',
+    Phone: c.phone,
+    Status: c.isNew ? 'New' : 'Returning',
+    'Visit Count': c.visitCount,
+    'Total Spend': c.totalSpend,
+    'First Visit': c.firstVisit ? new Date(c.firstVisit).toLocaleDateString('en-IN') : '—',
+    'Last Visit': c.lastVisit ? new Date(c.lastVisit).toLocaleDateString('en-IN') : '—',
+    'Discount Eligible': c.discountEligible ? 'Yes' : 'No'
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allCustomerRows), 'All Customers');
+
   const dateStr = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `spice_garden_analytics_${dateStr}.xlsx`);
 }
@@ -183,6 +210,34 @@ export function exportAnalyticsToPDF(data) {
       ['Total Customers', 'Repeat Customers', 'Retention Rate'],
       [[data.retention.totalCustomers, data.retention.repeatCustomers, `${data.retention.retentionRate}%`]],
       [60, 60, 62]
+    );
+  }
+
+  if (data.customerOverview) {
+    addSection(
+      'Customer Summary — New vs Returning',
+      ['Total', 'New', 'New %', 'Returning', 'Returning %'],
+      [[
+        data.customerOverview.totalCustomers,
+        data.customerOverview.newCustomers,
+        `${data.customerOverview.newPercent}%`,
+        data.customerOverview.returningCustomers,
+        `${data.customerOverview.returningPercent}%`
+      ]],
+      [30, 30, 30, 40, 52]
+    );
+
+    addSection(
+      'All Customers',
+      ['Name', 'Phone', 'Status', 'Visits', 'Total Spend'],
+      (data.customerOverview.customers || []).map((c) => [
+        c.name || '—',
+        c.phone,
+        c.isNew ? 'New' : 'Returning',
+        c.visitCount,
+        formatINR(c.totalSpend)
+      ]),
+      [45, 40, 32, 25, 40]
     );
   }
 

@@ -89,6 +89,47 @@ export const getRetentionRate = async (req, res) => {
   }
 }
 
+// GET /api/crm/customer-overview
+// The FULL customer roster — every Customer record, not filtered to
+// discount-eligible ones. Splits by a DIFFERENT, broader threshold than
+// REPEAT_VISIT_THRESHOLD above: "New" = visited exactly once ever,
+// "Returning" = came back at least one more time (visitCount >= 2).
+// This answers "how many are new vs coming back" as a general health
+// metric — separate from the >= 3 discount-eligibility business rule.
+export const getCustomerOverview = async (req, res) => {
+  try {
+    const customers = await Customer.find({})
+      .sort({ lastVisit: -1 })
+      .select("phone name visitCount totalSpend firstVisit lastVisit")
+
+    const withStatus = customers.map((c) => ({
+      phone: c.phone,
+      name: c.name,
+      visitCount: c.visitCount,
+      totalSpend: c.totalSpend,
+      firstVisit: c.firstVisit,
+      lastVisit: c.lastVisit,
+      isNew: c.visitCount <= 1,
+      discountEligible: c.visitCount >= REPEAT_VISIT_THRESHOLD
+    }))
+
+    const totalCustomers = withStatus.length
+    const newCustomers = withStatus.filter((c) => c.isNew).length
+    const returningCustomers = totalCustomers - newCustomers
+
+    res.json({
+      totalCustomers,
+      newCustomers,
+      returningCustomers,
+      newPercent: totalCustomers === 0 ? 0 : Number(((newCustomers / totalCustomers) * 100).toFixed(1)),
+      returningPercent: totalCustomers === 0 ? 0 : Number(((returningCustomers / totalCustomers) * 100).toFixed(1)),
+      customers: withStatus
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 // GET /api/crm/churn-list
 // Customers who were real visitors (visitCount >= 1, i.e. not junk records)
 // but haven't been seen in 30+ days. Sorted so the longest-gone / highest
