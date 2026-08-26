@@ -217,3 +217,42 @@ export const getItemPerformance = async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 }
+
+// GET /api/analytics/order-log?limit=500
+// The full, row-per-order detail export — everything about a single
+// paid order in one place: date, table, guest, phone, party size,
+// exactly what was ordered, how they paid, and the totals breakdown.
+// This is the ONE place that gives per-order detail; every other
+// analytics endpoint aggregates across orders, this one doesn't.
+// Sorted most recent first. Capped at 500 to keep the export sane —
+// raise the limit if a restaurant genuinely needs more history at once.
+export const getOrderLog = async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 500, 2000)
+
+    const invoices = await Invoice.find({ status: "paid" })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .select("invoiceNumber tableNumber guestName guestPhone partySize items subtotal serviceCharge gst discount total paymentMethod createdAt")
+
+    const orders = invoices.map((inv) => ({
+      date: inv.createdAt,
+      invoiceNumber: inv.invoiceNumber,
+      table: inv.tableNumber,
+      guestName: inv.guestName,
+      guestPhone: inv.guestPhone,
+      partySize: inv.partySize,
+      items: inv.items.map((i) => `${i.qty}x ${i.name}`).join(", "),
+      paymentMethod: inv.paymentMethod,
+      subtotal: inv.subtotal,
+      serviceCharge: inv.serviceCharge,
+      gst: inv.gst,
+      discount: inv.discount,
+      total: inv.total
+    }))
+
+    res.json({ count: orders.length, orders })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}

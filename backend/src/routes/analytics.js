@@ -5,7 +5,8 @@ import {
   getAOV,
   getFootfall,
   getRushHours,
-  getItemPerformance
+  getItemPerformance,
+  getOrderLog
 } from "../controllers/analyticsController.js"
 
 const router = express.Router()
@@ -15,5 +16,6 @@ router.get("/aov", staffAuth, getAOV)
 router.get("/footfall", staffAuth, getFootfall)
 router.get("/rush-hours", staffAuth, getRushHours)
 router.get("/items", staffAuth, getItemPerformance)
+router.get("/order-log", staffAuth, getOrderLog)
 
 export default router

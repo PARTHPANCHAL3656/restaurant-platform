@@ -106,6 +106,26 @@ export function exportAnalyticsToExcel(data) {
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allCustomerRows), 'All Customers');
 
+  // Full Order Log — one row per paid order, the complete detail view.
+  // Every other sheet in this workbook aggregates across orders; this is
+  // the only one that shows exactly what happened on each individual order.
+  const orderLogRows = (data.orderLog?.orders || []).map((o) => ({
+    Date: new Date(o.date).toLocaleString('en-IN'),
+    Invoice: o.invoiceNumber,
+    Table: o.table,
+    Guest: o.guestName || '—',
+    Phone: o.guestPhone || '—',
+    'Party Size': o.partySize ?? '—',
+    Items: o.items,
+    'Payment Method': o.paymentMethod || '—',
+    Subtotal: o.subtotal,
+    'Service Charge': o.serviceCharge,
+    GST: o.gst,
+    Discount: o.discount,
+    Total: o.total
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(orderLogRows), 'Full Order Log');
+
   const dateStr = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `spice_garden_analytics_${dateStr}.xlsx`);
 }
@@ -258,6 +278,25 @@ export function exportAnalyticsToPDF(data) {
       ['Name', 'Phone', 'Visits', 'Days Since Last Visit'],
       (data.churnList.customers || []).map((c) => [c.name || '—', c.phone, c.visitCount, c.daysSinceLastVisit]),
       [45, 40, 30, 67]
+    );
+  }
+
+  // Order Log — trimmed to the essentials for a readable printed page.
+  // Full itemized detail (subtotal/GST/service charge breakdown, exact
+  // items) lives in the Excel export's "Full Order Log" sheet instead.
+  if (data.orderLog) {
+    addSection(
+      `Order Log (${data.orderLog.count} orders)`,
+      ['Date', 'Table', 'Guest', 'Party', 'Payment', 'Total'],
+      (data.orderLog.orders || []).map((o) => [
+        new Date(o.date).toLocaleDateString('en-IN'),
+        o.table,
+        o.guestName || '—',
+        o.partySize ?? '—',
+        o.paymentMethod || '—',
+        formatINR(o.total)
+      ]),
+      [28, 18, 45, 20, 30, 41]
     );
   }
 

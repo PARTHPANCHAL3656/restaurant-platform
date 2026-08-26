@@ -42,6 +42,14 @@ const invoiceSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  // Party size at the moment of billing. Only populated for invoices
+  // generated after this field was added — older invoices will show
+  // null here since Table.guestCount gets overwritten on every reseating
+  // and was never snapshotted before now.
+  partySize: {
+    type: Number,
+    default: null
+  },
   items: [invoiceItemSchema],
   subtotal: { type: Number, required: true },
   serviceCharge: { type: Number, required: true },

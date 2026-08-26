@@ -20,6 +20,7 @@ export default function AnalyticsOverview() {
   const [retention, setRetention] = useState(null);
   const [customerOverview, setCustomerOverview] = useState(null);
   const [churnList, setChurnList] = useState(null);
+  const [orderLog, setOrderLog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -28,7 +29,7 @@ export default function AnalyticsOverview() {
 
     async function loadAnalytics() {
       try {
-        const [revenueRes, aovRes, footfallRes, itemsRes, rushRes, crmRes, retentionRes, overviewRes, churnRes] = await Promise.all([
+      const [revenueRes, aovRes, footfallRes, itemsRes, rushRes, crmRes, retentionRes, overviewRes, churnRes, orderLogRes] = await Promise.all([
           api.get('/api/analytics/revenue', { params: { period: 'day', range: 14 } }),
           api.get('/api/analytics/aov', { params: { period: 'day', range: 14 } }),
           api.get('/api/analytics/footfall', { params: { range: 30 } }),
@@ -38,6 +39,7 @@ export default function AnalyticsOverview() {
           api.get('/api/crm/retention-rate'),
           api.get('/api/crm/customer-overview'),
           api.get('/api/crm/churn-list'),
+          api.get('/api/analytics/order-log', { params: { limit: 500 } }),
         ]);
 
         if (cancelled) return;
@@ -50,6 +52,7 @@ export default function AnalyticsOverview() {
         setRetention(retentionRes.data);
         setCustomerOverview(overviewRes.data);
         setChurnList(churnRes.data);
+        setOrderLog(orderLogRes.data);
       } catch (err) {
         if (!cancelled) setError(err.message || 'Could not load analytics.');
       } finally {
@@ -89,7 +92,7 @@ export default function AnalyticsOverview() {
 
   // Single bundle passed to both export functions — same data already
   // rendered on this page, just handed off as raw JSON for Part 5.
-  const exportData = { revenue, aov, footfall, rushHours, items, repeatCustomers, retention, customerOverview, churnList };
+  const exportData = { revenue, aov, footfall, rushHours, items, repeatCustomers, retention, customerOverview, churnList, orderLog };
 
   return (
     <div className="space-y-8">
