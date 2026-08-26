@@ -1,11 +1,11 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import Lenis from 'lenis';
+// (Lenis import removed from the top — loaded dynamically below instead)
 import { CartProvider, useCart } from './context/CartContext';
 import { StaffProvider } from './context/StaffContext';
 import DesktopSidebar from './components/DesktopSidebar';
 import MobileHeader from './components/MobileHeader';
-import MobileMenu from './components/MobileMenu';
+const MobileMenu = React.lazy(() => import('./components/MobileMenu'));
 import CartDrawer from './components/CartDrawer';
 import StaffLayout from './components/staff/StaffLayout';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -168,22 +168,29 @@ function MainAppRouter() {
 
 export default function App() {
   useEffect(() => {
-    // Initialize Lenis smooth scrolling globally
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
+    let lenis;
+    let rafId;
+    let cancelled = false;
+
+    import('lenis').then(({ default: Lenis }) => {
+      if (cancelled) return;
+      lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+      });
+
+      function raf(time) {
+        lenis.raf(time);
+        rafId = requestAnimationFrame(raf);
+      }
+      rafId = requestAnimationFrame(raf);
     });
 
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
-
     return () => {
-      lenis.destroy();
+      cancelled = true;
+      if (rafId) cancelAnimationFrame(rafId);
+      if (lenis) lenis.destroy();
     };
   }, []);
 
