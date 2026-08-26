@@ -53,6 +53,7 @@ export default function LandingPage() {
             alt="Spice Garden Interior" 
             className="w-full h-full object-cover brightness-[0.70]" 
             src={getImage('interior-1.jpg')}
+            fetchpriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-ink-navy/40 via-transparent to-canvas-cream"></div>
         </div>

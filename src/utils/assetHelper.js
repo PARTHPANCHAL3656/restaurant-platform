@@ -1,11 +1,11 @@
 // Asset map to resolve old filenames to their new organized subdirectory paths
 const ASSET_MAP = {
   // Landing/Hero Elements
-  'interior-1.jpg': 'landing/hero-1.jpg',
+  'interior-1.jpg': 'landing/hero-1.webp',
   'interior-2.jpg': 'landing/hero-2.jpg',
   'table-setting.jpg': 'landing/restaurant-interior.jpg',
   'chef-prep.jpg': 'landing/chef.jpg',
-  'story-spices.jpg': 'landing/ambience.jpg',
+  'story-spices.jpg': 'landing/ambience.webp',
   
   // Photo Gallery
   'gallery-vibe-1.jpg': 'gallery/gallery-1.jpg',
