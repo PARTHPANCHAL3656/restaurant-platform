@@ -17,13 +17,17 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+            if (id.includes('react-router-dom') || id.includes('/react/') || id.includes('/react-dom/')) {
               return 'vendor-react';
             }
             if (id.includes('framer-motion')) {
               return 'vendor-motion';
             }
-            return 'vendor';
+            // No catch-all here — let Rollup's default splitting handle
+            // everything else. This is what lets dynamically-imported
+            // packages (like `lenis` in App.jsx) actually split into
+            // their own async chunk instead of being forced into one
+            // eager bundle regardless of import style.
           }
         }
       }
