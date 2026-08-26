@@ -1,0 +1,14 @@
+# Spice Garden
+
+> Modern Indian fine-dining restaurant in Alkapuri, Vadodara — dine-in reservations, live queue, and QR table ordering.
+
+## Pages
+- [Home](https://spice-garden-tau.vercel.app/): Overview, ambience, and reservations
+- [Menu](https://spice-garden-tau.vercel.app/menu): Full menu with INR pricing
+- [Reservation](https://spice-garden-tau.vercel.app/reservation): Book a table
+- [Track Order](https://spice-garden-tau.vercel.app/order-status): Live order status
+- [Gallery](https://spice-garden-tau.vercel.app/gallery): Photos of the space and dishes
+- [Contact](https://spice-garden-tau.vercel.app/contact): Location and contact details
+
+## Notes
+- All prices in INR. Location: Vadodara, Gujarat, India.

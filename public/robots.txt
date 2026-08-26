@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /staff
+
+Sitemap: https://spice-garden-tau.vercel.app/sitemap.xml

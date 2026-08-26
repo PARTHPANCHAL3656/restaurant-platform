@@ -22,7 +22,7 @@ export default function DesktopSidebar() {
       
       {/* 1. BRAND SECTION */}
       <div className="text-center flex flex-col items-center">
-        <Link to="/" className="inline-block text-canvas-cream hover:opacity-90 transition-opacity">
+        <Link to="/" className="inline-block text-canvas-cream hover:opacity-90 transition-opacity" aria-label="Spice Garden home">
           <BrandLogo colorClassName="text-canvas-cream" heightClass="h-[96px]" />
         </Link>
         <p className="font-body-md text-xs text-canvas-cream/50 tracking-wider mt-8">

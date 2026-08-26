@@ -35,7 +35,7 @@ export default function Footer() {
         
         {/* 1. Brand Section */}
         <div className="md:col-span-3 flex flex-col space-y-6">
-          <Link to="/" className="w-fit block">
+          <Link to="/" className="w-fit block" aria-label="Spice Garden home">
             <BrandLogo colorClassName="text-ink-navy" />
           </Link>
           <p className="font-body-md text-subtle-text text-xs tracking-wider">
@@ -55,7 +55,7 @@ export default function Footer() {
 
         {/* 2. Contact Section */}
         <div className="md:col-span-3 space-y-6">
-          <h4 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Contact &amp; Location</h4>
+          <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Contact &amp; Location</h3>
           <div className="font-body-md text-subtle-text text-sm leading-[1.7] space-y-3">
             <p>
               {restaurantInfo.address}
@@ -77,7 +77,7 @@ export default function Footer() {
 
         {/* 3. Opening Hours Section */}
         <div className="md:col-span-2 space-y-6">
-          <h4 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Opening Hours</h4>
+          <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Opening Hours</h3>
           <div className="font-body-md text-subtle-text text-sm leading-[1.7] space-y-3">
             {restaurantInfo.openingHours.map((oh, i) => (
               <div key={i}>
@@ -90,7 +90,7 @@ export default function Footer() {
 
         {/* 4. Quick Links Section */}
         <div className="md:col-span-2 space-y-6">
-          <h4 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Quick Navigation</h4>
+          <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Quick Navigation</h3>
           <nav className="flex flex-col space-y-2 font-body-md text-sm text-subtle-text">
             <Link to="/" className="hover:text-saffron-gold transition-colors">Home</Link>
             <a href="#experience" onClick={handleExperienceClick} className="hover:text-saffron-gold transition-colors">Experience</a>
@@ -104,7 +104,7 @@ export default function Footer() {
 
         {/* 5. Newsletter Section */}
         <div className="md:col-span-2 space-y-6">
-          <h4 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Stay Curated</h4>
+          <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Stay Curated</h3>
           <p className="font-body-md text-xs text-subtle-text leading-[1.6]">
             Subscribe to receive seasonal releases and culinary stories.
           </p>
@@ -130,9 +130,9 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6">
             <span>© 2024 SPICE GARDEN RESTAURANT GROUP. ALL RIGHTS RESERVED.</span>
             <span className="hidden md:inline opacity-30">|</span>
-            <Link to="#" className="hover:text-ink-navy transition-colors">PRIVACY POLICY</Link>
-            <span className="hidden md:inline opacity-30">|</span>
-            <Link to="#" className="hover:text-ink-navy transition-colors">TERMS OF SERVICE</Link>
+              <Link to="#" className="hover:text-ink-navy transition-colors py-2 px-1 -mx-1">PRIVACY POLICY</Link>
+              <span className="hidden md:inline opacity-30">|</span>
+              <Link to="#" className="hover:text-ink-navy transition-colors py-2 px-1 -mx-1">TERMS OF SERVICE</Link>
           </div>
           
           <Link 
