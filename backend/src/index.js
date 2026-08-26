@@ -4,6 +4,9 @@ import { Server } from "socket.io"
 import cors from "cors"
 import dotenv from "dotenv"
 import connectDB from "./config/db.js"
+import helmet from "helmet"
+import mongoSanitize from "express-mongo-sanitize"
+import rateLimit from "express-rate-limit"
 
 import tableRoutes from "./routes/tables.js"
 import orderRoutes from "./routes/orders.js"
@@ -21,6 +24,7 @@ dotenv.config()
 connectDB()
 
 const app = express()
+app.set('trust proxy', 1)
 const httpServer = createServer(app)
 
 // -------------------------------------------------------
@@ -52,7 +56,9 @@ setMenuIo(io)
 
 app.use(cors({ origin: process.env.FRONTEND_URL }))
 console.log('CORS configured for origin:', process.env.FRONTEND_URL)
+app.use(helmet())
 app.use(express.json({ limit: "10mb" }))
+app.use(mongoSanitize())
 
 // -------------------------------------------------------
 // DEPLOYMENT NOTE — Socket.IO on Render:
@@ -62,10 +68,26 @@ app.use(express.json({ limit: "10mb" }))
 // support persistent connections. Stay on Render for the backend.
 // -------------------------------------------------------
 
-app.use("/api/auth", authRoutes)
-app.use("/api/tables", tableRoutes)
+// After
+// Staff login: only ~25 people ever hit this, so this stays tight —
+// it's brute-force protection, not a capacity limit.
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 })
+
+// Customer-facing intake (queue join, phone capture, reservation submit):
+// sized generously since a full restaurant on shared WiFi can look like
+// one IP sending a burst of legitimate requests.
+const publicIntakeLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 300,                 // ~60/min sustained — comfortably above real usage, well below a scripted flood
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests, please try again in a few minutes." }
+})
+
+app.use("/api/auth", authLimiter, authRoutes)
+app.use("/api/tables", publicIntakeLimiter, tableRoutes)
 app.use("/api/orders", orderRoutes)
-app.use("/api/reservations", reservationRoutes)
+app.use("/api/reservations", publicIntakeLimiter, reservationRoutes)
 app.use("/api/menu", menuRoutes)
 app.use("/api/payments", paymentRoutes)
 app.use("/api/invoices", invoiceRoutes)
