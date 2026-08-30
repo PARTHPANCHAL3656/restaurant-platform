@@ -5,10 +5,19 @@ import { formatINR } from '../../utils/currency';
 import { exportAnalyticsToExcel, exportAnalyticsToPDF } from '../../utils/analyticsExport';
 
 // Small helper: format a Mongo $dateTrunc ISO string as "12 Aug"
-const formatDay = (isoString) => {
+const formatPeriodLabel = (isoString, period) => {
   const d = new Date(isoString);
+  if (period === 'month') {
+    return d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+  }
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 };
+
+const PERIOD_OPTIONS = [
+  { value: 'day', label: 'Day', range: 14, comparisonLabel: 'vs yesterday' },
+  { value: 'week', label: 'Week', range: 12, comparisonLabel: 'vs last week' },
+  { value: 'month', label: 'Month', range: 12, comparisonLabel: 'vs last month' }
+];
 
 export default function AnalyticsOverview() {
   const [revenue, setRevenue] = useState(null);
@@ -24,45 +33,60 @@ export default function AnalyticsOverview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadAnalytics() {
-      try {
-      const [revenueRes, aovRes, footfallRes, itemsRes, rushRes, crmRes, retentionRes, overviewRes, churnRes, orderLogRes] = await Promise.all([
-          api.get('/api/analytics/revenue', { params: { period: 'day', range: 14 } }),
-          api.get('/api/analytics/aov', { params: { period: 'day', range: 14 } }),
-          api.get('/api/analytics/footfall', { params: { range: 30 } }),
-          api.get('/api/analytics/items', { params: { limit: 5 } }),
-          api.get('/api/analytics/rush-hours'),
-          api.get('/api/crm/discount-eligible'),
-          api.get('/api/crm/retention-rate'),
-          api.get('/api/crm/customer-overview'),
-          api.get('/api/crm/churn-list'),
-          api.get('/api/analytics/order-log', { params: { limit: 500 } }),
-        ]);
-
-        if (cancelled) return;
-        setRevenue(revenueRes.data);
-        setAov(aovRes.data);
-        setFootfall(footfallRes.data);
-        setItems(itemsRes.data);
-        setRushHours(rushRes.data);
-        setRepeatCustomers(crmRes.data);
-        setRetention(retentionRes.data);
-        setCustomerOverview(overviewRes.data);
-        setChurnList(churnRes.data);
-        setOrderLog(orderLogRes.data);
-      } catch (err) {
-        if (!cancelled) setError(err.message || 'Could not load analytics.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+// AFTER — split into two effects: everything-but-revenue loads once,
+// revenue/AOV reload whenever the toggle changes
+useEffect(() => {
+  let cancelled = false;
+  async function loadAnalytics() {
+    try {
+      const [footfallRes, itemsRes, rushRes, crmRes, retentionRes, overviewRes, churnRes, orderLogRes] = await Promise.all([
+        api.get('/api/analytics/footfall', { params: { range: 30 } }),
+        api.get('/api/analytics/items', { params: { limit: 5 } }),
+        api.get('/api/analytics/rush-hours'),
+        api.get('/api/crm/discount-eligible'),
+        api.get('/api/crm/retention-rate'),
+        api.get('/api/crm/customer-overview'),
+        api.get('/api/crm/churn-list'),
+        api.get('/api/analytics/order-log', { params: { limit: 500 } }),
+      ]);
+      if (cancelled) return;
+      setFootfall(footfallRes.data);
+      setItems(itemsRes.data);
+      setRushHours(rushRes.data);
+      setRepeatCustomers(crmRes.data);
+      setRetention(retentionRes.data);
+      setCustomerOverview(overviewRes.data);
+      setChurnList(churnRes.data);
+      setOrderLog(orderLogRes.data);
+    } catch (err) {
+      if (!cancelled) setError(err.message || 'Could not load analytics.');
+    } finally {
+      if (!cancelled) setLoading(false);
     }
+  }
+  loadAnalytics();
+  return () => { cancelled = true; };
+}, []);
 
-    loadAnalytics();
-    return () => { cancelled = true; };
-  }, []);
+useEffect(() => {
+  let cancelled = false;
+  const opt = PERIOD_OPTIONS.find((p) => p.value === revenuePeriod);
+  async function loadRevenue() {
+    try {
+      const [revenueRes, aovRes] = await Promise.all([
+        api.get('/api/analytics/revenue', { params: { period: opt.value, range: opt.range } }),
+        api.get('/api/analytics/aov', { params: { period: opt.value, range: opt.range } }),
+      ]);
+      if (cancelled) return;
+      setRevenue(revenueRes.data);
+      setAov(aovRes.data);
+    } catch (err) {
+      if (!cancelled) setError(err.message || 'Could not load revenue analytics.');
+    }
+  }
+  loadRevenue();
+  return () => { cancelled = true; };
+}, [revenuePeriod]);
 
   if (loading) {
     return (
@@ -105,13 +129,6 @@ export default function AnalyticsOverview() {
         >
           <span className="material-symbols-outlined text-sm">table_view</span>
           Export Excel
-        </button>
-        <button
-          onClick={() => exportAnalyticsToPDF(exportData)}
-          className="flex items-center gap-2 border border-saffron-gold/40 text-ink-navy font-label-caps text-[10px] uppercase tracking-wider px-4 py-2.5 hover:bg-saffron-gold/10 transition-colors duration-300 cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
-          Export PDF
         </button>
       </div>
 

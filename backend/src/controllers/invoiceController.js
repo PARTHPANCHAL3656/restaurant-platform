@@ -56,7 +56,7 @@ export const generateInvoiceForTable = async (req, res) => {
       guestName: table.guestName || "Guest",
       guestPhone: order.guestPhone || "",
       partySize: table.guestCount || null,
-      items: order.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
+      items: order.items.map(i => ({ itemId: i.itemId, name: i.name, price: i.price, qty: i.qty })),
       subtotal,
       serviceCharge,
       gst,

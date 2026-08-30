@@ -212,7 +212,8 @@ export const getItemPerformance = async (req, res) => {
     const topByQty = [...items].sort((a, b) => b.qtySold - a.qtySold).slice(0, limit)
     const slowMovers = [...items].sort((a, b) => a.qtySold - b.qtySold).slice(0, limit)
 
-    res.json({ topByRevenue, topByQty, slowMovers })
+    // AFTER (new response shape — topByRevenue/topByQty/slowMovers unchanged, three new fields added)
+    res.json({ topByRevenue, topByQty, slowMovers, allItems, topByCategoryQty })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

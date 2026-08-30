@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import { formatINR } from './currency';
+// import jsPDF from 'jspdf';
+// import { formatINR } from './currency';
 
 // -------------------------------------------------------
 // Both functions below take the SAME shape of `data`:
