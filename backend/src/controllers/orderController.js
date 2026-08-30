@@ -13,40 +13,62 @@ export const addItems = async (req, res) => {
       return res.status(400).json({ error: "No items provided." })
     }
 
-    // Find the current order for this session
-    const order = await Order.findOne({ sessionId })
+    // Two diners at the same table can tap "place order" at the same instant.
+    // Both requests would otherwise read the same order, merge items in memory,
+    // and save - whichever save lands second silently overwrites the first
+    // (a classic lost-update race). Order.js now has optimisticConcurrency:true,
+    // so a save() based on stale data throws VersionError instead of overwriting.
+    // We catch that and retry against fresh data, up to MAX_RETRIES times.
+    const MAX_RETRIES = 5
+    let order = null
+    let round = null
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      const current = await Order.findOne({ sessionId })
+
+      if (!current) {
+        return res.status(404).json({ error: "No active order found for this table." })
+      }
+
+      if (guestPhone && !current.guestPhone) {
+        current.guestPhone = guestPhone
+      }
+
+      round = current.currentRound
+      const newItems = items.map(item => ({ ...item, round }))
+
+      newItems.forEach(newItem => {
+        const existingInThisRound = current.items.find(
+          i => i.itemId === newItem.itemId && i.round === round
+        )
+        if (existingInThisRound) {
+          existingInThisRound.qty += newItem.qty
+        } else {
+          current.items.push(newItem)
+        }
+      })
+
+      current.status = "Received"
+      current.currentRound = round + 1
+
+      try {
+        order = await current.save()
+        break // saved cleanly, no one else wrote in between - done
+      } catch (err) {
+        const isConflict = err.name === "VersionError"
+        if (isConflict && attempt < MAX_RETRIES - 1) {
+          continue // someone else's order landed first - re-read and redo the merge
+        }
+        throw err
+      }
+    }
 
     if (!order) {
-      return res.status(404).json({ error: "No active order found for this table." })
+      return res.status(409).json({
+        error: "This table's order is being updated by someone else right now. Please try again."
+      })
     }
 
-    // Only set on first capture - never overwrite a phone we already have
-    // (e.g. one already copied in from a reservation)
-    if (guestPhone && !order.guestPhone) {
-      order.guestPhone = guestPhone
-    }
-
-    const round = order.currentRound
-    const newItems = items.map(item => ({ ...item, round }))
-
-    newItems.forEach(newItem => {
-      const existingInThisRound = order.items.find(
-        i => i.itemId === newItem.itemId && i.round === round
-      )
-      if (existingInThisRound) {
-        existingInThisRound.qty += newItem.qty
-      } else {
-        order.items.push(newItem)
-      }
-    })
-
-    // Reset status back to Received so the kitchen gets a new/updated ticket
-    order.status = "Received"
-    order.currentRound += 1
-
-    await order.save()
-
-    // Notify all clients of new/updated order
     io.emit("order:new", order)
     io.emit("order:updated", {
       orderId: order._id,

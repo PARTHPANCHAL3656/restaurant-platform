@@ -61,7 +61,7 @@ const orderSchema = new mongoose.Schema({
     ref: "Reservation",
     default: null
   }
-}, { timestamps: true })
+}, { timestamps: true, optimisticConcurrency: true })
 
 // Auto-calculate total before saving
 orderSchema.pre("save", function (next) {
