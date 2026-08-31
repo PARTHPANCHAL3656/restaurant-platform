@@ -77,6 +77,9 @@ export function StaffProvider({ children }) {
   // Centralized Menu Catalog state (22 active dishes across 6 categories)
   const [menuItems, setMenuItems] = useState([]);
   const [isMenuLoading, setIsMenuLoading] = useState(true);
+  // Categories are their own collection now — see backend/src/models/Category.js.
+  // This lets a category exist (and show up as a tab) with zero items in it.
+  const [categories, setCategories] = useState([]);
   // const [menuItems, setMenuItems] = useState([
   //   // STARTERS
   //   {
@@ -668,14 +671,25 @@ export function StaffProvider({ children }) {
     return res.data;
   }, []);
 
+  const fetchCategories = useCallback(async () => {
+    const res = await api.get('/api/categories');
+    return res.data;
+  }, []);
+
   const loadPublicData = useCallback(async () => {
   if (isFetchingPublicRef.current) return;
   isFetchingPublicRef.current = true;
 
   try {
-    const rawMenuItems = await fetchMenuItems();
+    const [rawMenuItems, rawCategories] = await Promise.all([
+      fetchMenuItems(),
+      fetchCategories()
+    ]);
     if (rawMenuItems && rawMenuItems.length > 0) {
       setMenuItems(rawMenuItems);
+    }
+    if (rawCategories) {
+      setCategories(rawCategories);
     }
   } catch (err) {
     console.error('Menu fetch failed, retrying in 3s:', err);
@@ -687,7 +701,7 @@ export function StaffProvider({ children }) {
   } finally {
     isFetchingPublicRef.current = false;
   }
-  }, [fetchMenuItems]);
+  }, [fetchMenuItems, fetchCategories]);
 
   const loadStaffData = useCallback(async () => {
     if (!localStorage.getItem('staffToken')) return;
@@ -793,6 +807,7 @@ export function StaffProvider({ children }) {
     socket.on('reservation:updated', handleReservationUpdated);
     socket.on('waitingList:updated', handleWaitingListUpdate);
     socket.on('menu:updated', handleMenuUpdated);
+    socket.on('category:updated', handleMenuUpdated);
     socket.on('invoice:generated', handleTableUpdate);
     socket.on('invoice:paid', handleTableUpdate);
 
@@ -805,6 +820,7 @@ export function StaffProvider({ children }) {
       socket.off('reservation:updated', handleReservationUpdated);
       socket.off('waitingList:updated', handleWaitingListUpdate);
       socket.off('menu:updated', handleMenuUpdated);
+      socket.off('category:updated', handleMenuUpdated);
       socket.off('invoice:generated', handleTableUpdate);
       socket.off('invoice:paid', handleTableUpdate);
     };
@@ -1515,6 +1531,61 @@ export function StaffProvider({ children }) {
     }
   };
 
+  // Category management — categories now exist independently of items,
+  // so a category can be created empty and dishes added to it afterward.
+  const addCategory = async (name) => {
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      const fakeCategory = { id: `local-${Date.now()}`, name, sortOrder: categories.length };
+      setCategories(prev => [...prev, fakeCategory]);
+      logActivity(`Category added`, `Added "${name}" as a new menu category`, 'category', '/staff/menu');
+      return fakeCategory;
+    }
+
+    const res = await api.post('/api/categories', { name });
+    await loadPublicData();
+    logActivity(`Category added`, `Added "${name}" as a new menu category`, 'category', '/staff/menu');
+    return res.data;
+  };
+
+  const renameCategory = async (categoryId, newName) => {
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      setCategories(prev => prev.map(c => c.id === categoryId ? { ...c, name: newName } : c));
+      logActivity(`Category renamed`, `Renamed a category to "${newName}"`, 'category', '/staff/menu');
+      return;
+    }
+
+    const res = await api.patch(`/api/categories/${categoryId}`, { name: newName });
+    await loadPublicData();
+    logActivity(`Category renamed`, `Renamed a category to "${newName}"`, 'category', '/staff/menu');
+    return res.data;
+  };
+
+  // reassignTo (optional): name of another category to move this
+  // category's dishes into first. Without it, the backend refuses to
+  // delete a non-empty category — this function surfaces that refusal
+  // to the caller (StaffMenuPage) rather than silently swallowing it, so
+  // the UI can ask "move these N dishes where?" instead of items just
+  // disappearing.
+  const deleteCategory = async (categoryId, reassignTo) => {
+    const category = categories.find(c => c.id === categoryId);
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      setCategories(prev => prev.filter(c => c.id !== categoryId));
+      if (reassignTo && category) {
+        setMenuItems(prev => prev.map(i => i.category === category.name ? { ...i, category: reassignTo } : i));
+      }
+      logActivity(`Category deleted`, `Removed "${category?.name || categoryId}" from menu categories`, 'category', '/staff/menu');
+      return;
+    }
+
+    const params = reassignTo ? { reassignTo } : {};
+    const res = await api.delete(`/api/categories/${categoryId}`, { params });
+    await loadPublicData();
+    logActivity(`Category deleted`, `Removed "${category?.name || categoryId}" from menu categories`, 'category', '/staff/menu');
+    return res.data;
+  };
 
   return (
     <StaffContext.Provider value={{
@@ -1528,6 +1599,7 @@ export function StaffProvider({ children }) {
       queue,
       activities,
       menuItems,
+      categories,
       isAuthenticated,
       isDataLoaded,
       isError,
@@ -1546,6 +1618,9 @@ export function StaffProvider({ children }) {
       reseedDemoMenu,
       updateMenuItem,
       deleteMenuItem,
+      addCategory,
+      renameCategory,
+      deleteCategory,
       releaseTable,
       checkInGuest,
       cancelReservation,

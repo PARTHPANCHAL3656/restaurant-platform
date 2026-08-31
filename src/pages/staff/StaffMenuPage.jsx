@@ -6,7 +6,10 @@ import { getImage } from '../../utils/assetHelper';
 import { formatINR } from '../../utils/currency';
 
 export default function StaffMenuPage() {
-  const { menuItems, addMenuItem, updateMenuItem, deleteMenuItem, reseedDemoMenu } = useStaff();
+  const {
+    menuItems, addMenuItem, updateMenuItem, deleteMenuItem, reseedDemoMenu,
+    categories: staffCategories, addCategory, renameCategory, deleteCategory
+  } = useStaff();
 
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,7 +55,7 @@ export default function StaffMenuPage() {
   // Form states
   const [formState, setFormState] = useState({
     name: '',
-    category: 'Starters',
+    category: '',
     description: '',
     price: '',
     available: true,
@@ -66,7 +69,114 @@ export default function StaffMenuPage() {
   // Modal confirm state
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
-  const categories = ['All', 'Starters', 'Mains', 'Rice & Biryani', 'Breads', 'Desserts', 'Signature Cocktails'];
+  // Manage Categories drawer state
+  const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [categoryActionError, setCategoryActionError] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+  // Category currently mid-delete that turned out to have items in it —
+  // set to { category, itemCount } to show the "move dishes to..." step.
+  const [reassignTarget, setReassignTarget] = useState(null);
+  const [reassignToName, setReassignToName] = useState('');
+  const [categoryBusy, setCategoryBusy] = useState(false);
+
+  const itemCountByCategory = useMemo(() => {
+    const counts = {};
+    menuItems.forEach((item) => {
+      counts[item.category] = (counts[item.category] || 0) + 1;
+    });
+    return counts;
+  }, [menuItems]);
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    const name = newCategoryName.trim();
+    if (!name) return;
+    setCategoryActionError('');
+    setCategoryBusy(true);
+    try {
+      await addCategory(name);
+      setNewCategoryName('');
+    } catch (err) {
+      setCategoryActionError(err.response?.data?.error || 'Could not add category.');
+    } finally {
+      setCategoryBusy(false);
+    }
+  };
+
+  const handleStartRename = (cat) => {
+    setEditingCategoryId(cat.id);
+    setEditingCategoryName(cat.name);
+    setCategoryActionError('');
+  };
+
+  const handleConfirmRename = async (cat) => {
+    const name = editingCategoryName.trim();
+    if (!name || name === cat.name) {
+      setEditingCategoryId(null);
+      return;
+    }
+    setCategoryActionError('');
+    setCategoryBusy(true);
+    try {
+      await renameCategory(cat.id, name);
+      setEditingCategoryId(null);
+    } catch (err) {
+      setCategoryActionError(err.response?.data?.error || 'Could not rename category.');
+    } finally {
+      setCategoryBusy(false);
+    }
+  };
+
+  // First attempt with no reassignTo — if the backend says the category
+  // still has dishes in it, drop into the "move dishes to..." step instead
+  // of just failing.
+  const handleDeleteCategory = async (cat) => {
+    setCategoryActionError('');
+    const count = itemCountByCategory[cat.name] || 0;
+    if (count === 0) {
+      if (!window.confirm(`Delete "${cat.name}"? It has no dishes in it.`)) return;
+      setCategoryBusy(true);
+      try {
+        await deleteCategory(cat.id);
+      } catch (err) {
+        setCategoryActionError(err.response?.data?.error || 'Could not delete category.');
+      } finally {
+        setCategoryBusy(false);
+      }
+      return;
+    }
+    setReassignTarget({ category: cat, itemCount: count });
+    setReassignToName('');
+  };
+
+  const handleConfirmReassignAndDelete = async () => {
+    if (!reassignTarget) return;
+    if (!reassignToName) {
+      setCategoryActionError('Pick a category to move these dishes to.');
+      return;
+    }
+    setCategoryActionError('');
+    setCategoryBusy(true);
+    try {
+      await deleteCategory(reassignTarget.category.id, reassignToName);
+      setReassignTarget(null);
+    } catch (err) {
+      setCategoryActionError(err.response?.data?.error || 'Could not delete category.');
+    } finally {
+      setCategoryBusy(false);
+    }
+  };
+
+  // 'All' is a frontend-only pseudo-category, never stored in the DB.
+  // Every real category now comes from staffCategories (the Category
+  // collection) — no limit on how many, and a category can exist here
+  // with zero items in it (see "Manage Categories" drawer below).
+  const categories = useMemo(
+    () => ['All', ...staffCategories.map((c) => c.name)],
+    [staffCategories]
+  );
 
   const [isResyncing, setIsResyncing] = useState(false);
   const handleResyncDemoMenu = async () => {
@@ -80,7 +190,7 @@ export default function StaffMenuPage() {
   const handleOpenAdd = () => {
     setFormState({
       name: '',
-      category: 'Starters',
+      category: staffCategories[0]?.name || '',
       description: '',
       price: '',
       available: true,
@@ -135,6 +245,10 @@ export default function StaffMenuPage() {
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (!formState.name || !formState.price) return;
+    if (!formState.category) {
+      alert('Add a category first (see "Manage Categories"), then pick it here.');
+      return;
+    }
 
     const dishPayload = {
       ...formState,
@@ -266,6 +380,13 @@ export default function StaffMenuPage() {
                 >
                   <span className="material-symbols-outlined text-lg">add</span>
                   Add New Dish
+                </button>
+                <button
+                  onClick={() => setCategoryDrawerOpen(true)}
+                  className="h-[56px] px-5 border border-muted-border text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:border-saffron-gold transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shrink-0"
+                >
+                  <span className="material-symbols-outlined text-lg">category</span>
+                  Manage Categories
                 </button>
                 <button onClick={handleResyncDemoMenu} disabled={isResyncing} title="Refreshes the built-in demo dishes to their current  default prices. Does not touch dishes you've added yourself." className="h-[56px] px-5 border border-muted-border text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:border-saffron-gold transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
                   <span className={`material-symbols-outlined text-lg ${isResyncing ? 'animate-spin' : ''}`}>sync</span>
@@ -580,14 +701,12 @@ export default function StaffMenuPage() {
                         onChange={(e) => setFormState({ ...formState, category: e.target.value })}
                         className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy cursor-pointer"
                       >
-                        <option value="Starters">Starters</option>
-                        <option value="Soups">Soups</option>
-                        <option value="Mains">Main Course</option>
-                        <option value="Rice & Biryani">Rice & Biryani</option>
-                        <option value="Breads">Breads</option>
-                        <option value="Desserts">Desserts</option>
-                        <option value="Signature Cocktails">Beverages</option>
-                        <option value="Signature Cocktails">Chef Specials</option>
+                        {staffCategories.length === 0 && (
+                          <option value="">No categories yet — add one first</option>
+                        )}
+                        {staffCategories.map((cat) => (
+                          <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -757,6 +876,194 @@ export default function StaffMenuPage() {
                   className="flex-grow h-[56px] bg-red-900/10 hover:bg-red-900/20 text-red-700 font-cta-label text-cta-label uppercase tracking-widest transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center"
                 >
                   Archive Dish
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Manage Categories Drawer */}
+      <AnimatePresence>
+        {categoryDrawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCategoryDrawerOpen(false)}
+              className="fixed inset-0 z-50 bg-ink-navy/60 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+              className="fixed top-0 right-0 z-50 h-full w-full sm:w-[440px] bg-canvas-cream shadow-2xl flex flex-col"
+            >
+              <div className="p-6 border-b border-muted-border flex items-center justify-between shrink-0">
+                <div>
+                  <h3 className="font-serif text-xl text-ink-navy font-bold">Manage Categories</h3>
+                  <p className="text-xs text-subtle-text">No limit on categories or dishes per category.</p>
+                </div>
+                <button
+                  onClick={() => setCategoryDrawerOpen(false)}
+                  className="text-subtle-text hover:text-ink-navy cursor-pointer"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              {/* Add new category — create it here, empty, before adding any dishes to it */}
+              <form onSubmit={handleAddCategory} className="p-6 border-b border-muted-border shrink-0 flex gap-3">
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="New category name…"
+                  className="flex-grow bg-white border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={categoryBusy || !newCategoryName.trim()}
+                  className="px-5 bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 transition-all duration-300 rounded-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                >
+                  Add
+                </button>
+              </form>
+
+              {categoryActionError && (
+                <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-[11px] text-red-700 shrink-0">
+                  {categoryActionError}
+                </div>
+              )}
+
+              {/* List of existing categories */}
+              <div className="flex-grow overflow-y-auto p-6 space-y-2">
+                {staffCategories.length === 0 ? (
+                  <p className="text-xs text-subtle-text text-center py-8">
+                    No categories yet — add your first one above.
+                  </p>
+                ) : (
+                  staffCategories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between gap-3 bg-white border border-muted-border p-3"
+                    >
+                      {editingCategoryId === cat.id ? (
+                        <input
+                          autoFocus
+                          type="text"
+                          value={editingCategoryName}
+                          onChange={(e) => setEditingCategoryName(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmRename(cat); if (e.key === 'Escape') setEditingCategoryId(null); }}
+                          className="flex-grow bg-surface-container-low border border-muted-border p-2 text-xs focus:outline-none focus:border-ink-navy outline-none"
+                        />
+                      ) : (
+                        <div className="flex-grow min-w-0">
+                          <p className="text-sm text-ink-navy font-semibold truncate">{cat.name}</p>
+                          <p className="text-[10px] text-subtle-text">
+                            {itemCountByCategory[cat.name] || 0} dish{(itemCountByCategory[cat.name] || 0) === 1 ? '' : 'es'}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        {editingCategoryId === cat.id ? (
+                          <>
+                            <button
+                              onClick={() => handleConfirmRename(cat)}
+                              disabled={categoryBusy}
+                              className="p-2 text-emerald-600 hover:bg-emerald-50 cursor-pointer disabled:opacity-50"
+                              title="Save"
+                            >
+                              <span className="material-symbols-outlined text-lg">check</span>
+                            </button>
+                            <button
+                              onClick={() => setEditingCategoryId(null)}
+                              className="p-2 text-subtle-text hover:bg-surface-container-low cursor-pointer"
+                              title="Cancel"
+                            >
+                              <span className="material-symbols-outlined text-lg">close</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleStartRename(cat)}
+                              className="p-2 text-ink-navy hover:bg-surface-container-low cursor-pointer"
+                              title="Rename"
+                            >
+                              <span className="material-symbols-outlined text-lg">edit</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCategory(cat)}
+                              disabled={categoryBusy}
+                              className="p-2 text-red-600 hover:bg-red-50 cursor-pointer disabled:opacity-50"
+                              title="Delete"
+                            >
+                              <span className="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Reassign-then-delete step — only shown when the category being
+          deleted still has dishes in it */}
+      <AnimatePresence>
+        {reassignTarget && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-ink-navy/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white border border-muted-border max-w-md w-full p-8 shadow-2xl relative"
+            >
+              <div className="space-y-4">
+                <h3 className="font-serif text-xl text-ink-navy font-bold">
+                  "{reassignTarget.category.name}" has {reassignTarget.itemCount} dish{reassignTarget.itemCount === 1 ? '' : 'es'}
+                </h3>
+                <p className="font-sans text-xs text-subtle-text leading-relaxed">
+                  Move {reassignTarget.itemCount === 1 ? 'it' : 'them'} to another category before deleting — nothing gets removed or hidden silently.
+                </p>
+                <select
+                  value={reassignToName}
+                  onChange={(e) => setReassignToName(e.target.value)}
+                  className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy cursor-pointer"
+                >
+                  <option value="">Move dishes to…</option>
+                  {staffCategories
+                    .filter((c) => c.id !== reassignTarget.category.id)
+                    .map((c) => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                </select>
+                {categoryActionError && (
+                  <p className="text-[11px] text-red-700">{categoryActionError}</p>
+                )}
+              </div>
+
+              <div className="flex gap-4 mt-8">
+                <button
+                  onClick={() => { setReassignTarget(null); setCategoryActionError(''); }}
+                  className="flex-grow h-[56px] border border-ink-navy text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:bg-ink-navy hover:text-canvas-cream transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmReassignAndDelete}
+                  disabled={categoryBusy || !reassignToName}
+                  className="flex-grow h-[56px] bg-red-900/10 hover:bg-red-900/20 text-red-700 font-cta-label text-cta-label uppercase tracking-widest transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Move &amp; Delete
                 </button>
               </div>
             </motion.div>

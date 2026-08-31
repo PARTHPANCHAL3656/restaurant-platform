@@ -20,6 +20,9 @@ import invoiceRoutes from "./routes/invoices.js"
 import analyticsRoutes from "./routes/analytics.js"
 import crmRoutes from "./routes/crm.js"
 
+// import section, near the other route imports
+import menuRoutes from "./routes/menu.js"
+import categoryRoutes from "./routes/categories.js"
 dotenv.config()
 connectDB()
 
@@ -89,6 +92,7 @@ app.use("/api/tables", publicIntakeLimiter, tableRoutes)
 app.use("/api/orders", orderRoutes)
 app.use("/api/reservations", publicIntakeLimiter, reservationRoutes)
 app.use("/api/menu", menuRoutes)
+app.use("/api/categories", categoryRoutes)
 app.use("/api/payments", paymentRoutes)
 app.use("/api/invoices", invoiceRoutes)
 app.use("/api/analytics", analyticsRoutes)
