@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../../utils/api';
 import { formatINR } from '../../utils/currency';
-import { exportAnalyticsToExcel, exportAnalyticsToPDF } from '../../utils/analyticsExport';
+import { exportAnalyticsToExcel } from '../../utils/analyticsExport';
 
-// Small helper: format a Mongo $dateTrunc ISO string as "12 Aug"
+// Format a Mongo $dateTrunc ISO string to match the active bucket size:
+// day -> "12 Aug", week -> "12 Aug" (week start), month -> "Aug 2026"
 const formatPeriodLabel = (isoString, period) => {
   const d = new Date(isoString);
   if (period === 'month') {
@@ -32,61 +33,70 @@ export default function AnalyticsOverview() {
   const [orderLog, setOrderLog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [revenuePeriod, setRevenuePeriod] = useState('day');
 
-// AFTER — split into two effects: everything-but-revenue loads once,
-// revenue/AOV reload whenever the toggle changes
-useEffect(() => {
-  let cancelled = false;
-  async function loadAnalytics() {
-    try {
-      const [footfallRes, itemsRes, rushRes, crmRes, retentionRes, overviewRes, churnRes, orderLogRes] = await Promise.all([
-        api.get('/api/analytics/footfall', { params: { range: 30 } }),
-        api.get('/api/analytics/items', { params: { limit: 5 } }),
-        api.get('/api/analytics/rush-hours'),
-        api.get('/api/crm/discount-eligible'),
-        api.get('/api/crm/retention-rate'),
-        api.get('/api/crm/customer-overview'),
-        api.get('/api/crm/churn-list'),
-        api.get('/api/analytics/order-log', { params: { limit: 500 } }),
-      ]);
-      if (cancelled) return;
-      setFootfall(footfallRes.data);
-      setItems(itemsRes.data);
-      setRushHours(rushRes.data);
-      setRepeatCustomers(crmRes.data);
-      setRetention(retentionRes.data);
-      setCustomerOverview(overviewRes.data);
-      setChurnList(churnRes.data);
-      setOrderLog(orderLogRes.data);
-    } catch (err) {
-      if (!cancelled) setError(err.message || 'Could not load analytics.');
-    } finally {
-      if (!cancelled) setLoading(false);
-    }
-  }
-  loadAnalytics();
-  return () => { cancelled = true; };
-}, []);
+  // Everything except revenue/AOV loads once — those two reload separately
+  // below whenever the Day/Week/Month toggle changes.
+  useEffect(() => {
+    let cancelled = false;
 
-useEffect(() => {
-  let cancelled = false;
-  const opt = PERIOD_OPTIONS.find((p) => p.value === revenuePeriod);
-  async function loadRevenue() {
-    try {
-      const [revenueRes, aovRes] = await Promise.all([
-        api.get('/api/analytics/revenue', { params: { period: opt.value, range: opt.range } }),
-        api.get('/api/analytics/aov', { params: { period: opt.value, range: opt.range } }),
-      ]);
-      if (cancelled) return;
-      setRevenue(revenueRes.data);
-      setAov(aovRes.data);
-    } catch (err) {
-      if (!cancelled) setError(err.message || 'Could not load revenue analytics.');
+    async function loadAnalytics() {
+      try {
+        const [footfallRes, itemsRes, rushRes, crmRes, retentionRes, overviewRes, churnRes, orderLogRes] = await Promise.all([
+          api.get('/api/analytics/footfall', { params: { range: 30 } }),
+          api.get('/api/analytics/items', { params: { limit: 5 } }),
+          api.get('/api/analytics/rush-hours'),
+          api.get('/api/crm/discount-eligible'),
+          api.get('/api/crm/retention-rate'),
+          api.get('/api/crm/customer-overview'),
+          api.get('/api/crm/churn-list'),
+          api.get('/api/analytics/order-log', { params: { limit: 500 } }),
+        ]);
+
+        if (cancelled) return;
+        setFootfall(footfallRes.data);
+        setItems(itemsRes.data);
+        setRushHours(rushRes.data);
+        setRepeatCustomers(crmRes.data);
+        setRetention(retentionRes.data);
+        setCustomerOverview(overviewRes.data);
+        setChurnList(churnRes.data);
+        setOrderLog(orderLogRes.data);
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'Could not load analytics.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
-  }
-  loadRevenue();
-  return () => { cancelled = true; };
-}, [revenuePeriod]);
+
+    loadAnalytics();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Revenue + AOV reload whenever the Day/Week/Month toggle changes, so
+  // switching to "Month" gives a genuine month-over-month view rather
+  // than just relabeling the same 14 daily buckets.
+  useEffect(() => {
+    let cancelled = false;
+    const opt = PERIOD_OPTIONS.find((p) => p.value === revenuePeriod);
+
+    async function loadRevenue() {
+      try {
+        const [revenueRes, aovRes] = await Promise.all([
+          api.get('/api/analytics/revenue', { params: { period: opt.value, range: opt.range } }),
+          api.get('/api/analytics/aov', { params: { period: opt.value, range: opt.range } }),
+        ]);
+        if (cancelled) return;
+        setRevenue(revenueRes.data);
+        setAov(aovRes.data);
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'Could not load revenue analytics.');
+      }
+    }
+
+    loadRevenue();
+    return () => { cancelled = true; };
+  }, [revenuePeriod]);
 
   if (loading) {
     return (
@@ -110,9 +120,11 @@ useEffect(() => {
     : 1;
 
   const chartData = (revenue?.series || []).map(s => ({
-    label: formatDay(s.period),
+    label: formatPeriodLabel(s.period, revenuePeriod),
     revenue: s.revenue
   }));
+
+  const activePeriod = PERIOD_OPTIONS.find((p) => p.value === revenuePeriod);
 
   // Single bundle passed to both export functions — same data already
   // rendered on this page, just handed off as raw JSON for Part 5.
@@ -132,17 +144,40 @@ useEffect(() => {
         </button>
       </div>
 
-      {/* Today vs Previous Period */}
+      {/* Day / Week / Month toggle — drives both the summary card and the trend chart below */}
+      <div className="flex justify-end">
+        <div className="inline-flex border border-saffron-gold/30">
+          {PERIOD_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setRevenuePeriod(opt.value)}
+              className={`px-4 py-2 font-label-caps text-[10px] uppercase tracking-wider transition-colors duration-200 cursor-pointer ${
+                revenuePeriod === opt.value
+                  ? 'bg-ink-navy text-canvas-cream'
+                  : 'text-ink-navy hover:bg-saffron-gold/10'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Current vs Previous Period */}
       <div className="bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs flex items-center justify-between">
         <div>
-          <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-1">Today's Revenue</p>
+          <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-1">
+            This {activePeriod.label}'s Revenue
+          </p>
           <p className="font-serif text-3xl text-ink-navy">{formatINR(revenue?.currentPeriodRevenue)}</p>
         </div>
         <div className="text-right">
           <p className={`font-label-caps text-[10px] uppercase tracking-wider mb-1 ${growthUp ? 'text-emerald-600' : 'text-red-500'}`}>
-            {growthUp ? '▲' : '▼'} {Math.abs(revenue?.growthPercent ?? 0)}% vs yesterday
+            {growthUp ? '▲' : '▼'} {Math.abs(revenue?.growthPercent ?? 0)}% {activePeriod.comparisonLabel}
           </p>
-          <p className="font-sans text-[11px] text-subtle-text">Yesterday: {formatINR(revenue?.previousPeriodRevenue)}</p>
+          <p className="font-sans text-[11px] text-subtle-text">
+            Previous {activePeriod.label.toLowerCase()}: {formatINR(revenue?.previousPeriodRevenue)}
+          </p>
         </div>
       </div>
 
@@ -171,7 +206,9 @@ useEffect(() => {
 
       {/* Revenue Trend Chart */}
       <div className="bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs">
-        <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-4">Revenue — Last 14 Days</p>
+        <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-4">
+          Revenue — Last {activePeriod.range} {activePeriod.label}{activePeriod.range === 1 ? '' : 's'}
+        </p>
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData}>

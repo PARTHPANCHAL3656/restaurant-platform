@@ -1,4 +1,5 @@
 import Invoice from "../models/Invoice.js"
+import MenuItem from "../models/MenuItem.js"
 
 // -------------------------------------------------------
 // SHARED GROUND RULE FOR ALL ANALYTICS:
@@ -201,18 +202,51 @@ export const getItemPerformance = async (req, res) => {
       {
         $group: {
           _id: "$items.name",
+          itemId: { $first: "$items.itemId" },
           qtySold: { $sum: "$items.qty" },
           revenue: { $sum: { $multiply: ["$items.price", "$items.qty"] } }
         }
       },
-      { $project: { _id: 0, name: "$_id", qtySold: 1, revenue: 1 } }
+      { $project: { _id: 0, name: "$_id", itemId: 1, qtySold: 1, revenue: 1 } }
     ])
 
-    const topByRevenue = [...items].sort((a, b) => b.revenue - a.revenue).slice(0, limit)
-    const topByQty = [...items].sort((a, b) => b.qtySold - a.qtySold).slice(0, limit)
-    const slowMovers = [...items].sort((a, b) => a.qtySold - b.qtySold).slice(0, limit)
+    // Join to MenuItem for category. Prefer matching by itemId (survives
+    // a later rename); fall back to name match for invoices billed before
+    // itemId was captured on the invoice snapshot.
+    const menuItems = await MenuItem.find().select("name category")
+    const categoryById = new Map(menuItems.map((m) => [m._id.toString(), m.category]))
+    const categoryByName = new Map(menuItems.map((m) => [m.name.trim().toLowerCase(), m.category]))
+    const UNCATEGORIZED = "Uncategorized"
 
-    // AFTER (new response shape — topByRevenue/topByQty/slowMovers unchanged, three new fields added)
+    const allItems = items.map((it) => ({
+      name: it.name,
+      qtySold: it.qtySold,
+      revenue: it.revenue,
+      category:
+        (it.itemId && categoryById.get(it.itemId)) ||
+        categoryByName.get(it.name.trim().toLowerCase()) ||
+        UNCATEGORIZED
+    }))
+
+    const topByRevenue = [...allItems].sort((a, b) => b.revenue - a.revenue).slice(0, limit)
+    const topByQty = [...allItems].sort((a, b) => b.qtySold - a.qtySold).slice(0, limit)
+    const slowMovers = [...allItems].sort((a, b) => a.qtySold - b.qtySold).slice(0, limit)
+
+    // Top 3 best sellers (by qty) within each category, so a restaurant can
+    // see "what's actually working" per section of the menu rather than
+    // only a single flat top-10 dominated by one category.
+    const byCategory = {}
+    allItems.forEach((it) => {
+      if (!byCategory[it.category]) byCategory[it.category] = []
+      byCategory[it.category].push(it)
+    })
+    const topByCategoryQty = {}
+    Object.keys(byCategory).forEach((cat) => {
+      topByCategoryQty[cat] = byCategory[cat]
+        .sort((a, b) => b.qtySold - a.qtySold)
+        .slice(0, 3)
+    })
+
     res.json({ topByRevenue, topByQty, slowMovers, allItems, topByCategoryQty })
   } catch (err) {
     res.status(500).json({ error: err.message })

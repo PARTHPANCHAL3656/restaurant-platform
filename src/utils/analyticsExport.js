@@ -1,6 +1,4 @@
 import * as XLSX from 'xlsx';
-// import jsPDF from 'jspdf';
-// import { formatINR } from './currency';
 
 // -------------------------------------------------------
 // Both functions below take the SAME shape of `data`:
@@ -48,6 +46,36 @@ export function exportAnalyticsToExcel(data) {
     Revenue: it.revenue
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(itemRows), 'Top Items');
+
+  // Every item that has ever been billed, not just a top-N — the full
+  // ordered-item ledger, one row per distinct menu item.
+  const allItemRows = (data.items?.allItems || [])
+    .slice()
+    .sort((a, b) => b.qtySold - a.qtySold)
+    .map((it) => ({
+      Item: it.name,
+      Category: it.category,
+      'Qty Sold': it.qtySold,
+      Revenue: it.revenue
+    }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allItemRows), 'All Items Ordered');
+
+  // Top 3 best sellers within each menu category, so a restaurant can see
+  // what's actually working in Starters vs Mains vs Desserts etc., rather
+  // than one flat top-10 that a single popular category can dominate.
+  const topByCategoryQty = data.items?.topByCategoryQty || {};
+  const topByCategoryRows = Object.keys(topByCategoryQty)
+    .sort()
+    .flatMap((category) =>
+      topByCategoryQty[category].map((it, i) => ({
+        Category: category,
+        Rank: i + 1,
+        Item: it.name,
+        'Qty Sold': it.qtySold,
+        Revenue: it.revenue
+      }))
+    );
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(topByCategoryRows), 'Top 3 By Category');
 
   const repeatRows = (data.repeatCustomers?.customers || [])
     .filter((c) => c.discountEligible)
@@ -128,177 +156,4 @@ export function exportAnalyticsToExcel(data) {
 
   const dateStr = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `spice_garden_analytics_${dateStr}.xlsx`);
-}
-
-// Draws a simple bordered table using jsPDF's own primitives — no external
-// table plugin needed, which sidesteps a jspdf-autotable v2-vs-v4 peer
-// conflict. colWidths (mm) must sum to <= 182 (A4 width minus margins).
-function drawTable(doc, { startY, head, rows, colWidths }) {
-  const marginLeft = 14;
-  const rowHeight = 6;
-  const tableWidth = colWidths.reduce((a, b) => a + b, 0);
-  let y = startY;
-
-  doc.setFillColor(212, 175, 55);
-  doc.setTextColor(26, 31, 44);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.rect(marginLeft, y, tableWidth, rowHeight, 'F');
-  let x = marginLeft;
-  head.forEach((h, i) => {
-    doc.text(String(h), x + 2, y + rowHeight - 2);
-    x += colWidths[i];
-  });
-  y += rowHeight;
-
-  doc.setFont('helvetica', 'normal');
-  rows.forEach((row, rIdx) => {
-    if (y + rowHeight > 280) {
-      doc.addPage();
-      y = 20;
-    }
-    if (rIdx % 2 === 1) {
-      doc.setFillColor(250, 249, 248);
-      doc.rect(marginLeft, y, tableWidth, rowHeight, 'F');
-    }
-    x = marginLeft;
-    row.forEach((cell, i) => {
-      doc.text(String(cell), x + 2, y + rowHeight - 2);
-      x += colWidths[i];
-    });
-    y += rowHeight;
-  });
-
-  return y;
-}
-
-// Builds a single formatted PDF report with one table per dataset.
-export function exportAnalyticsToPDF(data) {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const dateStr = new Date().toLocaleDateString('en-IN');
-  let cursorY = 20;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.text('Spice Garden — Analytics Report', 14, cursorY);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  cursorY += 6;
-  doc.text(`Generated: ${dateStr}`, 14, cursorY);
-  cursorY += 8;
-
-  const addSection = (title, head, rows, colWidths) => {
-    if (!rows || rows.length === 0) return;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(26, 31, 44);
-    doc.text(title, 14, cursorY);
-    cursorY += 3;
-    cursorY = drawTable(doc, { startY: cursorY, head, rows, colWidths });
-    cursorY += 10;
-    if (cursorY > 270) {
-      doc.addPage();
-      cursorY = 20;
-    }
-  };
-
-  if (data.revenue) {
-    addSection(
-      `Revenue — Growth: ${data.revenue.growthPercent}% vs previous period`,
-      ['Date', 'Revenue', 'Orders'],
-      (data.revenue.series || []).map((r) => [
-        new Date(r.period).toLocaleDateString('en-IN'),
-        formatINR(r.revenue),
-        r.orders
-      ]),
-      [50, 70, 62]
-    );
-  }
-
-  if (data.items) {
-    addSection(
-      'Top Items by Revenue',
-      ['Rank', 'Item', 'Qty Sold', 'Revenue'],
-      (data.items.topByRevenue || []).map((it, i) => [i + 1, it.name, it.qtySold, formatINR(it.revenue)]),
-      [20, 80, 40, 42]
-    );
-  }
-
-  if (data.retention) {
-    addSection(
-      'Retention',
-      ['Total Customers', 'Repeat Customers', 'Retention Rate'],
-      [[data.retention.totalCustomers, data.retention.repeatCustomers, `${data.retention.retentionRate}%`]],
-      [60, 60, 62]
-    );
-  }
-
-  if (data.customerOverview) {
-    addSection(
-      'Customer Summary — New vs Returning',
-      ['Total', 'New', 'New %', 'Returning', 'Returning %'],
-      [[
-        data.customerOverview.totalCustomers,
-        data.customerOverview.newCustomers,
-        `${data.customerOverview.newPercent}%`,
-        data.customerOverview.returningCustomers,
-        `${data.customerOverview.returningPercent}%`
-      ]],
-      [30, 30, 30, 40, 52]
-    );
-
-    addSection(
-      'All Customers',
-      ['Name', 'Phone', 'Status', 'Visits', 'Total Spend'],
-      (data.customerOverview.customers || []).map((c) => [
-        c.name || '—',
-        c.phone,
-        c.isNew ? 'New' : 'Returning',
-        c.visitCount,
-        formatINR(c.totalSpend)
-      ]),
-      [45, 40, 32, 25, 40]
-    );
-  }
-
-  if (data.repeatCustomers) {
-    addSection(
-      `Repeat Customers (>= ${data.repeatCustomers.threshold} visits)`,
-      ['Name', 'Phone', 'Visits', 'Total Spend'],
-      (data.repeatCustomers.customers || [])
-        .filter((c) => c.discountEligible)
-        .map((c) => [c.name || '—', c.phone, c.visitCount, formatINR(c.totalSpend)]),
-      [50, 45, 35, 52]
-    );
-  }
-
-  if (data.churnList) {
-    addSection(
-      `Churn List (no visit in ${data.churnList.churnThresholdDays}+ days)`,
-      ['Name', 'Phone', 'Visits', 'Days Since Last Visit'],
-      (data.churnList.customers || []).map((c) => [c.name || '—', c.phone, c.visitCount, c.daysSinceLastVisit]),
-      [45, 40, 30, 67]
-    );
-  }
-
-  // Order Log — trimmed to the essentials for a readable printed page.
-  // Full itemized detail (subtotal/GST/service charge breakdown, exact
-  // items) lives in the Excel export's "Full Order Log" sheet instead.
-  if (data.orderLog) {
-    addSection(
-      `Order Log (${data.orderLog.count} orders)`,
-      ['Date', 'Table', 'Guest', 'Party', 'Payment', 'Total'],
-      (data.orderLog.orders || []).map((o) => [
-        new Date(o.date).toLocaleDateString('en-IN'),
-        o.table,
-        o.guestName || '—',
-        o.partySize ?? '—',
-        o.paymentMethod || '—',
-        formatINR(o.total)
-      ]),
-      [28, 18, 45, 20, 30, 41]
-    );
-  }
-
-  doc.save(`spice_garden_analytics_${new Date().toISOString().slice(0, 10)}.pdf`);
 }
