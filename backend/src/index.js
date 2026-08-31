@@ -12,6 +12,7 @@ import tableRoutes from "./routes/tables.js"
 import orderRoutes from "./routes/orders.js"
 import reservationRoutes from "./routes/reservations.js"
 import menuRoutes from "./routes/menu.js"
+import categoryRoutes from "./routes/categories.js"
 import { setMenuIo } from "./controllers/menuController.js"
 
 import authRoutes from "./routes/auth.js"
@@ -20,9 +21,6 @@ import invoiceRoutes from "./routes/invoices.js"
 import analyticsRoutes from "./routes/analytics.js"
 import crmRoutes from "./routes/crm.js"
 
-// import section, near the other route imports
-import menuRoutes from "./routes/menu.js"
-import categoryRoutes from "./routes/categories.js"
 dotenv.config()
 connectDB()
 
