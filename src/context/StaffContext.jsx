@@ -1509,9 +1509,9 @@ export function StaffProvider({ children }) {
     if (isMock) {
       setMenuItems(prev => prev.filter(i => i.id !== itemId));
       logActivity(
-        `Menu item archived`,
-        `Removed "${item.name}" from active menu catalog`,
-        'archive',
+        `Menu item deleted`,
+        `Permanently deleted "${item.name}" from the menu catalog`,
+        'delete',
         '/staff/menu'
       );
       return;
@@ -1521,10 +1521,10 @@ export function StaffProvider({ children }) {
       await api.delete(`/api/menu/${itemId}`);
       await loadAllData();
       logActivity(
-        `Menu item archived`,
-        `Removed "${item.name}" from active menu catalog`,
-        'archive',
-        '/staff/menu'
+          `Menu item deleted`,
+          `Permanently deleted "${item.name}" from the menu catalog`,
+          'delete',
+          '/staff/menu'
       );
     } catch (err) {
       console.error('Error deleting menu item:', err);

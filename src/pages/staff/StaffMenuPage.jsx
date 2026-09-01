@@ -360,37 +360,46 @@ export default function StaffMenuPage() {
                 <p className="text-xs text-subtle-text">Sartorial curation of restaurant culinary offerings.</p>
               </div>
               
-              <div className="flex flex-wrap md:flex-nowrap items-center gap-4 shrink-0">
-                {/* Search */}
-                <div className="relative w-full sm:w-64">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-subtle-text text-sm">search</span>
-                  <input 
-                    type="text" 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search signature dishes..." 
-                    className="w-full bg-transparent border-b border-saffron-gold/20 py-2 pl-9 pr-4 focus:outline-none focus:border-saffron-gold focus:ring-1 focus:ring-saffron-gold/15 font-body-md text-xs placeholder:text-subtle-text/30 outline-none transition-all duration-300"
-                  />
-                </div>
+              {/* Search */}
+              <div className="relative w-full sm:w-64">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-subtle-text text-sm">search</span>
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search signature dishes..." 
+                  className="w-full bg-transparent border-b border-saffron-gold/20 py-2 pl-9 pr-4 focus:outline-none focus:border-saffron-gold focus:ring-1 focus:ring-saffron-gold/15 font-body-md text-xs placeholder:text-subtle-text/30 outline-none transition-all duration-300"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 sm:gap-4">
 
                 {/* Primary Add Action */}
                 <button 
                   onClick={handleOpenAdd}
-                  className="h-[56px] px-6 bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shadow-md shrink-0"
+                  title="Add New Dish"
+                  className="h-12 sm:h-[56px] px-2 sm:px-6 bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shadow-md shrink-0"
                 >
                   <span className="material-symbols-outlined text-lg">add</span>
-                  Add New Dish
+                  <span className="hidden sm:inline">Add New Dish</span>
                 </button>
+
                 <button
                   onClick={() => setCategoryDrawerOpen(true)}
-                  className="h-[56px] px-5 border border-muted-border text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:border-saffron-gold transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shrink-0"
+                  title="Manage Categories"
+                  className="h-12 sm:h-[56px] px-2 sm:px-6 border border-muted-border text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:border-saffron-gold transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shrink-0"
                 >
                   <span className="material-symbols-outlined text-lg">category</span>
-                  Manage Categories
+                  <span className="hidden sm:inline">Manage Categories</span>
                 </button>
-                <button onClick={handleResyncDemoMenu} disabled={isResyncing} title="Refreshes the built-in demo dishes to their current  default prices. Does not touch dishes you've added yourself." className="h-[56px] px-5 border border-muted-border text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:border-saffron-gold transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
-                  <span className={`material-symbols-outlined text-lg ${isResyncing ? 'animate-spin' : ''}`}>sync</span>
-                  {isResyncing ? 'Syncing...' : 'Sync Demo Prices'}
+
+                <button 
+                onClick={handleResyncDemoMenu} 
+                disabled={isResyncing} 
+                title="Refreshes the built-in demo dishes to their current  default prices. Does not touch dishes you've added yourself." 
+                className="h-12 sm:h-[56px] px-2 sm:px-6 border border-muted-border text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:border-saffron-gold transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span className={`material-symbols-outlined text-lg ${isResyncing ? 'animate-spin' : ''}`}> sync </span>
+                  <span className="hidden sm:inline"> {isResyncing ? 'Syncing...' : 'Sync Demo Prices'} </span>
                 </button>
               </div>
             </div>
@@ -509,7 +518,7 @@ export default function StaffMenuPage() {
                         onClick={() => setDeleteConfirmId(dish.id)}
                         className="text-red-500 hover:text-red-700 transition-colors focus:outline-none font-semibold uppercase tracking-wider text-[10px]"
                       >
-                        Archive
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -857,10 +866,10 @@ export default function StaffMenuPage() {
               className="bg-white border border-muted-border max-w-md w-full p-8 shadow-2xl relative"
             >
               <div className="text-center space-y-4">
-                <span className="material-symbols-outlined text-red-500 text-4xl">archive</span>
-                <h3 className="font-serif text-xl text-ink-navy font-bold">Remove Menu Item?</h3>
+                <span className="material-symbols-outlined text-red-500 text-4xl">delete_forever</span>
+                <h3 className="font-serif text-xl text-ink-navy font-bold">Permanently Delete This Dish?</h3>
                 <p className="font-sans text-xs text-subtle-text leading-relaxed">
-                  This dish will be archived and will no longer appear on the customer digital menu.
+                  This cannot be undone. The dish will be removed from the database entirely and will no longer appear on the customer digital menu.
                 </p>
               </div>
 
@@ -875,7 +884,7 @@ export default function StaffMenuPage() {
                   onClick={handleConfirmArchive}
                   className="flex-grow h-[56px] bg-red-900/10 hover:bg-red-900/20 text-red-700 font-cta-label text-cta-label uppercase tracking-widest transition-all duration-300 rounded-none cursor-pointer flex items-center justify-center"
                 >
-                  Archive Dish
+                  Permanently Delete
                 </button>
               </div>
             </motion.div>
