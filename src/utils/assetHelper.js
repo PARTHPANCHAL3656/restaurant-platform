@@ -2,77 +2,77 @@
 const ASSET_MAP = {
   // Landing/Hero Elements
   'interior-1.jpg': 'landing/hero-1.webp',
-  'interior-2.jpg': 'landing/hero-2.jpg',
-  'table-setting.jpg': 'landing/restaurant-interior.jpg',
-  'chef-prep.jpg': 'landing/chef.jpg',
+  'interior-2.jpg': 'landing/hero-2.webp',
+  'table-setting.jpg': 'landing/restaurant-interior.webp',
+  'chef-prep.jpg': 'landing/chef.webp',
   'story-spices.jpg': 'landing/ambience.webp',
   
   // Photo Gallery
-  'gallery-vibe-1.jpg': 'gallery/gallery-1.jpg',
-  'gallery-vibe-2.jpg': 'gallery/gallery-2.jpg',
-  'gallery-mixology.jpg': 'gallery/gallery-3.jpg',
-  'gallery-terrace.jpg': 'gallery/gallery-4.jpg',
-  'gallery-ingredients.jpg': 'gallery/gallery-5.jpg',
+  'gallery-vibe-1.jpg': 'gallery/gallery-1.webp',
+  'gallery-vibe-2.jpg': 'gallery/gallery-2.webp',
+  'gallery-mixology.jpg': 'gallery/gallery-3.webp',
+  'gallery-terrace.jpg': 'gallery/gallery-4.webp',
+  'gallery-ingredients.jpg': 'gallery/gallery-5.webp',
   
   // Menu (Starters)
-  'tracking-scallops.jpg': 'menu/starters/saffron-infused-scallops.jpg',
-  'saffron-infused-scallops.jpg': 'menu/starters/saffron-infused-scallops.jpg',
-  'menu-truffle-paneer.jpg': 'menu/starters/malai-truffle-paneer.jpg',
-  'malai-truffle-paneer.jpg': 'menu/starters/malai-truffle-paneer.jpg',
-  'Paneer Tikka.jpeg': 'menu/starters/malai-truffle-paneer.jpg',
-  'paneer-tikka.jpg': 'menu/starters/malai-truffle-paneer.jpg',
-  'Hara Bhara Kebab.jpeg': 'menu/starters/hara-bhara-kebab.jpg',
-  'hara-bhara-kebab.jpg': 'menu/starters/hara-bhara-kebab.jpg',
+  'tracking-scallops.jpg': 'menu/starters/saffron-infused-scallops.webp',
+  'saffron-infused-scallops.jpg': 'menu/starters/saffron-infused-scallops.webp',
+  'menu-truffle-paneer.jpg': 'menu/starters/malai-truffle-paneer.webp',
+  'malai-truffle-paneer.jpg': 'menu/starters/malai-truffle-paneer.webp',
+  'Paneer Tikka.jpeg': 'menu/starters/malai-truffle-paneer.webp',
+  'paneer-tikka.jpg': 'menu/starters/malai-truffle-paneer.webp',
+  'Hara Bhara Kebab.jpeg': 'menu/starters/hara-bhara-kebab.webp',
+  'hara-bhara-kebab.jpg': 'menu/starters/hara-bhara-kebab.webp',
   'Cheese Balls.jpeg': 'menu/starters/golden-cheese-croquettes.jpg',
   'golden-cheese-croquettes.jpg': 'menu/starters/golden-cheese-croquettes.jpg',
-  'Masala dosa.jpeg': 'menu/starters/heritage-masala-dosa.jpg',
-  'heritage-masala-dosa.jpg': 'menu/starters/heritage-masala-dosa.jpg',
-  'signature-paneer-tikka.jpg': 'menu/starters/signature-paneer-tikka.jpg',
+  'Masala dosa.jpeg': 'menu/starters/heritage-masala-dosa.webp',
+  'heritage-masala-dosa.jpg': 'menu/starters/heritage-masala-dosa.webp',
+  'signature-paneer-tikka.jpg': 'menu/starters/signature-paneer-tikka.webp',
   
   // Menu (Mains)
-  'menu-makhani-murgh.jpg': 'menu/mains/royal-makhani-murgh.jpg',
-  'royal-makhani-murgh.jpg': 'menu/mains/royal-makhani-murgh.jpg',
-  'butter-chicken.jpg': 'menu/mains/royal-makhani-murgh.jpg',
-  'Malai Kofta.jpeg': 'menu/mains/malai-kofta-royale.jpg',
-  'malai-kofta-royale.jpg': 'menu/mains/malai-kofta-royale.jpg',
-  'glazed-quail.jpg': 'menu/mains/truffle-glazed-quail.jpg',
-  'truffle-glazed-quail.jpg': 'menu/mains/truffle-glazed-quail.jpg',
-  'dal-makhani.jpg': 'menu/mains/dal-makhani.jpg',
-  'palak-paneer.jpg': 'menu/mains/palak-paneer.jpg',
+  'menu-makhani-murgh.jpg': 'menu/mains/royal-makhani-murgh.webp',
+  'royal-makhani-murgh.jpg': 'menu/mains/royal-makhani-murgh.webp',
+  'butter-chicken.jpg': 'menu/mains/royal-makhani-murgh.webp',
+  'Malai Kofta.jpeg': 'menu/mains/malai-kofta-royale.webp',
+  'malai-kofta-royale.jpg': 'menu/mains/malai-kofta-royale.webp',
+  'glazed-quail.jpg': 'menu/mains/truffle-glazed-quail.webp',
+  'truffle-glazed-quail.jpg': 'menu/mains/truffle-glazed-quail.webp',
+  'dal-makhani.jpg': 'menu/mains/dal-makhani.webp',
+  'palak-paneer.jpg': 'menu/mains/palak-paneer.webp',
   
   // Menu (Rice)
-  'lamb-biryani.jpg': 'menu/rice/nawabi-mutton-biryani.jpg',
-  'menu-nawabi-mutton-biryani.jpg': 'menu/rice/nawabi-mutton-biryani.jpg',
-  'nawabi-mutton-biryani.jpg': 'menu/rice/nawabi-mutton-biryani.jpg',
-  'Veg Biryani.jpeg': 'menu/rice/royal-dum-veg-biryani.jpg',
-  'royal-dum-veg-biryani.jpg': 'menu/rice/royal-dum-veg-biryani.jpg',
-  'jeera-rice.jpg': 'menu/rice/jeera-rice.jpg',
-  'kashmiri-pulao.jpg': 'menu/rice/kashmiri-pulao.jpg',
+  'lamb-biryani.jpg': 'menu/rice/nawabi-mutton-biryani.webp',
+  'menu-nawabi-mutton-biryani.jpg': 'menu/rice/nawabi-mutton-biryani.webp',
+  'nawabi-mutton-biryani.jpg': 'menu/rice/nawabi-mutton-biryani.webp',
+  'Veg Biryani.jpeg': 'menu/rice/royal-dum-veg-biryani.webp',
+  'royal-dum-veg-biryani.jpg': 'menu/rice/royal-dum-veg-biryani.webp',
+  'jeera-rice.jpg': 'menu/rice/jeera-rice.webp',
+  'kashmiri-pulao.jpg': 'menu/rice/kashmiri-pulao.webp',
 
   // Menu (Breads)
-  'butter-naan.jpg': 'menu/breads/butter-naan.jpg',
-  'garlic-naan.jpg': 'menu/breads/garlic-naan.jpg',
-  'laccha-paratha.jpg': 'menu/breads/laccha-paratha.jpg',
+  'butter-naan.jpg': 'menu/breads/butter-naan.webp',
+  'garlic-naan.jpg': 'menu/breads/garlic-naan.webp',
+  'laccha-paratha.jpg': 'menu/breads/laccha-paratha.webp',
   
   // Menu (Desserts)
-  'gallery-detail.jpg': 'menu/desserts/golden-leaf-panna-cotta.jpg',
-  'golden-leaf-panna-cotta.jpg': 'menu/desserts/golden-leaf-panna-cotta.jpg',
-  'menu-saffron-rose-mahal.jpg': 'menu/desserts/saffron-rose-mahal.jpg',
-  'saffron-rose-mahal.jpg': 'menu/desserts/saffron-rose-mahal.jpg',
-  'Brownie with Ice Cream.jpeg': 'menu/desserts/belgian-chocolate-brownie.jpg',
-  'belgian-chocolate-brownie.jpg': 'menu/desserts/belgian-chocolate-brownie.jpg',
-  'gulab-jamun.jpg': 'menu/desserts/gulab-jamun.jpg',
+  'gallery-detail.jpg': 'menu/desserts/golden-leaf-panna-cotta.webp',
+  'golden-leaf-panna-cotta.jpg': 'menu/desserts/golden-leaf-panna-cotta.webp',
+  'menu-saffron-rose-mahal.jpg': 'menu/desserts/saffron-rose-mahal.webp',
+  'saffron-rose-mahal.jpg': 'menu/desserts/saffron-rose-mahal.webp',
+  'Brownie with Ice Cream.jpeg': 'menu/desserts/belgian-chocolate-brownie.webp',
+  'belgian-chocolate-brownie.jpg': 'menu/desserts/belgian-chocolate-brownie.webp',
+  'gulab-jamun.jpg': 'menu/desserts/gulab-jamun.webp',
   
   // Menu (Beverages)
-  'tracking-elixir.jpg': 'menu/beverages/garden-elixir.jpg',
-  'garden-elixir.jpg': 'menu/beverages/garden-elixir.jpg',
-  'cocktails.jpg': 'menu/beverages/vintage-krug-2008.jpg',
-  'vintage-krug-2008.jpg': 'menu/beverages/vintage-krug-2008.jpg',
+  'tracking-elixir.jpg': 'menu/beverages/garden-elixir.webp',
+  'garden-elixir.jpg': 'menu/beverages/garden-elixir.webp',
+  'cocktails.jpg': 'menu/beverages/vintage-krug-2008.webp',
+  'vintage-krug-2008.jpg': 'menu/beverages/vintage-krug-2008.webp',
 
   // General & Backdrops
-  'tracking-chef-bg.jpg': 'landing/chef.jpg',
-  'contact-map.jpg': 'landing/restaurant-interior.jpg',
-  'restaurant-interior.jpg': 'landing/restaurant-interior.jpg'
+  'tracking-chef-bg.jpg': 'landing/chef.webp',
+  'contact-map.jpg': 'landing/restaurant-interior.webp',
+  'restaurant-interior.jpg': 'landing/restaurant-interior.webp'
 };
 
 /**
@@ -84,7 +84,7 @@ export const getImage = (filename) => {
   // Resolve the ASSET_MAP key to its full path
   if (!filename) {
     // Return a food placeholder image so broken image icons never show
-    return new URL('../assets/images/menu/starters/hara-bhara-kebab.jpg', import.meta.url).href;
+    return new URL('../assets/images/menu/starters/hara-bhara-kebab.webp', import.meta.url).href;
   }
   
   // Bypass resolution for data previews, blob URLs, and external HTTP assets
