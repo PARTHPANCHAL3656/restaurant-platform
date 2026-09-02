@@ -7,6 +7,11 @@ const menuItemSchema = new mongoose.Schema({
   tag: { type: String, default: "" },
   description: { type: String, default: "" },
   image: { type: String, default: "" },
+  // Set only for photos uploaded through the staff dashboard (Cloudinary
+  // asset id) - lets us delete the actual stored file when the dish is
+  // permanently deleted, instead of leaving orphaned images in storage.
+  // Demo dishes use static bundled images and never set this.
+  imagePublicId: { type: String, default: "" },
   available: { type: Boolean, default: true },
   special: { type: Boolean, default: false },
   foodType: { type: String, default: "Non-Vegetarian" },

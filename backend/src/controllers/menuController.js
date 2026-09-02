@@ -1,5 +1,6 @@
 import MenuItem from "../models/MenuItem.js"
 import { Server } from "socket.io"
+import { uploadMenuImageIfNeeded, deleteMenuImageIfOwned } from "../utils/cloudinary.js"
 
 let io;
 export const setMenuIo = (socketIo) => { io = socketIo; }
@@ -15,7 +16,8 @@ export const getAllMenuItems = async (req, res) => {
 
 export const createMenuItem = async (req, res) => {
   try {
-    const item = await MenuItem.create(req.body)
+    const { image, imagePublicId } = await uploadMenuImageIfNeeded(req.body.image)
+    const item = await MenuItem.create({ ...req.body, image, imagePublicId })
     if (io) io.emit("menu:updated", { action: "create", item })
     res.status(201).json(item)
   } catch (err) {
@@ -25,8 +27,23 @@ export const createMenuItem = async (req, res) => {
 
 export const updateMenuItem = async (req, res) => {
   try {
-    const item = await MenuItem.findByIdAndUpdate(req.params.id, req.body, { new: true })
-    if (!item) return res.status(404).json({ error: "Item not found" })
+    const existing = await MenuItem.findById(req.params.id)
+    if (!existing) return res.status(404).json({ error: "Item not found" })
+
+    const { image, imagePublicId } = await uploadMenuImageIfNeeded(req.body.image)
+    const updatePayload = { ...req.body, image }
+    // Only touch imagePublicId if this call actually uploaded something new -
+    // otherwise leave the existing one alone (photo wasn't changed this edit).
+    if (imagePublicId) updatePayload.imagePublicId = imagePublicId
+
+    const item = await MenuItem.findByIdAndUpdate(req.params.id, updatePayload, { new: true })
+
+    // A genuinely new photo replaced an old uploaded one - remove the old
+    // one from Cloudinary so it doesn't sit there unused forever.
+    if (imagePublicId && existing.imagePublicId && existing.imagePublicId !== imagePublicId) {
+      deleteMenuImageIfOwned(existing.imagePublicId)
+    }
+
     if (io) io.emit("menu:updated", { action: "update", item })
     res.json(item)
   } catch (err) {
@@ -38,12 +55,15 @@ export const deleteMenuItem = async (req, res) => {
   try {
     const item = await MenuItem.findByIdAndDelete(req.params.id)
     if (!item) return res.status(404).json({ error: "Item not found" })
+    if (item.imagePublicId) deleteMenuImageIfOwned(item.imagePublicId)
     if (io) io.emit("menu:updated", { action: "delete", id: req.params.id })
     res.json({ message: "Item deleted successfully" })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
 }
+
+// ...DEFAULT_MENU and seedMenuItems stay exactly as they are, unchanged
 
 const DEFAULT_MENU = [
   { name: 'Signature Paneer Tikka', price: 450.00, category: 'Starters', tag: 'Classic', description: 'Charcoal grilled cottage cheese, spiced yogurt marinade, bell peppers, mint chutney.', image: 'signature-paneer-tikka.jpg', foodType: 'Vegetarian', prepTime: '15 min', spiceLevel: 'Medium' },
