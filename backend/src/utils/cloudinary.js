@@ -18,15 +18,25 @@ export const uploadMenuImageIfNeeded = async (imageValue) => {
     return { image: imageValue, imagePublicId: "" }
   }
 
+  // Resize is an "incoming" transformation - it actually shrinks the master
+  // file Cloudinary stores, which matters for the free tier's credit usage.
   const result = await cloudinary.uploader.upload(imageValue, {
     folder: "spice-garden/menu",
-    // Cap the stored master at 1600px wide - plenty for any card/hero use
-    // on this site, keeps storage/bandwidth down without any visible loss
-    // for how these are ever displayed.
     transformation: [{ width: 1600, crop: "limit" }]
   })
 
-  return { image: result.secure_url, imagePublicId: result.public_id }
+  // fetch_format/quality are DELIVERY-time parameters - Cloudinary decides
+  // the actual bytes (WebP/AVIF/JPEG) per request based on what the
+  // requesting browser supports, cached at the edge after that. This is
+  // why they're built into the URL via cloudinary.url() rather than
+  // passed to uploader.upload() above - that's the documented pattern.
+  const deliveryUrl = cloudinary.url(result.public_id, {
+    secure: true,
+    fetch_format: "auto",
+    quality: "auto"
+  })
+
+  return { image: deliveryUrl, imagePublicId: result.public_id }
 }
 
 // Called when a dish with an uploaded (non-demo) photo is permanently
