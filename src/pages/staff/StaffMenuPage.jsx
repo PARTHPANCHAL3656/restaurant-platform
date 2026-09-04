@@ -408,7 +408,7 @@ export default function StaffMenuPage() {
             <div className="overflow-x-auto hide-scrollbar whitespace-nowrap pt-2">
               <div className="flex gap-6 border-b border-muted-border">
                 {categories.map((cat) => {
-                  const active = selectedCategory === cat;
+                  const active = safeCategory === cat;
                   return (
                     <button
                       key={cat}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
@@ -11,7 +11,7 @@ import { formatINR } from '../utils/currency';
 const CATEGORIES = ['Starters', 'Mains', 'Rice & Biryani', 'Breads', 'Desserts', 'Signature Cocktails'];
 
 export default function MenuPage({ onCartToggle }) {
-  const { menuItems, isMenuLoading } = useStaff();
+  const { menuItems, isMenuLoading, categories: staffCategories } = useStaff();
   const { cartItems, addToCart, removeFromCart, getSubtotal, tableNumber, tableToken, sessionExpired, setSessionExpired, orderId, activeOrderItems, consumeFreshScan } = useCart();
   const navigate = useNavigate();
   const previewMode = !tableToken;
@@ -28,6 +28,14 @@ export default function MenuPage({ onCartToggle }) {
   const [selectedCategory, setSelectedCategory] = useState('Starters');
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState({ visible: false, itemName: '', count: 0 });
+
+  const categories = useMemo(
+    () => staffCategories.map((c) => c.name),
+    [staffCategories]
+  );
+  const safeCategory = categories.includes(selectedCategory)
+    ? selectedCategory
+    : (categories[0] || selectedCategory);
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = getSubtotal();
@@ -54,7 +62,7 @@ export default function MenuPage({ onCartToggle }) {
   const filteredItems = menuItems.filter(item => {
     // If category in DB is Main Course but tab category is Mains, align them
     const itemCat = item.category === 'Main Course' ? 'Mains' : item.category;
-    const matchesCategory = itemCat === selectedCategory;
+    const matchesCategory = itemCat === safeCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.description.toLowerCase().includes(searchQuery.toLowerCase());
     const isAvailable = item.available !== false;
     return matchesCategory && matchesSearch && isAvailable;
@@ -112,18 +120,18 @@ export default function MenuPage({ onCartToggle }) {
         {/* Category Tabs */}
         <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop overflow-x-auto hide-scrollbar whitespace-nowrap pt-4 pb-4">
           <div className="flex gap-8 border-b border-saffron-gold/15">
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`font-label-caps text-label-caps uppercase tracking-wider pb-3 transition-all relative ${
-                  selectedCategory === cat 
+                  safeCategory === cat 
                     ? 'text-saffron-gold' 
                     : 'text-subtle-text hover:text-saffron-gold'
                 }`}
               >
                 {cat}
-                {selectedCategory === cat && (
+                {safeCategory === cat && (
                   <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-saffron-gold" />
                 )}
               </button>
