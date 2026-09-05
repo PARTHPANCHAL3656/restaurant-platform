@@ -6,8 +6,8 @@ import { StaffProvider } from './context/StaffContext';
 import DesktopSidebar from './components/DesktopSidebar';
 import MobileHeader from './components/MobileHeader';
 const MobileMenu = React.lazy(() => import('./components/MobileMenu'));
-import CartDrawer from './components/CartDrawer';
-import StaffLayout from './components/staff/StaffLayout';
+const CartDrawer = React.lazy(() => import('./components/CartDrawer'));
+const StaffLayout = React.lazy(() => import('./components/staff/StaffLayout'));
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Pages (Lazy Loaded)

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Hanken+Grotesk:wght@400;600;700&family=Public+Sans:wght@400;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+/* AFTER */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0..1,0&icon_names=add,add_a_photo,add_circle,arrow_back,calendar_today,category,check,check_circle,close,cloud_off,dashboard,delete,delete_forever,distance,download,east,edit,error_outline,event_seat,expand_more,first_page,format_quote,groups,help_outline,hourglass_disabled,hourglass_empty,last_page,lock,logout,menu,monitoring,notifications,payments,person,progress_activity,public,qr_code_2,qr_code_scanner,receipt_long,remove,restaurant,restaurant_menu,room_service,sanitizer,search,settings,share,shopping_bag,star,sync,table_restaurant,table_view,visibility,visibility_off,warning&display=swap');
 
 @config "../tailwind.config.js";
 
