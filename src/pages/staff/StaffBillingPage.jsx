@@ -30,7 +30,7 @@ export default function StaffBillingPage() {
     inv.table.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const selectedInvoice = invoices.find(inv => inv.id === selectedInvoiceId) || invoices[0];
+  const selectedInvoice = invoices.find(inv => inv.id === selectedInvoiceId);
 
   const getStatusBadge = (status) => {
     switch (status) {
