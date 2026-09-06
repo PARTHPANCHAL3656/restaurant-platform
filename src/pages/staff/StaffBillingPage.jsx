@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import html2canvas from 'html2canvas-pro';
@@ -107,6 +108,113 @@ export default function StaffBillingPage() {
     show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } }
   };
 
+  const invoicePreviewContent = selectedInvoice ? (
+    <div className="h-full flex flex-col justify-between">
+      {/* Header */}
+      <div className="p-6 border-b border-muted-border shrink-0">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="font-serif text-lg text-ink-navy font-semibold">Invoice Details</h3>
+            <p className="text-[10px] font-mono text-subtle-text tracking-widest uppercase mt-0.5">{selectedInvoice.invoiceNumber || selectedInvoice.id}</p>
+          </div>
+          <button 
+            onClick={() => setSelectedInvoiceId(null)}
+            className="p-1 hover:bg-surface-container-low rounded-full transition-colors focus:outline-none text-subtle-text"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Invoice Breakdown */}
+      <div className="flex-grow p-6 space-y-6 overflow-y-auto hide-scrollbar text-xs">
+        <div className="space-y-2 border-b border-muted-border pb-4">
+          <div className="flex justify-between">
+            <span className="text-subtle-text">Table:</span>
+            <span className="font-bold text-ink-navy">{selectedInvoice.table}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-subtle-text">Guest Name:</span>
+            <span className="font-bold text-ink-navy">{selectedInvoice.guest}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-subtle-text">Date Issued:</span>
+            <span className="text-ink-navy">{selectedInvoice.date}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-subtle-text">Payment Type:</span>
+            <span className="text-ink-navy font-semibold">{selectedInvoice.paymentMethod}</span>
+          </div>
+        </div>
+
+        {/* Ordered Items */}
+        {selectedInvoice.items && selectedInvoice.items.length > 0 && (
+          <div className="space-y-3 pb-6 border-b border-muted-border">
+            <h4 className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase font-bold">Ordered Items</h4>
+            <ul className="space-y-2 text-ink-navy">
+              {selectedInvoice.items.map((item, idx) => (
+                <li key={idx} className="flex justify-between">
+                  <span>{item.qty}x {item.name}</span>
+                  <span className="font-mono font-semibold">{formatINR((item.price * item.qty))}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Tally */}
+        <div className="space-y-3">
+          <h4 className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase font-bold">Tally Summary</h4>
+          <div className="space-y-2 border-b border-muted-border pb-4">
+            <div className="flex justify-between text-subtle-text">
+              <span>Menu Subtotal</span>
+              <span>{formatINR((selectedInvoice.subtotal || selectedInvoice.amount / 1.175))}</span>
+            </div>
+            <div className="flex justify-between text-subtle-text">
+              <span>Service Charge (10%)</span>
+              <span>{formatINR((selectedInvoice.serviceCharge || selectedInvoice.amount * 0.10 / 1.175))}</span>
+            </div>
+            <div className="flex justify-between text-subtle-text">
+              <span>GST (7.5%)</span>
+              <span>{formatINR((selectedInvoice.gst || selectedInvoice.amount * 0.075 / 1.175))}</span>
+            </div>
+          </div>
+          <div className="flex justify-between items-end pt-2">
+            <span className="font-serif text-sm text-ink-navy font-bold uppercase">Total Charges</span>
+            <span className="font-serif text-2xl text-saffron-gold font-bold">{formatINR(selectedInvoice.amount)}</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Actions */}
+      <div className="p-6 border-t border-muted-border bg-canvas-cream space-y-3 shrink-0">
+        {selectedInvoice.status !== 'paid' && (
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              onClick={() => handleMarkAsPaid(selectedInvoice.id, 'Cash')}
+              className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer"
+            >
+              Mark Paid (Cash)
+            </button>
+            <button 
+              onClick={() => handleMarkAsPaid(selectedInvoice.id, 'Online')}
+              className="w-full bg-ink-navy text-canvas-cream font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-125 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer"
+            >
+              Mark Paid (Online)
+            </button>
+          </div>
+        )}
+        <button 
+          onClick={handleDownloadInvoiceChit}
+          className="w-full h-[56px] border border-ink-navy text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:bg-ink-navy hover:text-canvas-cream transition-all duration-300 cursor-pointer rounded-none text-center"
+        >
+          Print Invoice Chit
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
@@ -206,121 +314,24 @@ export default function StaffBillingPage() {
         </div>
       </div>
 
-      {/* Mobile overlay backdrop */}
-      {selectedInvoice && (
-        <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedInvoiceId(null)} />
-      )}
-      {/* Right side: Invoice Preview */}
-      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
-        selectedInvoice ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
+      {/* Desktop: in-flow panel, unchanged behavior — was never affected by the bug */}
+      <div className={`hidden md:flex md:static bg-white border-l border-muted-border shrink-0 transition-all duration-300 shadow-2xl flex-col ${
+        selectedInvoice ? 'md:w-96 md:opacity-100' : 'md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
-        {selectedInvoice && (
-          <div className="h-full flex flex-col justify-between">
-            {/* Header */}
-            <div className="p-6 border-b border-muted-border shrink-0">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-serif text-lg text-ink-navy font-semibold">Invoice Details</h3>
-                  <p className="text-[10px] font-mono text-subtle-text tracking-widest uppercase mt-0.5">{selectedInvoice.invoiceNumber || selectedInvoice.id}</p>
-                </div>
-                <button 
-                  onClick={() => setSelectedInvoiceId(null)}
-                  className="p-1 hover:bg-surface-container-low rounded-full transition-colors focus:outline-none text-subtle-text"
-                >
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Invoice Breakdown */}
-            <div className="flex-grow p-6 space-y-6 overflow-y-auto hide-scrollbar text-xs">
-              <div className="space-y-2 border-b border-muted-border pb-4">
-                <div className="flex justify-between">
-                  <span className="text-subtle-text">Table:</span>
-                  <span className="font-bold text-ink-navy">{selectedInvoice.table}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-subtle-text">Guest Name:</span>
-                  <span className="font-bold text-ink-navy">{selectedInvoice.guest}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-subtle-text">Date Issued:</span>
-                  <span className="text-ink-navy">{selectedInvoice.date}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-subtle-text">Payment Type:</span>
-                  <span className="text-ink-navy font-semibold">{selectedInvoice.paymentMethod}</span>
-                </div>
-              </div>
-
-              {/* Ordered Items */}
-              {selectedInvoice.items && selectedInvoice.items.length > 0 && (
-                <div className="space-y-3 pb-6 border-b border-muted-border">
-                  <h4 className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase font-bold">Ordered Items</h4>
-                  <ul className="space-y-2 text-ink-navy">
-                    {selectedInvoice.items.map((item, idx) => (
-                      <li key={idx} className="flex justify-between">
-                        <span>{item.qty}x {item.name}</span>
-                        <span className="font-mono font-semibold">{formatINR((item.price * item.qty))}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Tally */}
-              <div className="space-y-3">
-                <h4 className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase font-bold">Tally Summary</h4>
-                <div className="space-y-2 border-b border-muted-border pb-4">
-                  <div className="flex justify-between text-subtle-text">
-                    <span>Menu Subtotal</span>
-                    <span>{formatINR((selectedInvoice.subtotal || selectedInvoice.amount / 1.175))}</span>
-                  </div>
-                  <div className="flex justify-between text-subtle-text">
-                    <span>Service Charge (10%)</span>
-                    <span>{formatINR((selectedInvoice.serviceCharge || selectedInvoice.amount * 0.10 / 1.175))}</span>
-                  </div>
-                  <div className="flex justify-between text-subtle-text">
-                    <span>GST (7.5%)</span>
-                    <span>{formatINR((selectedInvoice.gst || selectedInvoice.amount * 0.075 / 1.175))}</span>
-                  </div>
-                </div>
-                <div className="flex justify-between items-end pt-2">
-                  <span className="font-serif text-sm text-ink-navy font-bold uppercase">Total Charges</span>
-                  <span className="font-serif text-2xl text-saffron-gold font-bold">{formatINR(selectedInvoice.amount)}</span>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Actions */}
-            <div className="p-6 border-t border-muted-border bg-canvas-cream space-y-3 shrink-0">
-              {selectedInvoice.status !== 'paid' && (
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    onClick={() => handleMarkAsPaid(selectedInvoice.id, 'Cash')}
-                    className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer"
-                  >
-                    Mark Paid (Cash)
-                  </button>
-                  <button 
-                    onClick={() => handleMarkAsPaid(selectedInvoice.id, 'Online')}
-                    className="w-full bg-ink-navy text-canvas-cream font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-125 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer"
-                  >
-                    Mark Paid (Online)
-                  </button>
-                </div>
-              )}
-              <button 
-                onClick={handleDownloadInvoiceChit}
-                className="w-full h-[56px] border border-ink-navy text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:bg-ink-navy hover:text-canvas-cream transition-all duration-300 cursor-pointer rounded-none text-center"
-              >
-                Print Invoice Chit
-              </button>
-            </div>
-          </div>
-        )}
+        {invoicePreviewContent}
       </div>
+
+      {/* Mobile: portaled straight onto <body> so it isn't trapped inside
+          StaffLayout's transformed motion.div wrapper */}
+      {selectedInvoice && createPortal(
+        <>
+          <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedInvoiceId(null)} />
+          <div className="fixed inset-y-0 right-0 z-50 w-full bg-white border-l border-muted-border shadow-2xl flex flex-col md:hidden">
+            {invoicePreviewContent}
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* Hidden receipt template used only for PDF generation via html2canvas.
           Rendered off-screen (not display:none) so html2canvas can lay it out. */}
