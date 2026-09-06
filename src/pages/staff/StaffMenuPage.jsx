@@ -476,14 +476,14 @@ export default function StaffMenuPage() {
 
                     {/* Metadata text */}
                     <div className="p-6 space-y-3">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-serif text-md font-bold text-ink-navy">{dish.name}</h4>
-                        <span className="font-serif text-saffron-gold font-bold">{formatINR(dish.price)}</span>
+                      <div className="flex justify-between items-start gap-3">
+                        <h4 className="font-serif text-md font-bold text-ink-navy min-w-0 break-words">{dish.name}</h4>
+                        <span className="font-serif text-saffron-gold font-bold shrink-0">{formatINR(dish.price)}</span>
                       </div>
                       <p className="text-xs text-subtle-text line-clamp-2 leading-relaxed">
                         {dish.description}
                       </p>
-                      <div className="flex gap-4 text-[10px] font-label-caps text-subtle-text">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-label-caps text-subtle-text">
                         <span>Type: <strong className="text-ink-navy">{dish.foodType}</strong></span>
                         <span>Prep: <strong className="text-ink-navy">{dish.prepTime}</strong></span>
                       </div>
@@ -491,8 +491,8 @@ export default function StaffMenuPage() {
                   </div>
 
                   {/* Actions Bar */}
-                  <div className="px-6 py-4 border-t border-muted-border/40 flex justify-between items-center text-xs">
-                    <div className="flex gap-4">
+                  <div className="px-6 py-4 border-t border-muted-border/40 flex flex-wrap gap-y-2 justify-between items-center text-xs">
+                    <div className="flex gap-3 sm:gap-4">
                       <button 
                         onClick={() => handleOpenPreview(dish)}
                         className="text-subtle-text hover:text-saffron-gold transition-colors focus:outline-none font-semibold uppercase tracking-wider text-[10px]"

@@ -36,13 +36,13 @@ export default function StaffLayout() {
         <StaffSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Main Viewport Container */}
-        <div className="flex-grow min-h-screen flex flex-col lg:pl-[300px] transition-all duration-300">
+        <div className="flex-grow min-w-0 min-h-screen flex flex-col lg:pl-[300px] transition-all duration-300">
           
           {/* Sticky Header */}
           <StaffHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
           
           {/* Dashboard/Feature Screen Contents */}
-          <main className="flex-grow pt-16 md:pt-20">
+          <main className="flex-grow min-w-0 pt-16 md:pt-20">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
