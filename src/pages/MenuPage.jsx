@@ -58,12 +58,15 @@ export default function MenuPage({ onCartToggle }) {
   const tableNum = parts.pop() || '14';
   const sectionName = parts.join(' ') || 'Garden Terrace';
 
-  // Filter items based on category, search query, and stock availability
+  // Filter items based on category, search query, and stock availability.
+  // While actively searching, ignore the selected tab entirely — a guest
+  // searching "gulab jamun" from the Starters tab should still find it.
+  const isSearching = searchQuery.trim().length > 0;
   const filteredItems = menuItems.filter(item => {
     // If category in DB is Main Course but tab category is Mains, align them
     const itemCat = item.category === 'Main Course' ? 'Mains' : item.category;
-    const matchesCategory = itemCat === safeCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = isSearching || itemCat === safeCategory;
+    const matchesSearch = !isSearching || item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.description.toLowerCase().includes(searchQuery.toLowerCase());
     const isAvailable = item.available !== false;
     return matchesCategory && matchesSearch && isAvailable;
   });
@@ -169,7 +172,18 @@ export default function MenuPage({ onCartToggle }) {
         </section>
 
         {/* Menu Cards Grid */}
-        {filteredItems.length === 0 ? (
+        {isMenuLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-gutter gap-y-16">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-[4/3] md:aspect-[1.4] mb-6 bg-surface-container border border-muted-border" />
+                <div className="h-4 w-2/3 bg-surface-container mb-3" />
+                <div className="h-3 w-full bg-surface-container mb-2" />
+                <div className="h-3 w-1/2 bg-surface-container" />
+              </div>
+            ))}
+          </div>
+        ) : filteredItems.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-muted-border">
             <span className="material-symbols-outlined text-4xl text-subtle-text/40 mb-2">restaurant_menu</span>
             <p className="font-serif text-headline-sm text-subtle-text">No items found matching your search</p>

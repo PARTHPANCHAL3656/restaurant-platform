@@ -135,3 +135,32 @@ export const deleteCategory = async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 }
+
+// PATCH /api/categories/reorder  { orderedIds: [id1, id2, ...] }
+// The frontend always sends its full, already-computed intended order
+// (e.g. after nudging one category up/down with the arrow buttons) —
+// this just re-assigns sortOrder = array index for every id in one shot,
+// rather than trying to express "swap these two" as its own operation.
+export const reorderCategories = async (req, res) => {
+  try {
+    const { orderedIds } = req.body
+    if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+      return res.status(400).json({ error: "orderedIds must be a non-empty array." })
+    }
+
+    const existingCount = await Category.countDocuments({ _id: { $in: orderedIds } })
+    if (existingCount !== orderedIds.length) {
+      return res.status(400).json({ error: "orderedIds contains an unknown category." })
+    }
+
+    await Promise.all(
+      orderedIds.map((id, index) => Category.updateOne({ _id: id }, { $set: { sortOrder: index } }))
+    )
+
+    const updated = await Category.find().sort({ sortOrder: 1, name: 1 })
+    io.emit("category:updated", { action: "reorder" })
+    res.json(updated)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}

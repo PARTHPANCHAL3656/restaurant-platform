@@ -687,6 +687,7 @@ export function StaffProvider({ children }) {
     ]);
     if (rawMenuItems && rawMenuItems.length > 0) {
       setMenuItems(rawMenuItems);
+      setIsMenuLoading(false);
     }
     if (rawCategories) {
       setCategories(rawCategories);
@@ -1533,6 +1534,31 @@ export function StaffProvider({ children }) {
 
   // Category management — categories now exist independently of items,
   // so a category can be created empty and dishes added to it afterward.
+  // Nudges one category up or down by swapping its sortOrder with its
+  // immediate neighbor, then persists the resulting full order. Optimistic
+  // local update first so the arrow feels instant — loadPublicData() then
+  // reconciles with the server's actual state.
+  const reorderCategories = async (categoryId, direction) => {
+    const sorted = [...categories].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const index = sorted.findIndex(c => c.id === categoryId);
+    const swapWith = direction === 'up' ? index - 1 : index + 1;
+    if (index === -1 || swapWith < 0 || swapWith >= sorted.length) return;
+
+    [sorted[index], sorted[swapWith]] = [sorted[swapWith], sorted[index]];
+    const orderedIds = sorted.map(c => c.id);
+
+    setCategories(prev => {
+      const byId = Object.fromEntries(sorted.map((c, i) => [c.id, i]));
+      return [...prev].sort((a, b) => byId[a.id] - byId[b.id]).map((c, i) => ({ ...c, sortOrder: i }));
+    });
+
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) return;
+
+    await api.patch('/api/categories/reorder', { orderedIds });
+    await loadPublicData();
+  };
+
   const addCategory = async (name) => {
     const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
@@ -1621,6 +1647,7 @@ export function StaffProvider({ children }) {
       addCategory,
       renameCategory,
       deleteCategory,
+      reorderCategories,
       releaseTable,
       checkInGuest,
       cancelReservation,

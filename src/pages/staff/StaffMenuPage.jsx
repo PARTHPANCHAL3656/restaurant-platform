@@ -8,7 +8,7 @@ import { formatINR } from '../../utils/currency';
 export default function StaffMenuPage() {
   const {
     menuItems, addMenuItem, updateMenuItem, deleteMenuItem, reseedDemoMenu,
-    categories: staffCategories, addCategory, renameCategory, deleteCategory
+    categories: staffCategories, addCategory, renameCategory, deleteCategory, reorderCategories
   } = useStaff();
 
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -109,6 +109,18 @@ export default function StaffMenuPage() {
     setEditingCategoryId(cat.id);
     setEditingCategoryName(cat.name);
     setCategoryActionError('');
+  };
+
+  const handleMoveCategory = async (cat, direction) => {
+    setCategoryActionError('');
+    setCategoryBusy(true);
+    try {
+      await reorderCategories(cat.id, direction);
+    } catch (err) {
+      setCategoryActionError(err.response?.data?.error || 'Could not reorder categories.');
+    } finally {
+      setCategoryBusy(false);
+    }
   };
 
   const handleConfirmRename = async (cat) => {
@@ -998,6 +1010,22 @@ export default function StaffMenuPage() {
                           </>
                         ) : (
                           <>
+                            <button
+                              onClick={() => handleMoveCategory(cat, 'up')}
+                              disabled={categoryBusy || staffCategories.indexOf(cat) === 0}
+                              className="p-2 text-ink-navy hover:bg-surface-container-low cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move up"
+                            >
+                              <span className="material-symbols-outlined text-lg">arrow_upward</span>
+                            </button>
+                            <button
+                              onClick={() => handleMoveCategory(cat, 'down')}
+                              disabled={categoryBusy || staffCategories.indexOf(cat) === staffCategories.length - 1}
+                              className="p-2 text-ink-navy hover:bg-surface-container-low cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move down"
+                            >
+                              <span className="material-symbols-outlined text-lg">arrow_downward</span>
+                            </button>
                             <button
                               onClick={() => handleStartRename(cat)}
                               className="p-2 text-ink-navy hover:bg-surface-container-low cursor-pointer"

@@ -4,7 +4,8 @@ import {
   getAllCategories,
   createCategory,
   renameCategory,
-  deleteCategory
+  deleteCategory,
+  reorderCategories
 } from "../controllers/categoryController.js"
 
 const router = express.Router()
@@ -14,6 +15,8 @@ router.get("/", getAllCategories)
 
 // Staff routes
 router.post("/", staffAuth, createCategory)
+// Must come before "/:id" — otherwise Express matches "reorder" as an :id.
+router.patch("/reorder", staffAuth, reorderCategories)
 router.patch("/:id", staffAuth, renameCategory)
 router.delete("/:id", staffAuth, deleteCategory)
 

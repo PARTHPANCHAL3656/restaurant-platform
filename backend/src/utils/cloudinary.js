@@ -33,7 +33,9 @@ export const uploadMenuImageIfNeeded = async (imageValue) => {
   const deliveryUrl = cloudinary.url(result.public_id, {
     secure: true,
     fetch_format: "auto",
-    quality: "auto"
+    quality: "auto",
+    width: 800,
+    crop: "limit"
   })
 
   return { image: deliveryUrl, imagePublicId: result.public_id }
