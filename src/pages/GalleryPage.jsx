@@ -68,7 +68,7 @@ export default function GalleryPage() {
   };
 
   return (
-    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20">
+    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20 lg:pt-0">
       
       {/* Narrative Intro */}
       <section className="px-margin-mobile md:px-margin-desktop py-16 max-w-container-max mx-auto text-center">

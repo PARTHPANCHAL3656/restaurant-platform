@@ -93,7 +93,7 @@ export default function ReservationPage() {
     : '--';
 
   return (
-    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20">
+    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20 lg:pt-0">
       {/* Header */}
       <header className="py-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto text-center border-b border-muted-border">
         <span className="font-label-caps text-label-caps text-saffron-gold tracking-[0.3em] uppercase mb-4 block">Table Booking</span>

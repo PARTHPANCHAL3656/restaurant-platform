@@ -72,7 +72,7 @@ export default function MenuPage({ onCartToggle }) {
   });
 
   return (
-    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20">
+    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20 lg:pt-0">
 
       {/* Search & Category Tabs sticky header */}
       <nav className="sticky top-12 lg:top-0 bg-gradient-to-b from-[#FBF7EE] to-[#F7F2E2] z-25 border-b border-saffron-gold/15 shadow-[0_8px_30px_rgba(212,175,55,0.03)]">

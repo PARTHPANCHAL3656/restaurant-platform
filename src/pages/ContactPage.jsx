@@ -12,7 +12,7 @@ export default function ContactPage() {
   const { restaurantInfo } = useStaff();
 
   return (
-    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20">
+    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20 lg:pt-0">
       
       {/* Intro Header */}
       <section className="px-margin-mobile md:px-margin-desktop py-16 max-w-container-max mx-auto border-b border-muted-border">

@@ -34,7 +34,7 @@ export default function CartPage() {
   };
 
   return (
-    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20">
+    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20 lg:pt-0">
       
       {/* Header */}
       <header className="py-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto text-center border-b border-muted-border">
