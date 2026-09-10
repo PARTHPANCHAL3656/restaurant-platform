@@ -52,36 +52,27 @@ export default function LandingPage() {
           <img 
             alt="Spice Garden Interior" 
             className="w-full h-full object-cover brightness-[0.70]" 
-            src={getImage('interior-1.jpg')}
+            src="/hero-lcp.webp"
             fetchpriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-ink-navy/40 via-transparent to-canvas-cream"></div>
         </div>
 
         <div className="relative z-10 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center">
-          <motion.span 
-            className="font-label-caps text-label-caps text-canvas-cream/90 tracking-[0.25em] block mb-6 uppercase"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 1 }}
+          <span 
+            className="hero-fade-up hero-fade-up-delay-1 font-label-caps text-label-caps text-canvas-cream/90 tracking-[0.25em] block mb-6 uppercase"
           >
             MICHELIN STAR CUISINE
-          </motion.span>
-          <motion.h1 
-            className="font-serif text-display-lg-mobile md:text-display-lg text-canvas-cream mb-8 leading-[1.1] max-w-4xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 1, ease: [0.165, 0.84, 0.44, 1] }}
+          </span>
+          <h1 
+            className="hero-fade-up hero-fade-up-delay-2 font-serif text-display-lg-mobile md:text-display-lg text-canvas-cream mb-8 leading-[1.1] max-w-4xl mx-auto"
           >
             Elevating Heritage through a<br />
             <span className="italic text-saffron-gold">Lens of Modern Luxury</span>
-          </motion.h1>
+          </h1>
           
-          <motion.div 
-            className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 mt-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
+          <div 
+            className="hero-fade-up hero-fade-up-delay-3 flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 mt-12"
           >
             <button 
               onClick={() => navigate('/menu')}
@@ -95,7 +86,7 @@ export default function LandingPage() {
             >
               Our Story
             </button>
-          </motion.div>
+          </div>
         </div>
 
         <motion.div 
