@@ -9,9 +9,12 @@ const MobileMenu = React.lazy(() => import('./components/MobileMenu'));
 const CartDrawer = React.lazy(() => import('./components/CartDrawer'));
 const StaffLayout = React.lazy(() => import('./components/staff/StaffLayout'));
 import ErrorBoundary from './components/ErrorBoundary';
+// Eager import: this is the entry route almost every visitor hits first,
+// so lazy-splitting it only adds a network round-trip to the LCP path
+// with no benefit (nothing is "saved" — it's needed immediately anyway).
+import LandingPage from './pages/LandingPage';
 
 // Pages (Lazy Loaded)
-const LandingPage = React.lazy(() => import('./pages/LandingPage'));
 const ReservationPage = React.lazy(() => import('./pages/ReservationPage'));
 const ReservationSuccess = React.lazy(() => import('./pages/ReservationSuccess'));
 const MenuPage = React.lazy(() => import('./pages/MenuPage'));
