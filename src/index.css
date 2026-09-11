@@ -128,3 +128,16 @@ html.lenis {
     transform: none;
   }
 }
+
+@keyframes hero-bounce {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, 10px); }
+}
+.hero-bounce {
+  animation: hero-bounce 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-bounce {
+    animation: none;
+  }
+}

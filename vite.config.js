@@ -13,6 +13,9 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1000,
+    modulePreload: {
+      resolveDependencies: (filename, deps) => deps.filter(dep => !dep.includes('vendor-motion'))
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
