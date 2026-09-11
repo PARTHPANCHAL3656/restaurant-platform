@@ -5,13 +5,16 @@ import { CartProvider, useCart } from './context/CartContext';
 import { StaffProvider } from './context/StaffContext';
 import DesktopSidebar from './components/DesktopSidebar';
 import MobileHeader from './components/MobileHeader';
-const MobileMenu = React.lazy(() => import('./components/MobileMenu'));
-const CartDrawer = React.lazy(() => import('./components/CartDrawer'));
+// Eager imports: both are unconditionally mounted in AppLayout on every
+// route (just hidden via isOpen=false) and are tiny (~1-2KB gzipped each),
+// so lazy-loading them buys nothing. It also removes them as a source of
+// SSR/hydration mismatch now that App renders through renderToString too
+// (see src/entry-server.jsx) — a lazy component with no local Suspense
+// boundary would fall back to the spinner during server rendering.
+import MobileMenu from './components/MobileMenu';
+import CartDrawer from './components/CartDrawer';
 const StaffLayout = React.lazy(() => import('./components/staff/StaffLayout'));
 import ErrorBoundary from './components/ErrorBoundary';
-// Eager import: this is the entry route almost every visitor hits first,
-// so lazy-splitting it only adds a network round-trip to the LCP path
-// with no benefit (nothing is "saved" — it's needed immediately anyway).
 import LandingPage from './pages/LandingPage';
 
 // Pages (Lazy Loaded)
@@ -169,7 +172,7 @@ function MainAppRouter() {
   return <AppLayout />;
 }
 
-export default function App() {
+export default function App({ RouterComponent = Router, routerProps = {} }) {
   useEffect(() => {
     let lenis;
     let rafId;
@@ -198,7 +201,7 @@ export default function App() {
   }, []);
 
   return (
-    <Router>
+    <RouterComponent {...routerProps}>
       <ScrollToTop />
       <StaffProvider>
         <CartProvider>
@@ -207,6 +210,6 @@ export default function App() {
           </Suspense>
         </CartProvider>
       </StaffProvider>
-    </Router>
+    </RouterComponent>
   );
 }
