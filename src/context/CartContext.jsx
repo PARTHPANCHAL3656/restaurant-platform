@@ -12,7 +12,7 @@ export function useCart() {
 export function CartProvider({ children }) {
   const { orders, addOrder } = useStaff();
   const [cartItems, setCartItems] = useState([]);
-  const [orderId, setOrderId] = useState(() => sessionStorage.getItem('lastOrderId') || null);
+  const [orderId, setOrderId] = useState(() => (typeof window !== 'undefined' ? sessionStorage.getItem('lastOrderId') : null) || null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [tableId, setTableId] = useState(null);
   const [tableSessionId, setTableSessionId] = useState(null);
@@ -36,6 +36,7 @@ export function CartProvider({ children }) {
   const isFreshScanRef = useRef(false);
 
   const [tableToken, setTableToken] = useState(() => {
+    if (typeof window === 'undefined') return '';
     const urlToken = new URLSearchParams(window.location.search).get('token');
     if (urlToken) {
       sessionStorage.setItem('tableToken', urlToken);
@@ -47,6 +48,7 @@ export function CartProvider({ children }) {
   });
   
   const [tableNumber, setTableNumber] = useState(() => {
+    if (typeof window === 'undefined') return '';
     const urlToken = new URLSearchParams(window.location.search).get('token');
     const token = urlToken || sessionStorage.getItem('tableToken');
     if (token) {

@@ -420,6 +420,7 @@ export function StaffProvider({ children }) {
   // tables from GET /api/tables, which does NOT include QR data
   // (the backend only returns it once, at the moment of assignment).
   const [tableQrData, setTableQrData] = useState(() => {
+    if (typeof window === 'undefined') return {};
     const saved = sessionStorage.getItem('tableQrData');
     return saved ? JSON.parse(saved) : {};
   });
@@ -455,6 +456,7 @@ export function StaffProvider({ children }) {
   ]);
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false;
     return sessionStorage.getItem('staffAuthenticated') === 'true' && !!localStorage.getItem('staffToken');
   });
 
