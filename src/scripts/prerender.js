@@ -23,6 +23,7 @@ async function main() {
       ssr: 'src/entry-server.jsx',
       outDir: 'dist-ssr',
       emptyOutDir: true,
+      reportCompressedSize: false, // dist-ssr/ gets deleted below — no point gzip-sizing it
       rollupOptions: {
         output: { format: 'es' },
       },
