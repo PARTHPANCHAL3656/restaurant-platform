@@ -1,27 +1,9 @@
 import React, { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// LandingPageContent is deliberately client-only (its whileInView animations
-// depend on IntersectionObserver, a browser-only API) and is meant to stay
-// suspended (Suspense fallback={null}) during server rendering — it's
-// below-the-fold, non-LCP content, so this is correct behavior, not a gap.
-//
-// The problem: a real `lazy(() => import(...))` can end up resolving eagerly
-// inside the production SSR bundle if the bundler inlines the module instead
-// of keeping it a genuinely separate async chunk. When that happens its real
-// code runs in Node for the first time, throws (no IntersectionObserver in
-// Node), and React silently falls back per-boundary — this is React error
-// #419 ("server could not finish this Suspense boundary... switched to
-// client rendering").
-//
-// Fix: on the server, use a lazy() whose promise never resolves, so this
-// boundary is *guaranteed* to stay suspended and render its null fallback,
-// regardless of how the bundler treats the import. Client behavior is
-// completely unchanged.
-const LandingPageContent = typeof window !== 'undefined'
-  ? lazy(() => import('./LandingPageContent'))
-  : lazy(() => new Promise(() => {})); // intentionally never resolves during SSR
-
+// TEMPORARY TEST — not lazy. Checking whether LandingPageContent is actually
+// safe to render during SSR before deciding how to handle it permanently.
+import LandingPageContent from './LandingPageContent';
 export default function LandingPage() {
   const navigate = useNavigate();
 
