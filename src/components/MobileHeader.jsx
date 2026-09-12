@@ -9,10 +9,10 @@ export default function MobileHeader({ onMenuToggle, onCartToggle }) {
 
   return (
     <nav className="lg:hidden fixed top-0 w-full z-40 bg-canvas-cream/90 backdrop-blur-md border-b border-muted-border">
-      <div className="flex justify-between items-center px-4 py-3 max-w-container-max mx-auto">
+      <div className="flex justify-between items-center px-4 py-2 max-w-container-max mx-auto">
         {/* BrandLogo */}
         <Link to="/" className="flex items-center text-ink-navy" aria-label="Spice Garden home">
-          <BrandLogo colorClassName="text-ink-navy" />
+          <BrandLogo colorClassName="text-ink-navy" heightClass="h-[40px]" paddingClass="py-1" />
         </Link>
 
         {/* Actions */}

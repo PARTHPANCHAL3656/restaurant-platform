@@ -75,7 +75,7 @@ export default function MenuPage({ onCartToggle }) {
     <div className="bg-canvas-cream text-ink-navy min-h-screen">
 
       {/* Search & Category Tabs sticky header */}
-      <nav className="sticky top-[65px] lg:top-0 bg-gradient-to-b from-[#FBF7EE] to-[#F7F2E2] z-25 border-b border-saffron-gold/15 shadow-[0_8px_30px_rgba(212,175,55,0.03)]">
+      <nav className="sticky top-[64px] lg:top-0 bg-gradient-to-b from-[#FBF7EE] to-[#F7F2E2] z-25 border-b border-saffron-gold/15 shadow-[0_8px_30px_rgba(212,175,55,0.03)]">
         <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-4 pb-3 md:pt-8 md:pb-6 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
           
           {/* Table Header Details (Clean & Premium Editorial) */}

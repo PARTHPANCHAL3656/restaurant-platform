@@ -1,8 +1,8 @@
 import React from 'react';
 
-export default function BrandLogo({ colorClassName = 'text-current', heightClass = 'h-[62px]' }) {
+export default function BrandLogo({ colorClassName = 'text-current', heightClass = 'h-[62px]', paddingClass = 'pt-5 pb-2' }) {
   return (
-    <div className={`pt-5 pb-2 flex items-center justify-center ${colorClassName}`}>
+    <div className={`${paddingClass} flex items-center justify-center ${colorClassName}`}>
       <svg 
         className={`${heightClass} w-auto`} 
         viewBox="0 0 400 120" 
