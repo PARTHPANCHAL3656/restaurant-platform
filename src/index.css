@@ -4,12 +4,12 @@
 
 @layer base {
   html {
-    overflow-x: hidden;
+    overflow-x: clip;
   }
   body {
     @apply bg-canvas-cream text-ink-navy selection:bg-saffron-gold/30 selection:text-ink-navy antialiased;
     font-family: 'Hanken Grotesk', sans-serif;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   h1, h2, h3, h4 {

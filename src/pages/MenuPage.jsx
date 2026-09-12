@@ -85,10 +85,14 @@ export default function MenuPage({ onCartToggle }) {
             </span>
             {!previewMode && (
               <>
-                <span className="opacity-30 text-xs text-subtle-text">•</span>
-                <span className="font-serif text-lg text-ink-navy italic font-medium">
-                  {sectionName}
-                </span>
+                {sectionName.trim().toLowerCase() !== 'table' && (
+                  <>
+                    <span className="opacity-30 text-xs text-subtle-text">•</span>
+                    <span className="font-serif text-lg text-ink-navy italic font-medium">
+                      {sectionName}
+                    </span>
+                  </>
+                )}
                 <span className="opacity-30 text-xs text-subtle-text">•</span>
                 <span className="font-label-caps text-xs text-saffron-gold font-bold tracking-widest uppercase">
                   TABLE {tableNum}
