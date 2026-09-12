@@ -33,7 +33,7 @@ async function main() {
   // 2. Import the built module and render "/".
   const entryPath = path.join(ssrOutDir, 'entry-server.js');
   const { render } = await import(pathToFileURL(entryPath).href);
-  const appHtml = render('/');
+  const appHtml = await render('/');
 
   // 3. Preserve the original client shell before it gets overwritten.
   const shellHtml = await readFile(path.join(distDir, 'index.html'), 'utf-8');
