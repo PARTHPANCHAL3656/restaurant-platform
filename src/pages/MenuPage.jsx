@@ -76,7 +76,7 @@ export default function MenuPage({ onCartToggle }) {
 
       {/* Search & Category Tabs sticky header */}
       <nav className="sticky top-12 lg:top-0 bg-gradient-to-b from-[#FBF7EE] to-[#F7F2E2] z-25 border-b border-saffron-gold/15 shadow-[0_8px_30px_rgba(212,175,55,0.03)]">
-        <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-8 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-4 pb-3 md:pt-8 md:pb-6 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
           
           {/* Table Header Details (Clean & Premium Editorial) */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-left">
@@ -121,13 +121,13 @@ export default function MenuPage({ onCartToggle }) {
         </div>
 
         {/* Category Tabs */}
-        <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop overflow-x-auto hide-scrollbar whitespace-nowrap pt-4 pb-4">
-          <div className="flex gap-8 border-b border-saffron-gold/15">
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-4 pb-4">
+          <div className="flex flex-wrap gap-x-6 gap-y-3 border-b border-saffron-gold/15">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`font-label-caps text-label-caps uppercase tracking-wider pb-3 transition-all relative ${
+                className={`font-label-caps text-label-caps uppercase tracking-wider pb-3 transition-all relative whitespace-nowrap ${
                   safeCategory === cat 
                     ? 'text-saffron-gold' 
                     : 'text-subtle-text hover:text-saffron-gold'
@@ -198,7 +198,7 @@ export default function MenuPage({ onCartToggle }) {
                 <article key={item.id} className="group flex flex-col justify-between">
                   <div>
                     {/* Image Block */}
-                    <div className="relative aspect-[4/3] md:aspect-[1.4] mb-6 overflow-hidden bg-surface-container shadow-sm border border-muted-border flex items-center justify-center">
+                    <div className="relative aspect-[16/9] md:aspect-[1.4] mb-4 md:mb-6 overflow-hidden bg-surface-container shadow-sm border border-muted-border flex items-center justify-center">
                       <img 
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103" 
                         src={getImage(item.image)}
