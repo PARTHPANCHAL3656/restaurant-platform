@@ -24,6 +24,13 @@ async function main() {
       outDir: 'dist-ssr',
       emptyOutDir: true,
       reportCompressedSize: false, // dist-ssr/ gets deleted below — no point gzip-sizing it
+      // Without this, Vite resolves imported images to their absolute path
+      // on the BUILD MACHINE's disk (e.g. /vercel/path0/assets/...) instead
+      // of the public URL the client uses (/assets/xxx-hash.webp) — those
+      // filesystem paths get baked into the prerendered HTML and are
+      // meaningless (and blocked) in an actual visitor's browser. This
+      // makes SSR resolve asset imports the same way the client build does.
+      ssrEmitAssets: true,
       rollupOptions: {
         output: { format: 'es' },
       },

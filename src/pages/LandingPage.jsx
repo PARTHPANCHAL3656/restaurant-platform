@@ -1,8 +1,12 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// TEMPORARY TEST — not lazy. Checking whether LandingPageContent is actually
-// safe to render during SSR before deciding how to handle it permanently.
+// Confirmed via debug-ssr.mjs: LandingPageContent renders correctly during
+// SSR — its whileInView/IntersectionObserver logic lives inside useEffect,
+// which never runs server-side, so the initial render is plain markup.
+// Rendering it for real (instead of deferring it behind Suspense) removes
+// React error #419 at the source, and means more of the page actually
+// benefits from prerendering instead of just the Hero.
 import LandingPageContent from './LandingPageContent';
 export default function LandingPage() {
   const navigate = useNavigate();
