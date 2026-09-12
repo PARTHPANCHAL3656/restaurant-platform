@@ -75,68 +75,45 @@ const ASSET_MAP = {
   'restaurant-interior.jpg': 'landing/restaurant-interior.webp'
 };
 
+// Eagerly resolves every image under src/assets/images at build time, in BOTH
+// the client and SSR builds. Unlike `new URL(dynamicPath, import.meta.url)`,
+// import.meta.glob is Vite's officially-supported way to look up many assets
+// by name and is statically analyzable in every build target — so it always
+// produces the real public URL (e.g. /assets/ambience-HASH.webp), never a
+// raw filesystem path. This is what was producing file:///vercel/path0/...
+// URLs (and the accompanying browser errors) once the landing page content
+// started being rendered during SSR.
+const imageModules = import.meta.glob('../assets/images/**/*.webp', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
+
+const IMAGE_URLS = {};
+for (const [modulePath, url] of Object.entries(imageModules)) {
+  const key = modulePath.replace('../assets/images/', '');
+  IMAGE_URLS[key] = url;
+}
+
+const FALLBACK_KEY = 'menu/starters/hara-bhara-kebab.webp';
+
 /**
  * Resolves local image URLs dynamically based on target assets subdirectories
  * @param {string} filename 
  * @returns {string} Fully qualified browser-ready URL
  */
 export const getImage = (filename) => {
-  // Resolve the ASSET_MAP key to its full path
   if (!filename) {
     // Return a food placeholder image so broken image icons never show
-    return new URL('../assets/images/menu/starters/hara-bhara-kebab.webp', import.meta.url).href;
+    return IMAGE_URLS[FALLBACK_KEY];
   }
-  
+
   // Bypass resolution for data previews, blob URLs, and external HTTP assets
   if (filename.startsWith('data:') || filename.startsWith('blob:') || filename.startsWith('http')) {
     return filename;
   }
-  
+
   const relativePath = ASSET_MAP[filename] || filename;
 
-  // Static template literal expressions per flat subdirectory 
-  // allows Vite's compiler to analyze and generate separate flat glob trees.
-  if (relativePath.startsWith('landing/')) {
-    const file = relativePath.replace('landing/', '');
-    return new URL(`../assets/images/landing/${file}`, import.meta.url).href;
-  }
-  if (relativePath.startsWith('gallery/')) {
-    const file = relativePath.replace('gallery/', '');
-    return new URL(`../assets/images/gallery/${file}`, import.meta.url).href;
-  }
-  if (relativePath.startsWith('menu/starters/')) {
-    const file = relativePath.replace('menu/starters/', '');
-    return new URL(`../assets/images/menu/starters/${file}`, import.meta.url).href;
-  }
-  if (relativePath.startsWith('menu/mains/')) {
-    const file = relativePath.replace('menu/mains/', '');
-    return new URL(`../assets/images/menu/mains/${file}`, import.meta.url).href;
-  }
-  if (relativePath.startsWith('menu/rice/')) {
-    const file = relativePath.replace('menu/rice/', '');
-    return new URL(`../assets/images/menu/rice/${file}`, import.meta.url).href;
-  }
-  if (relativePath.startsWith('menu/breads/')) {
-    const file = relativePath.replace('menu/breads/', '');
-    return new URL(`../assets/images/menu/breads/${file}`, import.meta.url).href;
-  }
-  if (relativePath.startsWith('menu/desserts/')) {
-    const file = relativePath.replace('menu/desserts/', '');
-    return new URL(`../assets/images/menu/desserts/${file}`, import.meta.url).href;
-  }
-  if (relativePath.startsWith('menu/beverages/')) {
-    const file = relativePath.replace('menu/beverages/', '');
-    return new URL(`../assets/images/menu/beverages/${file}`, import.meta.url).href;
-  }
-  if (relativePath.startsWith('qr/')) {
-    const file = relativePath.replace('qr/', '');
-    return new URL(`../assets/images/qr/${file}`, import.meta.url).href;
-  }
-  if (relativePath.startsWith('branding/')) {
-    const file = relativePath.replace('branding/', '');
-    return new URL(`../assets/images/branding/${file}`, import.meta.url).href;
-  }
-  
-  // Fallback default resolver if path remains root-level relative
-  return new URL(`../assets/images/${relativePath}`, import.meta.url).href;
+  return IMAGE_URLS[relativePath] || IMAGE_URLS[FALLBACK_KEY];
 };
