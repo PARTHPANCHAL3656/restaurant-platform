@@ -72,24 +72,24 @@ export default function MenuPage({ onCartToggle }) {
   });
 
   return (
-    <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20 lg:pt-0">
+    <div className="bg-canvas-cream text-ink-navy min-h-screen">
 
       {/* Search & Category Tabs sticky header */}
-      <nav className="sticky top-12 lg:top-0 bg-gradient-to-b from-[#FBF7EE] to-[#F7F2E2] z-25 border-b border-saffron-gold/15 shadow-[0_8px_30px_rgba(212,175,55,0.03)]">
+      <nav className="sticky top-[65px] lg:top-0 bg-gradient-to-b from-[#FBF7EE] to-[#F7F2E2] z-25 border-b border-saffron-gold/15 shadow-[0_8px_30px_rgba(212,175,55,0.03)]">
         <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-4 pb-3 md:pt-8 md:pb-6 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
           
           {/* Table Header Details (Clean & Premium Editorial) */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-left">
-            <span className="font-label-caps text-[10px] text-saffron-gold tracking-[0.2em] font-semibold uppercase">
+          <div className="flex flex-row items-center gap-2 text-left">
+            <span className="font-label-caps text-[11px] text-saffron-gold tracking-[0.2em] font-semibold uppercase">
               {previewMode ? 'OUR MENU' : 'DIGITAL MENU'}
             </span>
             {!previewMode && (
               <>
-                <span className="hidden sm:inline opacity-30 text-xs text-subtle-text">•</span>
+                <span className="opacity-30 text-xs text-subtle-text">•</span>
                 <span className="font-serif text-lg text-ink-navy italic font-medium">
                   {sectionName}
                 </span>
-                <span className="hidden sm:inline opacity-30 text-xs text-subtle-text">•</span>
+                <span className="opacity-30 text-xs text-subtle-text">•</span>
                 <span className="font-label-caps text-xs text-saffron-gold font-bold tracking-widest uppercase">
                   TABLE {tableNum}
                 </span>
@@ -109,13 +109,13 @@ export default function MenuPage({ onCartToggle }) {
 
           {/* Search bar */}
           <div className="relative w-full md:w-72">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-subtle-text/40 text-lg">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-saffron-gold/70 text-lg">search</span>
             <input 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search signature dishes..." 
-              className="w-full bg-transparent border-b border-saffron-gold/20 py-2 pl-9 pr-4 focus:outline-none focus:border-saffron-gold font-body-md text-xs placeholder:text-subtle-text/30 placeholder:italic text-ink-navy outline-none"
+              className="w-full bg-white/70 border border-saffron-gold/30 rounded-sm py-2.5 pl-9 pr-4 focus:outline-none focus:border-saffron-gold focus:bg-white font-body-md text-sm placeholder:text-subtle-text/60 text-ink-navy outline-none"
             />
           </div>
         </div>
@@ -145,21 +145,8 @@ export default function MenuPage({ onCartToggle }) {
 
       {/* Main Menu Layout */}
       <main className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-6 pb-24 md:pt-8 md:pb-12">
-        {/* Editorial Section Hero */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-center mb-16">
-          <div className="lg:col-span-5 space-y-4">
-            <span className="font-label-caps text-[10px] text-saffron-gold tracking-[0.3em] uppercase block">Welcome to Spice Garden</span>
-            <h1 className="font-serif text-display-lg-mobile md:text-display-lg text-ink-navy leading-none italic">
-              {previewMode ? 'Our Menu' : `Table ${tableNum}`}
-            </h1>
-            <p className="font-label-caps text-xs text-subtle-text tracking-widest uppercase">
-              {previewMode ? 'Summer Curations' : `${sectionName} • Summer Curations`}
-            </p>
-            <div className="h-px w-12 bg-saffron-gold my-4" />
-            <p className="font-sans text-body-lg text-subtle-text max-w-md leading-relaxed">
-              Our Michelin-inspired menu celebrates a century of culinary heritage, reimagined with contemporary artistry and locally sourced botanicals.
-            </p>
             {previewMode && (
+            <section className="mb-8">
               <a
                 href="/reservation"
                 className="inline-flex items-center gap-2 font-label-caps text-xs text-ink-navy font-semibold tracking-widest uppercase border-b border-saffron-gold pb-1 hover:text-saffron-gold transition-colors"
@@ -167,9 +154,8 @@ export default function MenuPage({ onCartToggle }) {
                 Reserve a table to order online
                 <span className="material-symbols-outlined text-sm">east</span>
               </a>
-            )}
-          </div>
-        </section>
+            </section>
+          )}
 
         {/* Menu Cards Grid */}
         {isMenuLoading ? (
