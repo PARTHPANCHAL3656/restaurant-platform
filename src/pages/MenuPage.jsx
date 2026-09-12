@@ -218,7 +218,7 @@ export default function MenuPage({ onCartToggle }) {
                       <span className="font-serif text-saffron-gold text-lg font-semibold">{formatINR(item.price)}</span>
                     </div>
                     <div className="mb-6">
-                      <p className="font-sans text-body-md text-subtle-text leading-relaxed line-clamp-2">
+                      <p className="font-sans text-body-md text-subtle-text leading-relaxed">
                         {item.description}
                       </p>
                       {item.allergens && item.allergens.length > 0 && (
