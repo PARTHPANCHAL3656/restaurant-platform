@@ -16,7 +16,8 @@ const menuItemSchema = new mongoose.Schema({
   special: { type: Boolean, default: false },
   foodType: { type: String, default: "Non-Vegetarian" },
   prepTime: { type: String, default: "15 min" },
-  spiceLevel: { type: String, default: "Medium" }
+  spiceLevel: { type: String, default: "Medium" },
+  allergens: { type: [String], default: [] }
 }, {
   timestamps: true,
   toJSON: {

@@ -69,7 +69,7 @@ export default function MenuPage({ onCartToggle }) {
     const matchesSearch = !isSearching || item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.description.toLowerCase().includes(searchQuery.toLowerCase());
     const isAvailable = item.available !== false;
     return matchesCategory && matchesSearch && isAvailable;
-  });
+  }).sort((a, b) => (b.special === true) - (a.special === true));
 
   return (
     <div className="bg-canvas-cream text-ink-navy min-h-screen">
@@ -195,10 +195,20 @@ export default function MenuPage({ onCartToggle }) {
                         alt={item.name}
                         loading="lazy"
                       />
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
+                        {item.special && (
+                          <span className="bg-saffron-gold text-ink-navy px-3 py-1 font-label-caps text-[9px] tracking-widest uppercase font-bold">
+                            Chef's Special
+                          </span>
+                        )}
                         <span className="bg-canvas-cream/90 backdrop-blur-sm px-3 py-1 font-label-caps text-[9px] tracking-widest uppercase border border-muted-border">
-                          {item.tag}
+                          {item.foodType === 'Non Vegetarian' ? 'Non-Veg' : item.foodType}
                         </span>
+                        {item.tag && (
+                          <span className="bg-canvas-cream/90 backdrop-blur-sm px-3 py-1 font-label-caps text-[9px] tracking-widest uppercase border border-muted-border">
+                            {item.tag}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -207,9 +217,16 @@ export default function MenuPage({ onCartToggle }) {
                       <h3 className="font-serif text-headline-sm text-ink-navy group-hover:text-saffron-gold transition-colors">{item.name}</h3>
                       <span className="font-serif text-saffron-gold text-lg font-semibold">{formatINR(item.price)}</span>
                     </div>
-                    <p className="font-sans text-body-md text-subtle-text mb-6 leading-relaxed line-clamp-2">
-                      {item.description}
-                    </p>
+                    <div className="mb-6">
+                      <p className="font-sans text-body-md text-subtle-text leading-relaxed line-clamp-2">
+                        {item.description}
+                      </p>
+                      {item.allergens && item.allergens.length > 0 && (
+                        <p className="font-label-caps text-[10px] text-subtle-text/70 uppercase tracking-wide mt-2">
+                          Contains: {item.allergens.join(', ')}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Actions */}

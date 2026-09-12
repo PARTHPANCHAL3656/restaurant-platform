@@ -63,7 +63,9 @@ export default function StaffMenuPage() {
     foodType: 'Vegetarian',
     prepTime: '15 min',
     spiceLevel: 'Medium',
-    image: ''
+    image: '',
+    tag: '',
+    allergens: []
   });
 
   // Modal confirm state
@@ -210,7 +212,9 @@ export default function StaffMenuPage() {
       foodType: 'Vegetarian',
       prepTime: '15 min',
       spiceLevel: 'Medium',
-      image: ''
+      image: '',
+      tag: '',
+      allergens: []
     });
     setDrawerMode('add');
   };
@@ -745,6 +749,19 @@ export default function StaffMenuPage() {
                       />
                     </div>
 
+                    {/* Tag (custom label shown on the customer menu, e.g. "Chef's Pick") */}
+                    <div className="space-y-1">
+                      <label className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest font-bold block">Tag (optional)</label>
+                      <input 
+                        type="text" 
+                        value={formState.tag}
+                        onChange={(e) => setFormState({ ...formState, tag: e.target.value })}
+                        placeholder="E.g. Chef's Pick, Bestseller, Awadhi Heritage"
+                        maxLength={24}
+                        className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy outline-none"
+                      />
+                    </div>
+
                     {/* Food Type Radios */}
                     <div className="space-y-2">
                       <label className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest font-bold block">Food Type</label>
@@ -840,6 +857,36 @@ export default function StaffMenuPage() {
                         placeholder="Provide details about culinary preparation, ingredients, and texture..."
                         className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy resize-none h-24 outline-none"
                       />
+                    </div>
+
+                    {/* Allergens */}
+                    <div className="space-y-2">
+                      <label className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest font-bold block">Allergens (optional)</label>
+                      <div className="flex flex-wrap gap-2">
+                        {['Nuts', 'Dairy', 'Gluten', 'Shellfish', 'Egg', 'Soy'].map((allergen) => {
+                          const isSelected = (formState.allergens || []).includes(allergen);
+                          return (
+                            <button
+                              key={allergen}
+                              type="button"
+                              onClick={() => {
+                                const current = formState.allergens || [];
+                                const next = isSelected
+                                  ? current.filter((a) => a !== allergen)
+                                  : [...current, allergen];
+                                setFormState({ ...formState, allergens: next });
+                              }}
+                              className={`font-label-caps text-[9px] uppercase tracking-wider px-3 py-2 border transition-colors ${
+                                isSelected
+                                  ? 'bg-ink-navy text-canvas-cream border-ink-navy'
+                                  : 'bg-surface-container-low text-subtle-text border-muted-border hover:border-ink-navy'
+                              }`}
+                            >
+                              {allergen}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                   </div>
