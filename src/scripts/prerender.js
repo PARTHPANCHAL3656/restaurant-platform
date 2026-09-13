@@ -42,9 +42,17 @@ async function main() {
   const { render } = await import(pathToFileURL(entryPath).href);
   const appHtml = await render('/');
 
-  // 3. Preserve the original client shell before it gets overwritten.
+  // 3. Preserve the original client shell before it gets overwritten —
+  // but strip the hero image preload first. That preload only makes sense
+  // on "/" (the only route that renders hero-lcp.webp); app-shell.html is
+  // served for every other route, and browsers warn about preloading an
+  // image that route never uses.
   const shellHtml = await readFile(path.join(distDir, 'index.html'), 'utf-8');
-  await writeFile(path.join(distDir, 'app-shell.html'), shellHtml, 'utf-8');
+  const appShellHtml = shellHtml.replace(
+    /\s*<link rel="preload" as="image" fetchpriority="high" href="\/hero-lcp\.webp" \/>\n?/,
+    '\n'
+  );
+  await writeFile(path.join(distDir, 'app-shell.html'), appShellHtml, 'utf-8');
 
   // 4. Splice the rendered markup into the root div and write it as the
   // new index.html.

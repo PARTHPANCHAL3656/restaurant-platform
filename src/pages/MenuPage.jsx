@@ -193,23 +193,15 @@ export default function MenuPage({ onCartToggle }) {
 
               return (
                 <article key={item.id} className="group border border-muted-border p-3 md:p-4 space-y-3">
-                  {/* Name + Price + Prep Time */}
+                  {/* Name + Price */}
                   <div className="flex justify-between items-baseline gap-3">
                     <h3 className="font-serif text-headline-sm text-ink-navy group-hover:text-saffron-gold transition-colors truncate">{item.name}</h3>
-                    <div className="flex items-baseline gap-3 flex-shrink-0">
-                      <span className="font-serif text-saffron-gold text-base font-semibold whitespace-nowrap">{formatINR(item.price)}</span>
-                      {item.prepTime && (
-                        <span className="font-label-caps text-[9px] text-subtle-text uppercase tracking-wide flex items-center gap-1 whitespace-nowrap">
-                          <span className="material-symbols-outlined text-xs">schedule</span>
-                          {item.prepTime}
-                        </span>
-                      )}
-                    </div>
+                    <span className="font-serif text-saffron-gold text-base font-semibold whitespace-nowrap flex-shrink-0">{formatINR(item.price)}</span>
                   </div>
 
                   {/* Image + Description */}
                   <div className="flex gap-3">
-                    <div className="w-24 h-24 md:w-28 md:h-28 flex-shrink-0 overflow-hidden bg-surface-container border border-muted-border">
+                    <div className="w-24 h-28 md:w-28 md:h-32 flex-shrink-0 overflow-hidden bg-surface-container border border-muted-border">
                       <img 
                         className="w-full h-full object-cover" 
                         src={getImage(item.image)}
@@ -217,15 +209,22 @@ export default function MenuPage({ onCartToggle }) {
                         loading="lazy"
                       />
                     </div>
-                    <div className="flex-grow min-w-0 flex flex-col justify-between">
+                    <div className="flex-grow min-w-0 flex flex-col justify-between gap-2">
                       <p className="font-sans text-sm text-subtle-text leading-relaxed line-clamp-3">
                         {item.description}
                       </p>
-                      {item.allergens && item.allergens.length > 0 && (
-                        <p className="font-label-caps text-[9px] text-subtle-text/70 uppercase tracking-wide text-right mt-1">
-                          Contains: {item.allergens.join(', ')}
-                        </p>
-                      )}
+                      <div className="flex items-center justify-between gap-2">
+                        {item.prepTime && (
+                          <span className="font-label-caps text-xs text-ink-navy font-semibold uppercase tracking-wide whitespace-nowrap">
+                            {item.prepTime}
+                          </span>
+                        )}
+                        {item.allergens && item.allergens.length > 0 && (
+                          <p className="font-label-caps text-[9px] text-subtle-text/70 uppercase tracking-wide text-right">
+                            Contains: {item.allergens.join(', ')}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -233,7 +232,7 @@ export default function MenuPage({ onCartToggle }) {
                   <div className="flex items-center justify-between gap-2 pt-3 border-t border-muted-border/50">
                     <div className="flex flex-wrap gap-1.5">
                       <span className="bg-surface-container-low text-subtle-text px-2.5 py-1 font-label-caps text-[9px] tracking-widest uppercase border border-muted-border">
-                        {item.foodType === 'Non Vegetarian' ? 'Non-Veg' : item.foodType}
+                        {item.foodType === 'Non Vegetarian' ? 'Non-Veg' : item.foodType === 'Vegetarian' ? 'Veg' : item.foodType}
                       </span>
                       {secondBadge && (
                         <span className={`px-2.5 py-1 font-label-caps text-[9px] tracking-widest uppercase ${
