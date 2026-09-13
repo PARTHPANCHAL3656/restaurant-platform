@@ -161,15 +161,21 @@ export default function MenuPage({ onCartToggle }) {
             </section>
           )}
 
-        {/* Menu Cards Grid */}
+        {/* Menu Cards List */}
         {isMenuLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-gutter gap-y-16">
+          <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="aspect-[4/3] md:aspect-[1.4] mb-6 bg-surface-container border border-muted-border" />
-                <div className="h-4 w-2/3 bg-surface-container mb-3" />
-                <div className="h-3 w-full bg-surface-container mb-2" />
-                <div className="h-3 w-1/2 bg-surface-container" />
+              <div key={i} className="animate-pulse border border-muted-border p-3 md:p-4 space-y-3">
+                <div className="h-4 w-1/2 bg-surface-container" />
+                <div className="flex gap-3">
+                  <div className="w-24 h-24 bg-surface-container flex-shrink-0" />
+                  <div className="flex-grow space-y-2">
+                    <div className="h-3 w-full bg-surface-container" />
+                    <div className="h-3 w-4/5 bg-surface-container" />
+                    <div className="h-3 w-2/3 bg-surface-container" />
+                  </div>
+                </div>
+                <div className="h-8 w-full bg-surface-container" />
               </div>
             ))}
           </div>
@@ -179,69 +185,76 @@ export default function MenuPage({ onCartToggle }) {
             <p className="font-serif text-headline-sm text-subtle-text">No items found matching your search</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-gutter gap-y-16">
+          <div className="space-y-4">
             {filteredItems.map((item) => {
               const cartItem = cartItems.find(i => i.id === item.id);
               const qty = cartItem ? cartItem.quantity : 0;
+              const secondBadge = item.special ? "Chef's Special" : item.tag;
 
               return (
-                <article key={item.id} className="group flex flex-col justify-between">
-                  <div>
-                    {/* Image Block */}
-                    <div className="relative aspect-[16/9] md:aspect-[1.4] mb-4 md:mb-6 overflow-hidden bg-surface-container shadow-sm border border-muted-border flex items-center justify-center">
+                <article key={item.id} className="group border border-muted-border p-3 md:p-4 space-y-3">
+                  {/* Name + Price + Prep Time */}
+                  <div className="flex justify-between items-baseline gap-3">
+                    <h3 className="font-serif text-headline-sm text-ink-navy group-hover:text-saffron-gold transition-colors truncate">{item.name}</h3>
+                    <div className="flex items-baseline gap-3 flex-shrink-0">
+                      <span className="font-serif text-saffron-gold text-base font-semibold whitespace-nowrap">{formatINR(item.price)}</span>
+                      {item.prepTime && (
+                        <span className="font-label-caps text-[9px] text-subtle-text uppercase tracking-wide flex items-center gap-1 whitespace-nowrap">
+                          <span className="material-symbols-outlined text-xs">schedule</span>
+                          {item.prepTime}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Image + Description */}
+                  <div className="flex gap-3">
+                    <div className="w-24 h-24 md:w-28 md:h-28 flex-shrink-0 overflow-hidden bg-surface-container border border-muted-border">
                       <img 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103" 
+                        className="w-full h-full object-cover" 
                         src={getImage(item.image)}
                         alt={item.name}
                         loading="lazy"
                       />
-                      <div className="absolute top-4 left-4 flex flex-col gap-2 items-start">
-                        {item.special && (
-                          <span className="bg-saffron-gold text-ink-navy px-3 py-1 font-label-caps text-[9px] tracking-widest uppercase font-bold">
-                            Chef's Special
-                          </span>
-                        )}
-                        <span className="bg-canvas-cream/90 backdrop-blur-sm px-3 py-1 font-label-caps text-[9px] tracking-widest uppercase border border-muted-border">
-                          {item.foodType === 'Non Vegetarian' ? 'Non-Veg' : item.foodType}
-                        </span>
-                        {item.tag && (
-                          <span className="bg-canvas-cream/90 backdrop-blur-sm px-3 py-1 font-label-caps text-[9px] tracking-widest uppercase border border-muted-border">
-                            {item.tag}
-                          </span>
-                        )}
-                      </div>
                     </div>
-
-                    {/* Meta info */}
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-serif text-headline-sm text-ink-navy group-hover:text-saffron-gold transition-colors">{item.name}</h3>
-                      <span className="font-serif text-saffron-gold text-lg font-semibold">{formatINR(item.price)}</span>
-                    </div>
-                    <div className="mb-6">
-                      <p className="font-sans text-body-md text-subtle-text leading-relaxed">
+                    <div className="flex-grow min-w-0 flex flex-col justify-between">
+                      <p className="font-sans text-sm text-subtle-text leading-relaxed line-clamp-3">
                         {item.description}
                       </p>
                       {item.allergens && item.allergens.length > 0 && (
-                        <p className="font-label-caps text-[10px] text-subtle-text/70 uppercase tracking-wide mt-2">
+                        <p className="font-label-caps text-[9px] text-subtle-text/70 uppercase tracking-wide text-right mt-1">
                           Contains: {item.allergens.join(', ')}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center justify-end pt-2 border-t border-muted-border/40 min-h-[50px]">
-                      {previewMode ? (
-                        <span className="font-label-caps text-[10px] text-subtle-text/60 uppercase tracking-widest px-2 py-3 flex items-center gap-2 select-none">
-                          <span className="material-symbols-outlined text-sm text-saffron-gold/70">qr_code_2</span>
-                          Order at your table
+                  {/* Tags + Action */}
+                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-muted-border/50">
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="bg-surface-container-low text-subtle-text px-2.5 py-1 font-label-caps text-[9px] tracking-widest uppercase border border-muted-border">
+                        {item.foodType === 'Non Vegetarian' ? 'Non-Veg' : item.foodType}
+                      </span>
+                      {secondBadge && (
+                        <span className={`px-2.5 py-1 font-label-caps text-[9px] tracking-widest uppercase ${
+                          item.special ? 'bg-saffron-gold text-ink-navy font-bold' : 'bg-surface-container-low text-subtle-text border border-muted-border'
+                        }`}>
+                          {secondBadge}
                         </span>
-                      ) : !item.available ? (
-                      <span className="font-label-caps text-xs text-subtle-text/50 uppercase tracking-widest px-6 py-3 border border-muted-border/30 bg-surface-container-low select-none cursor-not-allowed">
+                      )}
+                    </div>
+
+                    {previewMode ? (
+                      <span className="font-label-caps text-[9px] text-subtle-text/60 uppercase tracking-widest flex items-center gap-1.5 select-none whitespace-nowrap">
+                        <span className="material-symbols-outlined text-sm text-saffron-gold/70">qr_code_2</span>
+                        Order at your table
+                      </span>
+                    ) : !item.available ? (
+                      <span className="font-label-caps text-[10px] text-subtle-text/50 uppercase tracking-widest px-4 py-2 border border-muted-border/30 bg-surface-container-low select-none cursor-not-allowed whitespace-nowrap">
                         Out of Stock
                       </span>
                     ) : qty > 0 ? (
-                      <div className="flex items-center border border-muted-border px-4 py-2 bg-white shadow-sm transition-all duration-300">
+                      <div className="flex items-center border border-muted-border px-3 py-1.5 bg-white shadow-sm">
                         <button 
                           onClick={() => removeFromCart(item.id)}
                           className="text-ink-navy hover:text-saffron-gold transition-colors focus:outline-none flex items-center justify-center"
@@ -249,7 +262,7 @@ export default function MenuPage({ onCartToggle }) {
                         >
                           <span className="material-symbols-outlined text-sm font-bold">remove</span>
                         </button>
-                        <span className="mx-6 font-label-caps text-xs font-bold min-w-[20px] text-center">{String(qty).padStart(2, '0')}</span>
+                        <span className="mx-4 font-label-caps text-xs font-bold min-w-[16px] text-center">{String(qty).padStart(2, '0')}</span>
                         <button 
                           onClick={() => addToCart(item)}
                           className="text-ink-navy hover:text-saffron-gold transition-colors flex items-center justify-center"
@@ -261,7 +274,7 @@ export default function MenuPage({ onCartToggle }) {
                     ) : (
                       <button 
                         onClick={() => handleAddItem(item)}
-                        className="bg-ink-navy text-canvas-cream font-cta-label text-cta-label px-8 py-3.5 uppercase tracking-widest hover:bg-saffron-gold hover:text-ink-navy transition-all duration-300 shadow-sm active:scale-95 cursor-pointer"
+                        className="bg-ink-navy text-canvas-cream font-cta-label text-cta-label px-5 py-2.5 uppercase tracking-widest hover:bg-saffron-gold hover:text-ink-navy transition-all duration-300 shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
                       >
                         Add to Order
                       </button>
