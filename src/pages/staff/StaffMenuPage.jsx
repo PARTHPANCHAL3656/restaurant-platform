@@ -863,13 +863,13 @@ export default function StaffMenuPage() {
                     <div className="space-y-1">
                       <div className="flex items-baseline justify-between">
                         <label className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest font-bold block">Description</label>
-                        <span className="text-[9px] text-subtle-text/60">{(formState.description || '').length}/160</span>
+                        <span className="text-[9px] text-subtle-text/60">{(formState.description || '').length}/100</span>
                       </div>
                       <textarea 
                         value={formState.description}
                         onChange={(e) => setFormState({ ...formState, description: e.target.value })}
                         placeholder="Provide details about culinary preparation, ingredients, and texture..."
-                        maxLength={160}
+                        maxLength={100}
                         className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy resize-none h-24 outline-none"
                       />
                     </div>

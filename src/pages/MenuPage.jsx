@@ -210,18 +210,20 @@ export default function MenuPage({ onCartToggle }) {
                       <p className="font-sans text-sm text-subtle-text leading-relaxed line-clamp-4">
                         {item.description}
                       </p>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {item.prepTime && (
-                          <span className="font-label-caps text-xs text-ink-navy font-semibold uppercase tracking-wide whitespace-nowrap">
-                            {item.prepTime}
-                          </span>
-                        )}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between gap-2">
+                          {item.prepTime && (
+                            <span className="font-label-caps text-xs text-ink-navy font-semibold uppercase tracking-wide whitespace-nowrap">
+                              {item.prepTime}
+                            </span>
+                          )}
+                          <span className="font-serif text-saffron-gold text-base font-semibold whitespace-nowrap ml-auto">{formatINR(item.price)}</span>
+                        </div>
                         {item.allergens && item.allergens.length > 0 && (
                           <p className="font-label-caps text-[9px] text-subtle-text/70 uppercase tracking-wide">
                             Contains: {item.allergens.join(', ')}
                           </p>
                         )}
-                        <span className="font-serif text-saffron-gold text-base font-semibold whitespace-nowrap ml-auto">{formatINR(item.price)}</span>
                       </div>
                     </div>
                   </div>
