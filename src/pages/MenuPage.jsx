@@ -193,11 +193,8 @@ export default function MenuPage({ onCartToggle }) {
 
               return (
                 <article key={item.id} className="group border border-muted-border p-3 md:p-4 space-y-3">
-                  {/* Name + Price */}
-                  <div className="flex justify-between items-baseline gap-3">
-                    <h3 className="font-serif text-headline-sm text-ink-navy group-hover:text-saffron-gold transition-colors truncate">{item.name}</h3>
-                    <span className="font-serif text-saffron-gold text-base font-semibold whitespace-nowrap flex-shrink-0">{formatINR(item.price)}</span>
-                  </div>
+                  {/* Name */}
+                  <h3 className="font-serif text-headline-sm text-ink-navy group-hover:text-saffron-gold transition-colors">{item.name}</h3>
 
                   {/* Image + Description */}
                   <div className="flex gap-3">
@@ -209,21 +206,22 @@ export default function MenuPage({ onCartToggle }) {
                         loading="lazy"
                       />
                     </div>
-                    <div className="flex-grow min-w-0 flex flex-col justify-between gap-2">
-                      <p className="font-sans text-sm text-subtle-text leading-relaxed line-clamp-3">
+                    <div className="flex-grow min-w-0 flex flex-col gap-1.5">
+                      <p className="font-sans text-sm text-subtle-text leading-relaxed line-clamp-4">
                         {item.description}
                       </p>
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {item.prepTime && (
                           <span className="font-label-caps text-xs text-ink-navy font-semibold uppercase tracking-wide whitespace-nowrap">
                             {item.prepTime}
                           </span>
                         )}
                         {item.allergens && item.allergens.length > 0 && (
-                          <p className="font-label-caps text-[9px] text-subtle-text/70 uppercase tracking-wide text-right">
+                          <p className="font-label-caps text-[9px] text-subtle-text/70 uppercase tracking-wide">
                             Contains: {item.allergens.join(', ')}
                           </p>
                         )}
+                        <span className="font-serif text-saffron-gold text-base font-semibold whitespace-nowrap ml-auto">{formatINR(item.price)}</span>
                       </div>
                     </div>
                   </div>

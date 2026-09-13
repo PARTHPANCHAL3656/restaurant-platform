@@ -71,6 +71,9 @@ export default function StaffMenuPage() {
   // Modal confirm state
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
+  // Free-text entry for allergens not in the default list
+  const [customAllergenInput, setCustomAllergenInput] = useState('');
+
   // Manage Categories drawer state
   const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -754,12 +757,20 @@ export default function StaffMenuPage() {
                       <label className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest font-bold block">Tag (optional)</label>
                       <input 
                         type="text" 
-                        value={formState.tag}
+                        value={formState.special ? '' : formState.tag}
                         onChange={(e) => setFormState({ ...formState, tag: e.target.value })}
-                        placeholder="E.g. Chef's Pick, Bestseller, Awadhi Heritage"
+                        placeholder={formState.special ? "Disabled while Chef Special is on" : "E.g. Chef's Pick, Bestseller, Awadhi Heritage"}
                         maxLength={24}
-                        className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy outline-none"
+                        disabled={formState.special}
+                        className={`w-full border p-3 text-xs focus:outline-none outline-none ${
+                          formState.special
+                            ? 'bg-surface-container-low/50 border-muted-border/50 text-subtle-text/50 cursor-not-allowed'
+                            : 'bg-surface-container-low border-muted-border focus:border-ink-navy'
+                        }`}
                       />
+                      {formState.special && (
+                        <p className="text-[9px] text-subtle-text/70">A dish can only carry one highlight badge — Chef's Special or a custom tag, not both.</p>
+                      )}
                     </div>
 
                     {/* Food Type Radios */}
@@ -838,7 +849,7 @@ export default function StaffMenuPage() {
                         <input 
                           type="checkbox"
                           checked={formState.special}
-                          onChange={(e) => setFormState({ ...formState, special: e.target.checked })}
+                          onChange={(e) => setFormState({ ...formState, special: e.target.checked, tag: e.target.checked ? '' : formState.tag })}
                           className="form-checkbox text-saffron-gold focus:ring-0 rounded-xs"
                         />
                         <div>
@@ -850,11 +861,15 @@ export default function StaffMenuPage() {
 
                     {/* Description */}
                     <div className="space-y-1">
-                      <label className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest font-bold block">Description</label>
+                      <div className="flex items-baseline justify-between">
+                        <label className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest font-bold block">Description</label>
+                        <span className="text-[9px] text-subtle-text/60">{(formState.description || '').length}/160</span>
+                      </div>
                       <textarea 
                         value={formState.description}
                         onChange={(e) => setFormState({ ...formState, description: e.target.value })}
                         placeholder="Provide details about culinary preparation, ingredients, and texture..."
+                        maxLength={160}
                         className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy resize-none h-24 outline-none"
                       />
                     </div>
@@ -863,7 +878,7 @@ export default function StaffMenuPage() {
                     <div className="space-y-2">
                       <label className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest font-bold block">Allergens (optional)</label>
                       <div className="flex flex-wrap gap-2">
-                        {['Nuts', 'Dairy', 'Gluten', 'Shellfish', 'Egg', 'Soy'].map((allergen) => {
+                        {['Dairy', 'Gluten', 'Peanuts', 'Tree Nuts', 'Egg', 'Soy', 'Fish', 'Shellfish', ...(formState.allergens || []).filter(a => !['Dairy', 'Gluten', 'Peanuts', 'Tree Nuts', 'Egg', 'Soy', 'Fish', 'Shellfish'].includes(a))].map((allergen) => {
                           const isSelected = (formState.allergens || []).includes(allergen);
                           return (
                             <button
@@ -886,6 +901,39 @@ export default function StaffMenuPage() {
                             </button>
                           );
                         })}
+                      </div>
+                      <div className="flex gap-2 pt-1">
+                        <input
+                          type="text"
+                          value={customAllergenInput}
+                          onChange={(e) => setCustomAllergenInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const value = customAllergenInput.trim();
+                              if (value && !(formState.allergens || []).some(a => a.toLowerCase() === value.toLowerCase())) {
+                                setFormState({ ...formState, allergens: [...(formState.allergens || []), value] });
+                              }
+                              setCustomAllergenInput('');
+                            }
+                          }}
+                          placeholder="Add a custom allergen and press Enter"
+                          maxLength={20}
+                          className="flex-grow bg-surface-container-low border border-muted-border p-2.5 text-xs focus:outline-none focus:border-ink-navy outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const value = customAllergenInput.trim();
+                            if (value && !(formState.allergens || []).some(a => a.toLowerCase() === value.toLowerCase())) {
+                              setFormState({ ...formState, allergens: [...(formState.allergens || []), value] });
+                            }
+                            setCustomAllergenInput('');
+                          }}
+                          className="font-label-caps text-[9px] uppercase tracking-wider px-4 border border-ink-navy text-ink-navy hover:bg-ink-navy hover:text-canvas-cream transition-colors"
+                        >
+                          Add
+                        </button>
                       </div>
                     </div>
 
