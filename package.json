@@ -13,6 +13,7 @@
   "dependencies": {
     "axios": "^1.18.1",
     "canvas-confetti": "^1.9.4",
+    "exceljs": "4.4.0",
     "framer-motion": "^12.42.0",
     "html2canvas-pro": "^2.3.8",
     "jspdf": "^4.2.1",
@@ -22,8 +23,10 @@
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.0",
     "recharts": "^2.15.4",
-    "socket.io-client": "^4.8.3",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "socket.io-client": "^4.8.3"
+  },
+  "overrides": {
+    "uuid": "11.1.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.1",

@@ -47,6 +47,8 @@ export function StaffProvider({ children }) {
     name: "Spice Garden",
     tagline: "Modern Indian Fine Dining",
     address: "12 Alkapuri Boulevard, Vadodara, Gujarat 390007",
+    gstin: "24AABCS1429B1Z8",
+    fssai: "21423011000123",
     phone: "+91 265 234 5678",
     reservationPhone: "+91 70960 34960",
     email: "concierge@spicegarden.com",
@@ -619,6 +621,7 @@ export function StaffProvider({ children }) {
   const mapBackendInvoice = useCallback((inv) => {
     const tableStr = "T-" + String(inv.tableNumber).padStart(2, '0');
     const dateStr = new Date(inv.createdAt).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+    const timeStr = new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     return {
       id: inv._id,
@@ -627,6 +630,7 @@ export function StaffProvider({ children }) {
       guest: inv.guestName || 'Guest',
       amount: inv.total,
       date: dateStr,
+      time: timeStr,
       status: inv.status,
       paymentMethod: inv.paymentMethod,
       subtotal: inv.subtotal,
@@ -1122,6 +1126,7 @@ export function StaffProvider({ children }) {
         guest: table.guestName || 'Diner',
         amount: table.billTotal,
         date: new Date().toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'unpaid',
         paymentMethod: '—',
         subtotal: Math.round(sub),
