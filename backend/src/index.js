@@ -10,6 +10,7 @@ import rateLimit from "express-rate-limit"
 
 import tableRoutes from "./routes/tables.js"
 import orderRoutes from "./routes/orders.js"
+import takeawayRoutes from "./routes/takeaway.js"
 import reservationRoutes from "./routes/reservations.js"
 import menuRoutes from "./routes/menu.js"
 import categoryRoutes from "./routes/categories.js"
@@ -88,6 +89,7 @@ const publicIntakeLimiter = rateLimit({
 app.use("/api/auth", authLimiter, authRoutes)
 app.use("/api/tables", publicIntakeLimiter, tableRoutes)
 app.use("/api/orders", orderRoutes)
+app.use("/api/takeaway", takeawayRoutes)
 app.use("/api/reservations", publicIntakeLimiter, reservationRoutes)
 app.use("/api/menu", menuRoutes)
 app.use("/api/categories", categoryRoutes)

@@ -13,6 +13,7 @@ export default function StaffSidebar({ isOpen, onClose }) {
     { name: 'Analytics', path: '/staff/analytics', icon: 'monitoring' },
     { name: 'Tables & Reservations', path: '/staff/tables', icon: 'event_seat' },
     { name: 'Order Management', path: '/staff/orders', icon: 'receipt_long' },
+    { name: 'Takeaway Orders', path: '/staff/takeaway', icon: 'shopping_bag' },
     { name: 'Billing & Invoices', path: '/staff/billing', icon: 'payments' },
     { name: 'Guest Queue', path: '/staff/guest-queue', icon: 'hourglass_empty' },
     { name: 'Menu Management', path: '/staff/menu', icon: 'restaurant_menu' }
