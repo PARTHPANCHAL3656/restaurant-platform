@@ -356,7 +356,7 @@ export default function StaffBillingPage() {
       {selectedInvoice && (
         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
           <div ref={receiptRef}>
-            <ThermalReceipt restaurantInfo={restaurantInfo} invoice={{ number: selectedInvoice.invoiceNumber || selectedInvoice.id, table: selectedInvoice.table, guest: selectedInvoice.guest, cashier: selectedInvoice.generatedBy, date: selectedInvoice.date, time: selectedInvoice.time || '—', paymentMethod: selectedInvoice.paymentMethod, items: selectedInvoice.items, subtotal: selectedInvoice.subtotal, serviceCharge: selectedInvoice.serviceCharge, gst: selectedInvoice.gst, total: selectedInvoice.amount }} />
+            <ThermalReceipt restaurantInfo={restaurantInfo} invoice={{ number: selectedInvoice.invoiceNumber || selectedInvoice.id, table: selectedInvoice.table, guest: selectedInvoice.guest, cashier: selectedInvoice.generatedBy, date: selectedInvoice.date, time: selectedInvoice.time || '---', paymentMethod: selectedInvoice.paymentMethod, status: selectedInvoice.status, items: selectedInvoice.items, subtotal: selectedInvoice.subtotal, serviceCharge: selectedInvoice.serviceCharge, gst: selectedInvoice.gst, total: selectedInvoice.amount }} />
           </div>
         </div>
       )}
