@@ -6,6 +6,7 @@ import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
 import { useStaff } from '../../context/StaffContext';
 import { formatINR } from '../../utils/currency';
+import ThermalReceipt from '../../components/ThermalReceipt';
 
 // Formats a charge/tax amount as a percentage of the subtotal, rounded to
 // at most 2 decimals with no trailing zeros (7.5 not 7.50). Used so the
@@ -85,9 +86,9 @@ export default function StaffBillingPage() {
       windowHeight: element.scrollHeight
     }).then((canvas) => {
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
-      const imgWidth = 190;
+      const imgWidth = 72;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const margin = 10;
+      const margin = 4;
 
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -354,100 +355,8 @@ export default function StaffBillingPage() {
           Rendered off-screen (not display:none) so html2canvas can lay it out. */}
       {selectedInvoice && (
         <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-          <div ref={receiptRef} className="w-[380px] bg-canvas-cream p-8 text-ink-navy font-sans">
-            {/* Restaurant identity */}
-            <div className="text-center mb-4">
-              <h2 className="font-serif text-xl font-bold">{restaurantInfo.name.toUpperCase()}</h2>
-              <p className="text-[10px] text-subtle-text uppercase tracking-widest">{restaurantInfo.tagline}</p>
-              <p className="text-[9px] text-subtle-text mt-2 leading-relaxed">{restaurantInfo.address}</p>
-              <p className="text-[9px] text-subtle-text mt-1">GSTIN: {restaurantInfo.gstin} &nbsp;|&nbsp; FSSAI: {restaurantInfo.fssai}</p>
-            </div>
-
-            <div className="border-t border-dashed border-muted-border my-4" />
-
-            {/* Invoice meta */}
-            <div className="space-y-1 text-xs mb-4">
-              <div className="flex justify-between">
-                <span className="text-subtle-text">Invoice No</span>
-                <span className="font-bold">{selectedInvoice.invoiceNumber || selectedInvoice.id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-subtle-text">Table</span>
-                <span className="font-bold">{selectedInvoice.table}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-subtle-text">Customer Name</span>
-                <span className="font-bold">{selectedInvoice.guest}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-subtle-text">Date</span>
-                <span className="font-bold">{selectedInvoice.date}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-subtle-text">Time</span>
-                <span className="font-bold">{selectedInvoice.time || '—'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-subtle-text">Payment Type</span>
-                <span className="font-bold">{selectedInvoice.paymentMethod}</span>
-              </div>
-            </div>
-
-            <div className="border-t border-dashed border-muted-border my-4" />
-
-            {/* Items table */}
-            <table className="w-full text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-muted-border text-subtle-text uppercase text-[9px] tracking-wider">
-                  <th className="text-left font-normal pb-2">Item</th>
-                  <th className="text-center font-normal pb-2">Qty</th>
-                  <th className="text-right font-normal pb-2">Rate</th>
-                  <th className="text-right font-normal pb-2">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedInvoice.items.map((item, i) => (
-                  <tr key={i}>
-                    <td className="text-left py-1 pr-1">{item.name}</td>
-                    <td className="text-center py-1">{item.qty}</td>
-                    <td className="text-right py-1 font-mono">{formatINR(item.price)}</td>
-                    <td className="text-right py-1 font-mono">{formatINR(item.price * item.qty)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Tax breakdown */}
-            <div className="border-t border-muted-border mt-4 pt-4 space-y-1 text-xs">
-              <div className="flex justify-between text-subtle-text">
-                <span>Subtotal</span>
-                <span>{formatINR(selectedInvoice.subtotal)}</span>
-              </div>
-              <div className="flex justify-between text-subtle-text">
-                <span>Service Charge</span>
-                <span>{formatINR(selectedInvoice.serviceCharge)}</span>
-              </div>
-              <div className="flex justify-between text-subtle-text">
-                <span>CGST @ {formatPercent(selectedInvoice.gst / 2, selectedInvoice.subtotal)}%</span>
-                <span>{formatINR(selectedInvoice.gst / 2)}</span>
-              </div>
-              <div className="flex justify-between text-subtle-text">
-                <span>SGST @ {formatPercent(selectedInvoice.gst / 2, selectedInvoice.subtotal)}%</span>
-                <span>{formatINR(selectedInvoice.gst / 2)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-sm pt-2 border-t border-muted-border mt-2">
-                <span>Total</span>
-                <span>{formatINR(selectedInvoice.amount)}</span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="border-t border-dashed border-muted-border mt-4 pt-4 text-center space-y-1">
-              <p className="text-xs font-semibold">Thank You! Visit Again.</p>
-              <p className="text-[9px] text-subtle-text leading-relaxed">
-                Prices are inclusive of applicable taxes. Please verify the bill before payment — no complaints will be entertained thereafter.
-              </p>
-            </div>
+          <div ref={receiptRef}>
+            <ThermalReceipt restaurantInfo={restaurantInfo} invoice={{ number: selectedInvoice.invoiceNumber || selectedInvoice.id, table: selectedInvoice.table, guest: selectedInvoice.guest, date: selectedInvoice.date, time: selectedInvoice.time || '—', paymentMethod: selectedInvoice.paymentMethod, items: selectedInvoice.items, subtotal: selectedInvoice.subtotal, serviceCharge: selectedInvoice.serviceCharge, gst: selectedInvoice.gst, total: selectedInvoice.amount }} />
           </div>
         </div>
       )}

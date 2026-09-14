@@ -89,6 +89,20 @@ html.lenis {
   }
 }
 
+/* 80 mm thermal-roll output. The PDF exporter measures this element and makes
+   a matching custom-height page, so a long receipt is never split or clipped. */
+.thermal-receipt {
+  box-sizing: border-box;
+  width: 302px;
+  min-height: 0;
+  padding: 14px 12px 16px;
+  letter-spacing: -0.015em;
+}
+.thermal-rule {
+  border-top: 1px dashed #000;
+  margin: 12px 0;
+}
+
 /* Custom Webkit Scrollbar overrides */
 ::-webkit-scrollbar {
   width: 6px;

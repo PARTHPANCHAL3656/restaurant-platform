@@ -3,9 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
 import { useCart } from '../context/CartContext';
+import { useStaff } from '../context/StaffContext';
 import BrandLogo from '../components/BrandLogo';
 import Footer from '../components/Footer';
 import { formatINR } from '../utils/currency';
+import ThermalReceipt from '../components/ThermalReceipt';
 
 export default function BillSummaryPage() {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ export default function BillSummaryPage() {
     tableNumber,
     activeOrderTime
   } = useCart();
+  const { restaurantInfo } = useStaff();
 
   const receiptRef = useRef(null);
 
@@ -55,9 +58,9 @@ export default function BillSummaryPage() {
       // JPEG at 0.92 quality instead of uncompressed PNG - same visual
       // result for a receipt, a fraction of the file size.
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
-      const imgWidth = 190;
+      const imgWidth = 72;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const margin = 10;
+      const margin = 4;
 
       // Custom page sized to fit the WHOLE receipt in one page, no matter
       // how long the order is — a fixed 'a4' page silently clipped anything
@@ -186,6 +189,28 @@ export default function BillSummaryPage() {
           </div>
           <div className="absolute bottom-0 left-0 w-20 h-20 pointer-events-none">
             <div className="w-full h-full bg-saffron-gold/5 rotate-45 -translate-x-10 translate-y-10"></div>
+          </div>
+        </div>
+
+        {/* The on-screen summary remains spacious for phone reading; this is
+            the exact narrow receipt captured for download and printer use. */}
+        <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+          <div ref={receiptRef}>
+            <ThermalReceipt
+              restaurantInfo={restaurantInfo}
+              heading="BILL SUMMARY"
+              invoice={{
+                number: displayOrderId,
+                table: displayTable,
+                date: displayTime,
+                time: activeOrderTime || '—',
+                items: items.map(item => ({ ...item, qty: item.quantity })),
+                subtotal,
+                serviceCharge,
+                gst,
+                total: grandTotal
+              }}
+            />
           </div>
         </div>
 
