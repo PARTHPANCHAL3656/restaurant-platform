@@ -675,6 +675,7 @@ export function StaffProvider({ children }) {
       time: timeStr,
       status: inv.status,
       paymentMethod: inv.paymentMethod,
+      generatedBy: inv.generatedBy || 'Floor Manager',
       subtotal: inv.subtotal,
       gst: inv.gst,
       serviceCharge: inv.serviceCharge,
