@@ -40,14 +40,21 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
 
       <p className="thermal-title">{heading}</p>
 
-      {/* Invoice meta — 2-column grid */}
+      {/* Invoice meta — 2-column grid. Cashier/Customer only appear once a
+          real invoice exists to source them from - showing '---' for data
+          that was never collected is more misleading than just omitting
+          the row. */}
       <dl className="thermal-meta">
         <div><dt>INV No:</dt><dd>{value(invoice.number)}</dd></div>
         <div><dt>Table:</dt><dd>{value(invoice.table)}{orderSourceSuffix}</dd></div>
         <div><dt>Date:</dt><dd>{value(invoice.date)}</dd></div>
         <div><dt>Time:</dt><dd>{value(invoice.time)}</dd></div>
-        <div><dt>Cashier:</dt><dd>{value(invoice.cashier)}</dd></div>
-        <div><dt>Customer:</dt><dd>{value(invoice.guest)}</dd></div>
+        {(invoice.cashier || invoice.guest) && (
+          <>
+            <div><dt>Cashier:</dt><dd>{value(invoice.cashier)}</dd></div>
+            <div><dt>Customer:</dt><dd>{value(invoice.guest)}</dd></div>
+          </>
+        )}
       </dl>
 
       {/* Items table */}
@@ -99,18 +106,21 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
         </div>
       </section>
 
-      {/* Payment details */}
-      <section className="thermal-payment">
-        <p className="thermal-payment-title">Payment Details</p>
-        <div className="thermal-row">
-          <span>Method:</span>
-          <strong>{value(invoice.paymentMethod, 'Pay at Counter')}</strong>
-        </div>
-        <div className="thermal-row">
-          <span>Status:</span>
-          <strong>{value(invoice.status, 'Pending')}</strong>
-        </div>
-      </section>
+      {/* Payment details — omitted entirely pre-invoice, since there is no
+          real payment method or status yet to report. */}
+      {(invoice.paymentMethod || invoice.status) && (
+        <section className="thermal-payment">
+          <p className="thermal-payment-title">Payment Details</p>
+          <div className="thermal-row">
+            <span>Method:</span>
+            <strong>{value(invoice.paymentMethod)}</strong>
+          </div>
+          <div className="thermal-row">
+            <span>Status:</span>
+            <strong>{value(invoice.status)}</strong>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="thermal-footer">

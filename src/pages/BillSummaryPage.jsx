@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
@@ -8,6 +8,8 @@ import BrandLogo from '../components/BrandLogo';
 import Footer from '../components/Footer';
 import { formatINR } from '../utils/currency';
 import ThermalReceipt from '../components/ThermalReceipt';
+import api from '../utils/api';
+import socket from '../utils/socket';
 
 export default function BillSummaryPage() {
   const navigate = useNavigate();
@@ -22,22 +24,59 @@ export default function BillSummaryPage() {
 
   const receiptRef = useRef(null);
 
+  // The REAL invoice, once staff has generated one for this table (see
+  // backend invoiceController.generateInvoiceForTable). Before that exists
+  // there is genuinely no cashier, no guest name, and no real payment
+  // status yet — so this page shows an honest order summary instead of
+  // guessing at those fields, and switches to the real bill the moment
+  // one is presented.
+  const [invoice, setInvoice] = useState(null);
+  const hasInvoice = Boolean(invoice);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchInvoice = () => {
+      api.get('/api/invoices/my-invoice')
+        .then((res) => { if (!cancelled) setInvoice(res.data); })
+        .catch(() => { if (!cancelled) setInvoice(null); }); // 404 = no bill presented yet, not an error
+    };
+
+    fetchInvoice();
+    // Live-refresh the instant staff presents the bill, instead of making
+    // the customer reload to see it. The endpoint is scoped server-side to
+    // this table's own session, so re-fetching on any table's event is
+    // harmless — it just no-ops for tables that aren't ours.
+    socket.on('invoice:generated', fetchInvoice);
+    return () => {
+      cancelled = true;
+      socket.off('invoice:generated', fetchInvoice);
+    };
+  }, []);
+
   // Fallback mock items matching the exact Stitch design (Step 40) if no order has been placed yet
   const hasActiveOrder = activeOrderItems && activeOrderItems.length > 0;
-  
-  const displayOrderId = hasActiveOrder ? orderId : '#SG-992104';
+
   const displayTable = hasActiveOrder ? tableNumber : 'Garden Terrace 14';
-  const displayTime = hasActiveOrder ? `${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} — ${activeOrderTime}` : 'October 24, 2023 — 8:42 PM';
+  const displayTime = hasInvoice
+    ? new Date(invoice.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).replace(',', ' —')
+    : hasActiveOrder ? `${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} — ${activeOrderTime}` : 'October 24, 2023 — 8:42 PM';
 
-  const items = hasActiveOrder ? activeOrderItems : [];
+  // Once a real invoice exists it's the source of truth (frozen at the
+  // moment staff presented the bill) - prefer it over the live cart, which
+  // may no longer reflect what was actually billed.
+  const items = hasInvoice
+    ? invoice.items.map(i => ({ name: i.name, price: i.price, quantity: i.qty }))
+    : hasActiveOrder ? activeOrderItems : [];
+  const subtotal = hasInvoice ? invoice.subtotal
+    : hasActiveOrder ? items.reduce((sum, item) => sum + (item.price * item.quantity), 0) : 0;
+  const serviceCharge = hasInvoice ? invoice.serviceCharge : hasActiveOrder ? subtotal * 0.10 : 0;
+  const gst = hasInvoice ? invoice.gst : hasActiveOrder ? subtotal * 0.075 : 0;
+  const grandTotal = hasInvoice ? invoice.total : hasActiveOrder ? activeOrderTotal : 0;
 
-  const subtotal = hasActiveOrder 
-    ? items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    : 0;
-
-  const serviceCharge = hasActiveOrder ? subtotal * 0.10 : 0;
-  const gst = hasActiveOrder ? subtotal * 0.075 : 0;
-  const grandTotal = hasActiveOrder ? activeOrderTotal : 0;
+  // The ID shown to the guest: the real, staff-tracked invoice number once
+  // it exists, otherwise the order's own id as a lightweight reference -
+  // never a fabricated bill number.
+  const displayOrderId = hasInvoice ? invoice.invoiceNumber : hasActiveOrder ? orderId : '#SG-992104';
 
     const handleDownloadPDF = () => {
     const element = receiptRef.current;
@@ -113,7 +152,7 @@ export default function BillSummaryPage() {
       });
 
       pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
-      pdf.save(`spice_garden_bill_${displayOrderId}.pdf`);
+      pdf.save(`spice_garden_${hasInvoice ? 'invoice' : 'bill'}_${displayOrderId}.pdf`);
     }).catch((err) => {
       console.error('Receipt download failed:', err);
       alert('Could not generate the receipt PDF. Please try again or ask staff for a printed copy.');
@@ -147,10 +186,23 @@ export default function BillSummaryPage() {
                 <p className="font-serif text-base text-ink-navy font-semibold">{displayTable}</p>
               </div>
               <div className="text-right">
-                <p className="tracking-wider uppercase mb-1">ORDER NUMBER</p>
+                <p className="tracking-wider uppercase mb-1">{hasInvoice ? 'INVOICE NUMBER' : 'ORDER NUMBER'}</p>
                 <p className="font-serif text-base text-ink-navy font-semibold">{displayOrderId}</p>
               </div>
             </div>
+
+            {hasInvoice && (
+              <div className="grid grid-cols-2 gap-4 text-left text-xs font-label-caps text-subtle-text mt-4">
+                <div>
+                  <p className="tracking-wider uppercase mb-1">GUEST</p>
+                  <p className="font-serif text-base text-ink-navy font-semibold">{invoice.guestName || 'Guest'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="tracking-wider uppercase mb-1">CASHIER</p>
+                  <p className="font-serif text-base text-ink-navy font-semibold">{invoice.generatedBy || 'Floor Manager'}</p>
+                </div>
+              </div>
+            )}
 
             <div className="mt-4 text-left text-xs font-label-caps text-subtle-text">
               <p className="tracking-wider uppercase mb-1">DATE &amp; TIME</p>
@@ -209,10 +261,16 @@ export default function BillSummaryPage() {
             </p>
             <div className="flex items-center space-x-2 text-ink-navy font-semibold font-serif text-lg">
               <span className="material-symbols-outlined text-[22px]">payments</span>
-              <span>Pay at Counter</span>
+              <span>
+                {hasInvoice
+                  ? `${invoice.status.charAt(0).toUpperCase()}${invoice.status.slice(1)}${invoice.paymentMethod && invoice.paymentMethod !== '—' ? ` · ${invoice.paymentMethod}` : ''}`
+                  : 'Pay at Counter'}
+              </span>
             </div>
             <p className="mt-3 font-sans text-xs text-subtle-text leading-relaxed">
-              Please present this summary to the concierge upon departure.
+              {hasInvoice
+                ? 'Please settle at the counter before you leave, if you haven\'t already.'
+                : 'Please present this summary to the concierge upon departure.'}
             </p>
           </div>
 
@@ -238,17 +296,25 @@ export default function BillSummaryPage() {
           <div ref={receiptRef}>
             <ThermalReceipt
               restaurantInfo={restaurantInfo}
-              heading="BILL SUMMARY"
+              heading={hasInvoice ? 'TAX INVOICE' : 'BILL SUMMARY'}
               invoice={{
                 number: displayOrderId,
                 table: displayTable,
                 date: displayTime,
-                time: activeOrderTime || '—',
+                time: hasInvoice
+                  ? new Date(invoice.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+                  : (activeOrderTime || '—'),
                 items: items.map(item => ({ ...item, qty: item.quantity })),
                 subtotal,
                 serviceCharge,
                 gst,
-                total: grandTotal
+                total: grandTotal,
+                ...(hasInvoice && {
+                  cashier: invoice.generatedBy || 'Floor Manager',
+                  guest: invoice.guestName || 'Guest',
+                  paymentMethod: invoice.paymentMethod && invoice.paymentMethod !== '—' ? invoice.paymentMethod : 'Pay at Counter',
+                  status: invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)
+                })
               }}
             />
           </div>

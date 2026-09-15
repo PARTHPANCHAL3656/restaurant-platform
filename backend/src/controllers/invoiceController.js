@@ -78,6 +78,27 @@ export const generateInvoiceForTable = async (req, res) => {
   }
 }
 
+// GET /api/invoices/my-invoice
+// Customer looks up the REAL invoice for their own table session, once
+// staff has presented the bill (generateInvoiceForTable). Scoped to their
+// own session only via tableSession — never exposes the full invoice list.
+// Returns 404 until staff presents the bill; the frontend treats that as
+// "order in progress, no bill yet" rather than an error.
+export const getMyInvoice = async (req, res) => {
+  try {
+    const { sessionId } = req.tableSession
+    const invoice = await Invoice.findOne({ sessionId })
+ 
+    if (!invoice) {
+      return res.status(404).json({ error: "No bill has been presented for this table yet." })
+    }
+ 
+    res.json(invoice)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 // GET /api/invoices
 // Staff sees all invoices, newest first
 // Protected by staffAuth
