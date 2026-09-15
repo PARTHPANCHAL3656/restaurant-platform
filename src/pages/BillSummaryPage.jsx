@@ -43,6 +43,26 @@ export default function BillSummaryPage() {
     const element = receiptRef.current;
     if (!element) return;
 
+    // Guard against capturing an unstyled receipt. If index.css hasn't
+    // actually loaded for this element (stale bundle, dev server that
+    // silently dropped HMR, a `vite preview` serving an old `dist/`),
+    // html2canvas will happily screenshot the *unstyled* markup and hand
+    // back a "successful" PDF that looks nothing like the design - this
+    // is the exact symptom of a PDF that never changes no matter what you
+    // edit. Fail loudly instead of shipping a silently-broken chit.
+    const cs = window.getComputedStyle(element);
+    if (!cs.fontFamily.includes('Courier') || cs.borderTopWidth === '0px') {
+      console.warn(
+        '[ThermalReceipt] Expected receipt styles (Courier font, 1px border) ' +
+        'were not detected on the capture target. This usually means the ' +
+        'browser is running a stale JS/CSS bundle. Hard-refresh ' +
+        '(Ctrl/Cmd+Shift+R), clear any service workers/caches, and rebuild ' +
+        'before retrying. Computed style seen:', cs.fontFamily, cs.borderTopWidth
+      );
+      alert('The receipt template looks unstyled (stale build?). Please hard-refresh the page and try again.');
+      return;
+    }
+
     // windowHeight/scrollY ensure we capture the FULL receipt regardless of
     // where the page happens to be scrolled to when the button is tapped -
     // without this, only whatever's in the current viewport gets captured.
@@ -85,7 +105,6 @@ export default function BillSummaryPage() {
         
         {/* Receipt Container */}
         <div 
-          ref={receiptRef}
           id="receipt-container"
           className="w-full bg-canvas-cream border border-muted-border p-8 md:p-12 relative overflow-hidden shadow-sm space-y-8"
         >

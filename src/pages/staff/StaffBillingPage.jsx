@@ -86,13 +86,38 @@ export default function StaffBillingPage() {
       requestAnimationFrame(() => requestAnimationFrame(resolve));
     });
 
-    waitForPaint().then(() => html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#FDFCFB',
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight
-    })).then((canvas) => {
+    // Same stale-bundle guard as BillSummaryPage: if the captured node
+    // doesn't actually have the thermal-receipt styles applied, html2canvas
+    // will still "succeed" and hand back an unstyled PDF that looks
+    // identical every time no matter what you change in the code — because
+    // the code that generated it never actually reloaded.
+    const assertStylesLoaded = () => {
+      const cs = window.getComputedStyle(element);
+      if (!cs.fontFamily.includes('Courier') || cs.borderTopWidth === '0px') {
+        console.warn(
+          '[ThermalReceipt] Expected receipt styles (Courier font, 1px border) ' +
+          'were not detected on the capture target — the running bundle is ' +
+          'likely stale. Hard-refresh (Ctrl/Cmd+Shift+R), clear service ' +
+          'workers/caches, and rebuild before retrying. Computed style seen:',
+          cs.fontFamily, cs.borderTopWidth
+        );
+        return false;
+      }
+      return true;
+    };
+
+    waitForPaint().then(() => {
+      if (!assertStylesLoaded()) {
+        return Promise.reject(new Error('stale-styles'));
+      }
+      return html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#FDFCFB',
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight
+      });
+    }).then((canvas) => {
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
       const imgWidth = 72;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -108,7 +133,11 @@ export default function StaffBillingPage() {
       pdf.save(`spice_garden_invoice_${selectedInvoice.invoiceNumber || selectedInvoice.id}.pdf`);
     }).catch((err) => {
       console.error('Invoice chit download failed:', err);
-      alert('Could not generate the invoice PDF. Please try again.');
+      if (err.message === 'stale-styles') {
+        alert('The receipt template looks unstyled (stale build?). Hard-refresh the page and try again.');
+      } else {
+        alert('Could not generate the invoice PDF. Please try again.');
+      }
     });
   };
 
