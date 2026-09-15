@@ -50,7 +50,7 @@ export default function BillSummaryPage() {
     // back a "successful" PDF that looks nothing like the design - this
     // is the exact symptom of a PDF that never changes no matter what you
     // edit. Fail loudly instead of shipping a silently-broken chit.
-    const cs = window.getComputedStyle(element);
+    const cs = window.getComputedStyle(element.querySelector('.thermal-receipt') || element);
     if (!cs.fontFamily.includes('Courier') || cs.borderTopWidth === '0px') {
       console.warn(
         '[ThermalReceipt] Expected receipt styles (Courier font, 1px border) ' +

@@ -92,7 +92,7 @@ export default function StaffBillingPage() {
     // identical every time no matter what you change in the code — because
     // the code that generated it never actually reloaded.
     const assertStylesLoaded = () => {
-      const cs = window.getComputedStyle(element);
+      const cs = window.getComputedStyle(element.querySelector('.thermal-receipt') || element);
       if (!cs.fontFamily.includes('Courier') || cs.borderTopWidth === '0px') {
         console.warn(
           '[ThermalReceipt] Expected receipt styles (Courier font, 1px border) ' +
