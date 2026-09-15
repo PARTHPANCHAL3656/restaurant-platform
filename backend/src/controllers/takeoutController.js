@@ -1,0 +1,55 @@
+import Order from "../models/Order.js"
+import Customer from "../models/Customer.js"
+import { generateTakeoutToken } from "../utils/generateTakeoutToken.js"
+
+// Normalizes a phone number to a bare 10-digit string, same convention
+// the CRM/analytics side already uses for matching customers.
+const normalizePhone = (phone) => (phone || "").replace(/\D/g, "").slice(-10)
+
+// POST /api/takeout/start
+// Public — no login required. A customer taps "Start Takeout Order" on the
+// website/landing page (no QR scan needed) and this spins up a brand new
+// session for just them, the same way a staff table-assignment does for
+// dine-in — just with no table attached.
+export const startTakeoutSession = async (req, res) => {
+  try {
+    const { guestName, guestPhone, pickupTime } = req.body
+
+    if (!guestName || !guestPhone) {
+      return res.status(400).json({ error: "Name and phone number are required to start a takeout order." })
+    }
+
+    const phone = normalizePhone(guestPhone)
+    if (phone.length !== 10) {
+      return res.status(400).json({ error: "Please enter a valid 10-digit phone number." })
+    }
+
+    // The no-OTP anti-ghosting policy: a phone flagged after a past
+    // no-show can't self-start a new takeout order online.
+    const existingCustomer = await Customer.findOne({ phone })
+    if (existingCustomer?.isBlacklisted) {
+      return res.status(403).json({
+        error: "Online ordering is unavailable for this number. Please call the restaurant directly."
+      })
+    }
+
+    const { sessionId, token, menuUrl } = generateTakeoutToken()
+    const count = await Order.countDocuments({ orderType: "takeout" })
+    const orderNumber = `TA-${1000 + count + 1}`
+
+    await Order.create({
+      orderType: "takeout",
+      sessionId,
+      orderNumber,
+      guestName,
+      guestPhone: phone,
+      pickupTime: pickupTime || "ASAP",
+      items: [],
+      status: "Received"
+    })
+
+    res.status(201).json({ sessionId, token, menuUrl, orderNumber })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}

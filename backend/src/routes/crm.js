@@ -5,7 +5,8 @@ import {
   getDiscountEligible,
   getRetentionRate,
   getCustomerOverview,
-  getChurnList
+  getChurnList,
+  setCustomerBlacklist
 } from "../controllers/crmController.js"
 
 const router = express.Router()
@@ -15,5 +16,6 @@ router.get("/discount-eligible", staffAuth, getDiscountEligible)
 router.get("/retention-rate", staffAuth, getRetentionRate)
 router.get("/customer-overview", staffAuth, getCustomerOverview)
 router.get("/churn-list", staffAuth, getChurnList)
+router.patch("/customers/:phone/blacklist", staffAuth, setCustomerBlacklist)
 
 export default router

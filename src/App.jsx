@@ -21,6 +21,7 @@ import LandingPage from './pages/LandingPage';
 const ReservationPage = React.lazy(() => import('./pages/ReservationPage'));
 const ReservationSuccess = React.lazy(() => import('./pages/ReservationSuccess'));
 const MenuPage = React.lazy(() => import('./pages/MenuPage'));
+const TakeoutStartPage = React.lazy(() => import('./pages/TakeoutStartPage'));
 const OrderTrackingPage = React.lazy(() => import('./pages/OrderTrackingPage'));
 const BillSummaryPage = React.lazy(() => import('./pages/BillSummaryPage'));
 const GalleryPage = React.lazy(() => import('./pages/GalleryPage'));
@@ -134,6 +135,7 @@ function AppLayout() {
             <Route path="/reservation" element={<ReservationPage />} />
             <Route path="/reservation-success" element={<ReservationSuccess />} />
             <Route path="/menu" element={<MenuPage onCartToggle={() => setIsCartOpen(true)} />} />
+            <Route path="/takeout" element={<TakeoutStartPage />} />
             <Route path="/order-status" element={<OrderTrackingPage />} />
             <Route path="/track-order" element={<OrderTrackingPage />} />
             <Route path="/bill" element={<BillSummaryPage />} />

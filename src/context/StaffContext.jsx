@@ -22,15 +22,10 @@ const MOCK_RESERVATIONS = [
 ];
 
 const MOCK_ORDERS = [
-  { id: 'ORD-402', table: 'T-03', section: 'Main Hall', time: '4 mins ago', status: 'new', items: [{ name: 'Malai Truffle Paneer', qty: 2, price: 26.00 }, { name: 'Artisanal Garlic Naan', qty: 3, price: 6.00 }], notes: 'Walnut allergy warning. Make starters medium spicy.' },
-  { id: 'ORD-398', table: 'T-02', section: 'Main Hall', time: '12 mins ago', status: 'preparing', items: [{ name: 'Royal Makhani Murgh', qty: 1, price: 32.00 }, { name: 'Nawabi Mutton Biryani', qty: 2, price: 38.00 }], notes: 'Serve extra raita with biryani.' },
-  { id: 'ORD-391', table: 'T-04', section: 'Window Alcove', time: '22 mins ago', status: 'ready', items: [{ name: 'Saffron Infused Scallops', qty: 3, price: 24.00 }], notes: 'VIP customer. Serve immediately.' }
-];
-
-const MOCK_TAKEAWAY_ORDERS = [
-  { id: 'TA-1041', customerName: 'Rohan Mehta', customerPhone: '+91 98250 11223', time: '6 mins ago', status: 'received', paymentMethod: 'Online', items: [{ name: 'Dal Makhani', qty: 1, price: 420 }, { name: 'Garlic Naan', qty: 2, price: 30 }], notes: 'Less spicy please.' },
-  { id: 'TA-1040', customerName: 'Ishita Rao', customerPhone: '+91 98200 55678', time: '14 mins ago', status: 'preparing', paymentMethod: 'Cash', items: [{ name: 'Signature Paneer Tikka', qty: 1, price: 450 }, { name: 'Plain Naan', qty: 2, price: 22 }], notes: '' },
-  { id: 'TA-1039', customerName: 'Karan Bhatt', customerPhone: '+91 90990 44112', time: '25 mins ago', status: 'ready', paymentMethod: 'Pending', items: [{ name: 'Nawabi Mutton Biryani', qty: 1, price: 780 }], notes: 'Pickup at the counter, not the table.' }
+  { id: 'ORD-402', table: 'T-03', section: 'Main Hall', orderType: 'dine-in', time: '4 mins ago', status: 'new', items: [{ name: 'Malai Truffle Paneer', qty: 2, price: 26.00 }, { name: 'Artisanal Garlic Naan', qty: 3, price: 6.00 }], notes: 'Walnut allergy warning. Make starters medium spicy.' },
+  { id: 'ORD-398', table: 'T-02', section: 'Main Hall', orderType: 'dine-in', time: '12 mins ago', status: 'preparing', items: [{ name: 'Royal Makhani Murgh', qty: 1, price: 32.00 }, { name: 'Nawabi Mutton Biryani', qty: 2, price: 38.00 }], notes: 'Serve extra raita with biryani.' },
+  { id: 'ORD-391', table: 'T-04', section: 'Window Alcove', orderType: 'dine-in', time: '22 mins ago', status: 'ready', items: [{ name: 'Saffron Infused Scallops', qty: 3, price: 24.00 }], notes: 'VIP customer. Serve immediately.' },
+  { id: 'ORD-TA1', table: 'TA-1041', section: 'Takeout', orderType: 'takeout', orderNumber: 'TA-1041', guestName: 'Rohan Mehta', guestPhone: '9825011223', pickupTime: 'ASAP', time: '6 mins ago', status: 'new', items: [{ name: 'Dal Makhani', qty: 1, price: 420 }, { name: 'Garlic Naan', qty: 2, price: 30 }], notes: 'Less spicy please.' }
 ];
 
 const MOCK_QUEUE = [
@@ -440,12 +435,9 @@ export function StaffProvider({ children }) {
   // Shared Reservations List state
   const [reservations, setReservations] = useState([]);
 
-  // Unified Orders pipeline state
+  // Unified Orders pipeline state — holds both dine-in and takeout orders,
+  // distinguished by orderType on each order.
   const [orders, setOrders] = useState([]);
-
-  // Takeaway Orders pipeline state — deliberately separate from `orders`
-  // (dine-in) so nothing here ever touches table/session logic.
-  const [takeawayOrders, setTakeawayOrders] = useState([]);
 
   // Guest Waitlist Queue state
   const [queue, setQueue] = useState([]);
@@ -482,7 +474,6 @@ export function StaffProvider({ children }) {
     setTables([]);
     setReservations([]);
     setOrders([]);
-    setTakeawayOrders([]);
     setQueue([]);
     setInvoices([]);
     setIsDataLoaded(false);
@@ -513,7 +504,8 @@ export function StaffProvider({ children }) {
 
   // Data mapping helper functions
   const mapBackendOrder = useCallback((o) => {
-    const tableStr = "T-" + String(o.tableNumber).padStart(2, '0');
+    const isTakeout = o.orderType === 'takeout';
+    const tableStr = isTakeout ? (o.orderNumber || 'Takeout') : "T-" + String(o.tableNumber).padStart(2, '0');
     const diffMs = new Date() - new Date(o.createdAt);
     const diffMins = Math.max(0, Math.floor(diffMs / 60000));
     const timeStr = diffMins === 0 ? 'Just now' : `${diffMins} mins ago`;
@@ -530,7 +522,10 @@ export function StaffProvider({ children }) {
     return {
       id: o._id,
       table: tableStr,
-      section: o.tableNumber <= 5 ? 'Dining Room' : 'Garden Terrace',
+      section: isTakeout ? 'Takeout' : (o.tableNumber <= 5 ? 'Dining Room' : 'Garden Terrace'),
+      orderType: o.orderType || 'dine-in',
+      orderNumber: o.orderNumber || '',
+      pickupTime: o.pickupTime || '',
       time: timeStr,
       status: mappedStatus,
       items: o.items.map(i => ({
@@ -543,44 +538,13 @@ export function StaffProvider({ children }) {
       notes: o.notes || '',
       isCustomerOrder: true,
       createdAt: o.createdAt,
-      guestName: o.guestName || `Table ${o.tableNumber} Guest`,
+      guestName: o.guestName || (isTakeout ? 'Takeout Guest' : `Table ${o.tableNumber} Guest`),
       guestPhone: o.guestPhone || '',
       reservationId: o.reservationId || '',
       sessionId: o.sessionId || ''
     };
   }, []);
 
-  const mapBackendTakeawayOrder = useCallback((o) => {
-    const diffMs = new Date() - new Date(o.createdAt);
-    const diffMins = Math.max(0, Math.floor(diffMs / 60000));
-    const timeStr = diffMins === 0 ? 'Just now' : `${diffMins} mins ago`;
-
-    let mappedStatus = 'received';
-    if (o.status === 'Preparing') {
-      mappedStatus = 'preparing';
-    } else if (o.status === 'Ready for Pickup') {
-      mappedStatus = 'ready';
-    } else if (o.status === 'Completed') {
-      mappedStatus = 'completed';
-    } else if (o.status === 'Cancelled') {
-      mappedStatus = 'cancelled';
-    }
-
-    return {
-      id: o._id,
-      orderNumber: o.orderNumber,
-      customerName: o.customerName,
-      customerPhone: o.customerPhone,
-      time: timeStr,
-      status: mappedStatus,
-      paymentMethod: o.paymentMethod || 'Pending',
-      items: o.items.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
-      notes: o.notes || '',
-      totalAmount: o.totalAmount,
-      createdAt: o.createdAt
-    };
-  }, []);
-  
   const mapBackendTable = useCallback((t, currentOrders) => {
     const tableStr = "T-" + String(t.tableNumber).padStart(2, '0');
     // Match on the table's actual currentOrderId pointer, not order status.
@@ -706,11 +670,6 @@ export function StaffProvider({ children }) {
     return res.data;
   }, []);
 
-  const fetchTakeawayOrders = useCallback(async () => {
-    const res = await api.get('/api/takeaway/all-active');
-    return res.data;
-  }, []);
-
   const fetchQueue = useCallback(async () => {
     const res = await api.get('/api/tables/waiting');
     return res.data;
@@ -771,7 +730,6 @@ export function StaffProvider({ children }) {
       setTables(prev => prev.length ? prev : MOCK_TABLES);
       setReservations(prev => prev.length ? prev : MOCK_RESERVATIONS);
       setOrders(prev => prev.length ? prev : MOCK_ORDERS);
-      setTakeawayOrders(prev => prev.length ? prev : MOCK_TAKEAWAY_ORDERS);
       setQueue(prev => prev.length ? prev : MOCK_QUEUE);
       setIsDataLoaded(true);
       isFetchingRef.current = false;
@@ -779,18 +737,16 @@ export function StaffProvider({ children }) {
     }
 
     try {
-      const [rawTables, rawReservations, rawOrders, rawTakeawayOrders, rawQueue, rawInvoices] = await Promise.all([
+      const [rawTables, rawReservations, rawOrders, rawQueue, rawInvoices] = await Promise.all([
         fetchTables(),
         fetchReservations(),
         fetchOrders(),
-        fetchTakeawayOrders(),
         fetchQueue(),
         fetchInvoices(),
       ]);
 
       const mappedOrders = rawOrders.map(mapBackendOrder);
       setOrders(mappedOrders);
-      setTakeawayOrders(rawTakeawayOrders.map(mapBackendTakeawayOrder));
       setTables(rawTables.map(t => mapBackendTable(t, mappedOrders)));
       setReservations(rawReservations.map(mapBackendReservation));
       setQueue(rawQueue.map(mapBackendQueueItem));
@@ -801,13 +757,12 @@ export function StaffProvider({ children }) {
       setTables(prev => prev.length ? prev : MOCK_TABLES);
       setReservations(prev => prev.length ? prev : MOCK_RESERVATIONS);
       setOrders(prev => prev.length ? prev : MOCK_ORDERS);
-      setTakeawayOrders(prev => prev.length ? prev : MOCK_TAKEAWAY_ORDERS);
       setQueue(prev => prev.length ? prev : MOCK_QUEUE);
       setIsError(true);
     } finally {
       isFetchingRef.current = false;
     }
-  }, [fetchTables, fetchReservations, fetchOrders, fetchTakeawayOrders, fetchQueue, fetchInvoices, mapBackendOrder, mapBackendTakeawayOrder, mapBackendTable, mapBackendReservation, mapBackendQueueItem, mapBackendInvoice]);
+  }, [fetchTables, fetchReservations, fetchOrders, fetchQueue, fetchInvoices, mapBackendOrder, mapBackendTable, mapBackendReservation, mapBackendQueueItem, mapBackendInvoice]);
 
   // Load public data on mount unconditionally
   useEffect(() => {
@@ -863,8 +818,6 @@ export function StaffProvider({ children }) {
     socket.on('table:released', handleTableUpdate);
     socket.on('order:updated', handleOrderUpdate);
     socket.on('order:new', handleOrderUpdate);
-    socket.on('takeaway:updated', handleOrderUpdate);
-    socket.on('takeaway:new', handleOrderUpdate);
     socket.on('reservation:new', handleReservationNew);
     socket.on('reservation:updated', handleReservationUpdated);
     socket.on('waitingList:updated', handleWaitingListUpdate);
@@ -878,8 +831,6 @@ export function StaffProvider({ children }) {
       socket.off('table:released', handleTableUpdate);
       socket.off('order:updated', handleOrderUpdate);
       socket.off('order:new', handleOrderUpdate);
-      socket.off('takeaway:updated', handleOrderUpdate);
-      socket.off('takeaway:new', handleOrderUpdate);
       socket.off('reservation:new', handleReservationNew);
       socket.off('reservation:updated', handleReservationUpdated);
       socket.off('waitingList:updated', handleWaitingListUpdate);
@@ -1069,116 +1020,8 @@ export function StaffProvider({ children }) {
     }
   };
 
-  // Staff logs a new takeaway order (phone-in or counter walk-up)
-  const createTakeawayOrder = async ({ customerName, customerPhone, items, notes, paymentMethod }) => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
-    if (isMock) {
-      const newOrder = {
-        id: `TA-${1040 + takeawayOrders.length + 1}`,
-        customerName,
-        customerPhone,
-        time: 'Just now',
-        status: 'received',
-        paymentMethod: paymentMethod || 'Pending',
-        items,
-        notes: notes || ''
-      };
-      setTakeawayOrders(prev => [newOrder, ...prev]);
-      logActivity(
-        `Takeaway order ${newOrder.id} received`,
-        `${customerName} — ${items.map(i => `${i.qty}x ${i.name}`).join(', ')}`,
-        'shopping_bag',
-        '/staff/takeaway'
-      );
-      return newOrder;
-    }
-
-    try {
-      const res = await api.post('/api/takeaway', { customerName, customerPhone, items, notes, paymentMethod });
-      await loadAllData();
-      logActivity(
-        `Takeaway order ${res.data.order.orderNumber} received`,
-        `${customerName} — ${items.map(i => `${i.qty}x ${i.name}`).join(', ')}`,
-        'shopping_bag',
-        '/staff/takeaway'
-      );
-      return res.data.order;
-    } catch (err) {
-      console.error('Error creating takeaway order:', err);
-      alert(err.message || 'Failed to create takeaway order.');
-    }
-  };
-
-  // Advances a takeaway order (Received -> Preparing -> Ready for Pickup -> Completed)
-  const advanceTakeawayOrder = async (orderId) => {
-    const order = takeawayOrders.find(o => o.id === orderId);
-    if (!order) return;
-
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
-    if (isMock) {
-      if (order.status === 'received') {
-        setTakeawayOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'preparing' } : o));
-      } else if (order.status === 'preparing') {
-        setTakeawayOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'ready' } : o));
-      } else if (order.status === 'ready') {
-        setTakeawayOrders(prev => prev.filter(o => o.id !== orderId));
-        logActivity(
-          `Takeaway order ${orderId} completed`,
-          `Picked up by ${order.customerName}`,
-          'check_circle',
-          '/staff/takeaway'
-        );
-      }
-      return;
-    }
-
-    try {
-      let nextBackendStatus = null;
-      if (order.status === 'received') {
-        nextBackendStatus = 'Preparing';
-      } else if (order.status === 'preparing') {
-        nextBackendStatus = 'Ready for Pickup';
-      } else if (order.status === 'ready') {
-        nextBackendStatus = 'Completed';
-      }
-
-      if (nextBackendStatus) {
-        await api.patch(`/api/takeaway/${orderId}/status`, { status: nextBackendStatus });
-        await loadAllData();
-
-        if (nextBackendStatus === 'Completed') {
-          logActivity(
-            `Takeaway order ${orderId} completed`,
-            `Picked up by ${order.customerName}`,
-            'check_circle',
-            '/staff/takeaway'
-          );
-        }
-      }
-    } catch (err) {
-      console.error('Error advancing takeaway order status:', err);
-      alert(err.message || 'Failed to update takeaway order status.');
-    }
-  };
-
-  // Cancels a takeaway order (customer no-show, wrong order, etc.)
-  const cancelTakeawayOrder = async (orderId) => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
-    if (isMock) {
-      setTakeawayOrders(prev => prev.filter(o => o.id !== orderId));
-      return;
-    }
-
-    try {
-      await api.patch(`/api/takeaway/${orderId}/status`, { status: 'Cancelled' });
-      await loadAllData();
-    } catch (err) {
-      console.error('Error cancelling takeaway order:', err);
-      alert(err.message || 'Failed to cancel takeaway order.');
-    }
-  };
-
   // Seating Guest from Queue or Reservation to Table
+
   const assignTable = async (assignId, tableId) => {
     let guest = queue.find(q => q.id === assignId);
     let isReservation = false;
@@ -1273,6 +1116,38 @@ export function StaffProvider({ children }) {
     } catch (err) {
       console.error('Error settling invoice:', err);
       alert(err.message || 'Failed to settle invoice.');
+    }
+  };
+
+  // Flags a takeout customer's phone number after a no-show, blocking that
+  // number from self-starting new online takeout orders. This is the
+  // no-OTP-needed anti-ghosting policy — see startTakeoutSession backend.
+  const flagCustomerNoShow = async (phone, orderId) => {
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+      logActivity(
+        'Customer flagged as no-show',
+        `${phone} blocked from future online takeout orders`,
+        'block',
+        '/staff/orders'
+      );
+      return;
+    }
+
+    try {
+      await api.patch(`/api/crm/customers/${phone}/blacklist`, { isBlacklisted: true });
+      await api.patch(`/api/orders/${orderId}/status`, { status: 'Cancelled' });
+      await loadAllData();
+      logActivity(
+        'Customer flagged as no-show',
+        `${phone} blocked from future online takeout orders`,
+        'block',
+        '/staff/orders'
+      );
+    } catch (err) {
+      console.error('Error flagging no-show:', err);
+      alert(err.message || 'Failed to flag customer.');
     }
   };
 
@@ -1795,7 +1670,6 @@ export function StaffProvider({ children }) {
       tables,
       tableQrData,
       orders,
-      takeawayOrders,
       invoices,
       queue,
       activities,
@@ -1811,11 +1685,9 @@ export function StaffProvider({ children }) {
       deleteReservation,
       addOrder,
       advanceOrder,
-      createTakeawayOrder,
-      advanceTakeawayOrder,
-      cancelTakeawayOrder,
       assignTable,
       markInvoicePaid,
+      flagCustomerNoShow,
       finalizeTableBill,
       addGuestToQueue,
       addMenuItem,

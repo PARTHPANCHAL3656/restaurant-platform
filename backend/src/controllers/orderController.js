@@ -142,7 +142,7 @@ export const getAllActiveOrders = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body
-    const validStatuses = ["Received", "Preparing", "Ready", "Served"]
+    const validStatuses = ["Received", "Preparing", "Ready", "Served", "Cancelled"]
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid status value." })

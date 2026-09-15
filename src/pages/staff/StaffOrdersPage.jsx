@@ -43,7 +43,7 @@ export default function StaffOrdersPage() {
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <span className="font-label-caps text-xs font-bold text-ink-navy">Table {o.table}</span>
+                <span className="font-label-caps text-xs font-bold text-ink-navy">{o.orderType === 'takeout' ? 'Takeout ' : 'Table '}{o.table}</span>
                   <span className="text-[10px] text-subtle-text">{o.time}</span>
                 </div>
                 <p className="text-[11px] text-subtle-text font-semibold uppercase tracking-wider">{o.section}</p>
@@ -73,7 +73,7 @@ export default function StaffOrdersPage() {
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <span className="font-label-caps text-xs font-bold text-ink-navy">Table {o.table}</span>
+                <span className="font-label-caps text-xs font-bold text-ink-navy">{o.orderType === 'takeout' ? 'Takeout ' : 'Table '}{o.table}</span>
                   <span className="text-[10px] text-subtle-text">{o.time}</span>
                 </div>
                 <p className="text-[11px] text-subtle-text font-semibold uppercase tracking-wider">{o.section}</p>
@@ -103,7 +103,7 @@ export default function StaffOrdersPage() {
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <span className="font-label-caps text-xs font-bold text-ink-navy">Table {o.table}</span>
+                <span className="font-label-caps text-xs font-bold text-ink-navy">{o.orderType === 'takeout' ? 'Takeout ' : 'Table '}{o.table}</span>
                   <span className="text-[10px] text-subtle-text">{o.time}</span>
                 </div>
                 <p className="text-[11px] text-subtle-text font-semibold uppercase tracking-wider">{o.section}</p>

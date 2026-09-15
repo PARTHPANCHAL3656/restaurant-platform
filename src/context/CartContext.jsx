@@ -54,6 +54,9 @@ export function CartProvider({ children }) {
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload && payload.orderType === 'takeout') {
+          return 'Takeout Order';
+        }
         if (payload && payload.tableNumber) {
           return `Table T-${String(payload.tableNumber).padStart(2, '0')}`;
         }
@@ -64,6 +67,24 @@ export function CartProvider({ children }) {
     return 'Garden Terrace 14';
   });
 
+  // Whether the current session is a self-service takeout order rather
+  // than a dine-in table session — derived from the token, same source
+  // as tableNumber/tableId above.
+  const [isTakeout, setIsTakeout] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const urlToken = new URLSearchParams(window.location.search).get('token');
+    const token = urlToken || sessionStorage.getItem('tableToken');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload?.orderType === 'takeout';
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  });
+
   // Decode table ID and session ID from tableToken
   useEffect(() => {
     if (tableToken) {
@@ -72,6 +93,7 @@ export function CartProvider({ children }) {
         if (payload) {
           setTableId(payload.tableId || null);
           setTableSessionId(payload.sessionId || null);
+          setIsTakeout(payload.orderType === 'takeout');
         }
       } catch (e) {
         console.error('Error decoding table token:', e);
@@ -92,7 +114,9 @@ export function CartProvider({ children }) {
       setTableToken(urlToken);
       try {
         const payload = JSON.parse(atob(urlToken.split('.')[1]));
-        if (payload && payload.tableNumber) {
+        if (payload && payload.orderType === 'takeout') {
+          setTableNumber('Takeout Order');
+        } else if (payload && payload.tableNumber) {
           setTableNumber(`Table T-${String(payload.tableNumber).padStart(2, '0')}`);
         }
       } catch (e) {
@@ -319,6 +343,7 @@ export function CartProvider({ children }) {
       setTableToken,
       tableNumber,
       setTableNumber,
+      isTakeout,
       orderId,
       orderStatus,
       activeOrderItems,

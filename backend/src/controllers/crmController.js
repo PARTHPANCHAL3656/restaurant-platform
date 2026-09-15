@@ -165,3 +165,28 @@ export const getChurnList = async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 }
+
+// PATCH /api/crm/customers/:phone/blacklist
+// Staff flags a phone number as a no-show — blocks it from starting new
+// self-service takeout orders (see takeoutController.js). Upserts the
+// Customer record since a first-time takeout guest may not have one yet.
+export const setCustomerBlacklist = async (req, res) => {
+  try {
+    const { isBlacklisted } = req.body
+    const phone = (req.params.phone || "").replace(/\D/g, "").slice(-10)
+
+    if (phone.length !== 10) {
+      return res.status(400).json({ error: "Invalid phone number." })
+    }
+
+    const customer = await Customer.findOneAndUpdate(
+      { phone },
+      { $set: { isBlacklisted: !!isBlacklisted } },
+      { upsert: true, new: true }
+    )
+
+    res.json(customer)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}

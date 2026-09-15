@@ -25,6 +25,13 @@ const customerSchema = new mongoose.Schema({
   lastVisit: {
     type: Date,
     default: Date.now
+  },
+  // Set by staff when a takeout customer no-shows. Blocks that phone
+  // number from starting new self-service takeout orders — the practical,
+  // no-OTP-needed anti-ghosting policy instead of SMS/WhatsApp verification.
+  isBlacklisted: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true })
 

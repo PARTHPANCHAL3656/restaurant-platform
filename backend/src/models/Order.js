@@ -12,14 +12,32 @@ const orderItemSchema = new mongoose.Schema({
 }, { _id: false })
 
 const orderSchema = new mongoose.Schema({
+  // "dine-in" orders always have a tableId/tableNumber. "takeout" orders
+  // never do — they're identified by sessionId + orderNumber instead.
+  orderType: {
+    type: String,
+    enum: ["dine-in", "takeout"],
+    default: "dine-in"
+  },
   tableId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Table",
-    required: true
+    required: function () { return this.orderType === "dine-in" }
   },
   tableNumber: {
     type: Number,
-    required: true  // denormalized for easy staff display
+    required: function () { return this.orderType === "dine-in" }  // denormalized for easy staff display
+  },
+  // Only set for takeout orders, e.g. "TA-1041" — the human-readable
+  // identifier a customer gives at the counter, since there's no table.
+  orderNumber: {
+    type: String,
+    default: ""
+  },
+  // Only meaningful for takeout: "ASAP" or a specific scheduled time string.
+  pickupTime: {
+    type: String,
+    default: ""
   },
   // Same sessionId as what's in the JWT token
   // This is how we find the right order when customer places/adds items
