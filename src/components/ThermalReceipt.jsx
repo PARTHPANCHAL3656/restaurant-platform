@@ -24,7 +24,7 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
 
       <dl className="thermal-grid-meta">
         <div><dt>INV No:</dt><dd>{value(invoice.number)}</dd></div>
-        <div><dt>Table:</dt><dd>{value(invoice.table)}</dd></div>
+        <div><dt>Table:</dt><dd>{value(invoice.table)}{invoice.orderSource === 'Reservation' ? ' (Reserved)' : invoice.orderSource === 'Walk-in' ? ' (Walk-in)' : ''}</dd></div>
         <div><dt>Date:</dt><dd>{value(invoice.date)}</dd></div>
         <div><dt>Time:</dt><dd>{value(invoice.time)}</dd></div>
         <div><dt>Cashier:</dt><dd>{value(invoice.cashier)}</dd></div>
@@ -44,11 +44,17 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
       </table>
 
       <section className="thermal-grid-summary" aria-label="Invoice totals">
-        <div><span>Sub Total</span><strong>{formatINR(subtotal)}</strong></div>
-        <div><span>Service Charge @ {percent(serviceCharge)}%</span><strong>{formatINR(serviceCharge)}</strong></div>
-        <div><span>CGST @ {percent(gst / 2)}%</span><strong>{formatINR(gst / 2)}</strong></div>
-        <div><span>SGST @ {percent(gst / 2)}%</span><strong>{formatINR(gst / 2)}</strong></div>
-        <div className="thermal-grid-grand"><span>Grand Total</span><strong>{formatINR(total)}</strong></div>
+        <div className="thermal-grid-total-block">
+          <span>Sub Total</span>
+          <strong>{formatINR(subtotal)}</strong>
+        </div>
+        <div className="thermal-grid-charge-row"><span>Service Charge @ {percent(serviceCharge)}%</span><strong>{formatINR(serviceCharge)}</strong></div>
+        <div className="thermal-grid-charge-row"><span>CGST @ {percent(gst / 2)}%</span><strong>{formatINR(gst / 2)}</strong></div>
+        <div className="thermal-grid-charge-row"><span>SGST @ {percent(gst / 2)}%</span><strong>{formatINR(gst / 2)}</strong></div>
+        <div className="thermal-grid-total-block thermal-grid-grand">
+          <span>Grand Total</span>
+          <strong>{formatINR(total)}</strong>
+        </div>
       </section>
 
       <section className="thermal-grid-payment">

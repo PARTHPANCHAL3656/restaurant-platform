@@ -676,6 +676,7 @@ export function StaffProvider({ children }) {
       status: inv.status,
       paymentMethod: inv.paymentMethod,
       generatedBy: inv.generatedBy || 'Floor Manager',
+      orderSource: inv.reservationId ? 'Reservation' : 'Walk-in',
       subtotal: inv.subtotal,
       gst: inv.gst,
       serviceCharge: inv.serviceCharge,
@@ -1294,6 +1295,7 @@ export function StaffProvider({ children }) {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'unpaid',
         paymentMethod: '—',
+        orderSource: table.reservationId ? 'Reservation' : 'Walk-in',
         subtotal: Math.round(sub),
         gst: Math.round(sub * 0.05),
         serviceCharge: Math.round(sub * 0.125)

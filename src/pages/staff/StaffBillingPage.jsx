@@ -78,13 +78,21 @@ export default function StaffBillingPage() {
     const element = receiptRef.current;
     if (!element || !selectedInvoice) return;
 
-    html2canvas(element, {
+    // Wait for the browser to actually paint the receipt's styles before
+    // capturing — without this, html2canvas can snapshot the element
+    // before its CSS (borders, grid layout, fonts) has finished applying,
+    // producing a plain unstyled text dump instead of the real design.
+    const waitForPaint = () => new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+
+    waitForPaint().then(() => html2canvas(element, {
       scale: 2,
       useCORS: true,
       backgroundColor: '#FDFCFB',
       windowWidth: element.scrollWidth,
       windowHeight: element.scrollHeight
-    }).then((canvas) => {
+    })).then((canvas) => {
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
       const imgWidth = 72;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -354,9 +362,9 @@ export default function StaffBillingPage() {
       {/* Hidden receipt template used only for PDF generation via html2canvas.
           Rendered off-screen (not display:none) so html2canvas can lay it out. */}
       {selectedInvoice && (
-        <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, opacity: 0.01, pointerEvents: 'none', zIndex: -1 }}>
           <div ref={receiptRef}>
-            <ThermalReceipt restaurantInfo={restaurantInfo} invoice={{ number: selectedInvoice.invoiceNumber || selectedInvoice.id, table: selectedInvoice.table, guest: selectedInvoice.guest, cashier: selectedInvoice.generatedBy, date: selectedInvoice.date, time: selectedInvoice.time || '---', paymentMethod: selectedInvoice.paymentMethod, status: selectedInvoice.status, items: selectedInvoice.items, subtotal: selectedInvoice.subtotal, serviceCharge: selectedInvoice.serviceCharge, gst: selectedInvoice.gst, total: selectedInvoice.amount }} />
+            <ThermalReceipt restaurantInfo={restaurantInfo} invoice={{ number: selectedInvoice.invoiceNumber || selectedInvoice.id, table: selectedInvoice.table, orderSource: selectedInvoice.orderSource, guest: selectedInvoice.guest, cashier: selectedInvoice.generatedBy, date: selectedInvoice.date, time: selectedInvoice.time || '---', paymentMethod: selectedInvoice.paymentMethod, status: selectedInvoice.status, items: selectedInvoice.items, subtotal: selectedInvoice.subtotal, serviceCharge: selectedInvoice.serviceCharge, gst: selectedInvoice.gst, total: selectedInvoice.amount }} />
           </div>
         </div>
       )}
