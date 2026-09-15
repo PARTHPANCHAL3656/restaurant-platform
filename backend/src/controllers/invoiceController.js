@@ -42,9 +42,12 @@ export const generateInvoiceForTable = async (req, res) => {
     const gst = Math.round(subtotal * 0.075)
     const total = Math.round(subtotal + serviceCharge + gst)
 
-    // Generate unique sequential invoice number
-    const count = await Invoice.countDocuments()
-    const invoiceNumber = `INV-${1000 + count + 1}`
+    // Reuse the number already minted on this order at creation time (see
+    // utils/nextBillNumber.js) so the customer's pre-invoice bill and this
+    // tax invoice show the identical number. Orders created before this
+    // field existed have no billNumber — fall back to the old counting
+    // method so legacy in-flight orders can still be invoiced.
+    const invoiceNumber = order.billNumber || `INV-${1000 + (await Invoice.countDocuments()) + 1}`
 
     const invoice = await Invoice.create({
       invoiceNumber,

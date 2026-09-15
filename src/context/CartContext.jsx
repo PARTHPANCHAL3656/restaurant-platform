@@ -257,6 +257,7 @@ export function CartProvider({ children }) {
     return sub + sub * 0.10 + sub * 0.075;
   })() : 0;
   const activeOrderTime = activeOrder ? new Date(activeOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+  const activeOrderBillNumber = activeOrder ? activeOrder.billNumber : null;
 
   const addToCart = (item) => {
     setCartItems(prev => {
@@ -349,6 +350,7 @@ export function CartProvider({ children }) {
       activeOrderItems,
       activeOrderTotal,
       activeOrderTime,
+      activeOrderBillNumber,
       consumeFreshScan: () => {
         const was = isFreshScanRef.current;
         isFreshScanRef.current = false;

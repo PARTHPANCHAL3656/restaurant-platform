@@ -1,6 +1,7 @@
 import Order from "../models/Order.js"
 import Customer from "../models/Customer.js"
 import { generateTakeoutToken } from "../utils/generateTakeoutToken.js"
+import { nextBillNumber } from "../utils/nextBillNumber.js"
 
 // Normalizes a phone number to a bare 10-digit string, same convention
 // the CRM/analytics side already uses for matching customers.
@@ -36,11 +37,13 @@ export const startTakeoutSession = async (req, res) => {
     const { sessionId, token, menuUrl } = generateTakeoutToken()
     const count = await Order.countDocuments({ orderType: "takeout" })
     const orderNumber = `TA-${1000 + count + 1}`
+    const billNumber = await nextBillNumber()
 
     await Order.create({
       orderType: "takeout",
       sessionId,
       orderNumber,
+      billNumber,
       guestName,
       guestPhone: phone,
       pickupTime: pickupTime || "ASAP",

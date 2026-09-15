@@ -34,6 +34,17 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  // The SAME "INV-####" sequence staff invoices use, minted once at order
+  // creation (see utils/nextBillNumber.js) and later copied onto the
+  // Invoice as-is rather than a new number being generated at that point.
+  // Lets the customer's pre-invoice bill and staff's tax invoice always
+  // show the identical number. Blank on orders created before this field
+  // existed — invoiceController falls back to the old counting method for
+  // those.
+  billNumber: {
+    type: String,
+    default: ""
+  },
   // Only meaningful for takeout: "ASAP" or a specific scheduled time string.
   pickupTime: {
     type: String,

@@ -18,7 +18,8 @@ export default function BillSummaryPage() {
     activeOrderItems, 
     activeOrderTotal, 
     tableNumber,
-    activeOrderTime
+    activeOrderTime,
+    activeOrderBillNumber
   } = useCart();
   const { restaurantInfo } = useStaff();
 
@@ -73,10 +74,13 @@ export default function BillSummaryPage() {
   const gst = hasInvoice ? invoice.gst : hasActiveOrder ? subtotal * 0.075 : 0;
   const grandTotal = hasInvoice ? invoice.total : hasActiveOrder ? activeOrderTotal : 0;
 
-  // The ID shown to the guest: the real, staff-tracked invoice number once
-  // it exists, otherwise the order's own id as a lightweight reference -
-  // never a fabricated bill number.
-  const displayOrderId = hasInvoice ? invoice.invoiceNumber : hasActiveOrder ? orderId : '#SG-992104';
+  // The ID shown to the guest: the invoice number once an Invoice exists,
+  // otherwise the SAME number already minted on the order at creation time
+  // (see backend utils/nextBillNumber.js) - so this never shows the raw
+  // Mongo order id, and always matches what staff will eventually see.
+  // Only orders created before that field existed fall back to the id.
+  const displayOrderId = hasInvoice ? invoice.invoiceNumber
+    : hasActiveOrder ? (activeOrderBillNumber || orderId) : '#SG-992104';
 
     const handleDownloadPDF = () => {
     const element = receiptRef.current;
