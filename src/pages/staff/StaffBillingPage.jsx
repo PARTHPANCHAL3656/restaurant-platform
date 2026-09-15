@@ -115,7 +115,28 @@ export default function StaffBillingPage() {
         useCORS: true,
         backgroundColor: '#FDFCFB',
         windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight
+        windowHeight: element.scrollHeight,
+        // html2canvas clones the page into an offscreen document and
+        // re-parses stylesheets there before rasterizing — that clone is
+        // what actually gets captured, not the live DOM assertStylesLoaded
+        // just checked. That re-parse is async and can race the capture,
+        // which is why the check above can pass yet the PDF still comes
+        // out unstyled. Block until the clone itself shows the right styles.
+        onclone: (clonedDoc) => new Promise((resolve, reject) => {
+          const deadline = Date.now() + 2000;
+          const check = () => {
+            const el = clonedDoc.querySelector('.thermal-receipt');
+            const ccs = el && clonedDoc.defaultView.getComputedStyle(el);
+            if (ccs && ccs.fontFamily.includes('Courier') && ccs.borderTopWidth !== '0px') {
+              resolve();
+            } else if (Date.now() > deadline) {
+              reject(new Error('stale-styles'));
+            } else {
+              setTimeout(check, 50);
+            }
+          };
+          check();
+        })
       });
     }).then((canvas) => {
       const imgData = canvas.toDataURL('image/jpeg', 0.92);

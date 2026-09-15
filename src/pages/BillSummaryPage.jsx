@@ -73,7 +73,28 @@ export default function BillSummaryPage() {
       windowWidth: element.scrollWidth,
       windowHeight: element.scrollHeight,
       scrollX: 0,
-      scrollY: -window.scrollY
+      scrollY: -window.scrollY,
+      // html2canvas clones the page into an offscreen document and
+      // re-parses stylesheets there before rasterizing - THAT clone is
+      // what actually gets captured, not the live DOM we checked above.
+      // That re-parse is async and can race the capture, which is why the
+      // guard above sometimes passes yet the PDF still comes out unstyled.
+      // Block until the clone itself shows the right styles.
+      onclone: (clonedDoc) => new Promise((resolve, reject) => {
+        const deadline = Date.now() + 2000;
+        const check = () => {
+          const el = clonedDoc.querySelector('.thermal-receipt');
+          const ccs = el && clonedDoc.defaultView.getComputedStyle(el);
+          if (ccs && ccs.fontFamily.includes('Courier') && ccs.borderTopWidth !== '0px') {
+            resolve();
+          } else if (Date.now() > deadline) {
+            reject(new Error('stale-styles'));
+          } else {
+            setTimeout(check, 50);
+          }
+        };
+        check();
+      })
     }).then((canvas) => {
       // JPEG at 0.92 quality instead of uncompressed PNG - same visual
       // result for a receipt, a fraction of the file size.
