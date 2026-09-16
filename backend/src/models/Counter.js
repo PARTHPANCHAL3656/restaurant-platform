@@ -8,7 +8,7 @@ import mongoose from "mongoose"
 // and can hand out the same "next" number to both if neither has saved yet.
 const counterSchema = new mongoose.Schema({
   _id: { type: String, required: true },
-  seq: { type: Number, default: 1000 }
+  seq: { type: Number, default: 0 }
 })
  
 export default mongoose.model("Counter", counterSchema)
