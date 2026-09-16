@@ -25,6 +25,16 @@ export default function StaffTakeawayPage() {
 
   const orderTotal = (order) => order.items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
+  // A "Ready for Pickup" order that's been sitting for 25+ minutes is at
+  // real risk of the food going to waste — flag it visually so staff
+  // notice and can call the customer before it's forgotten.
+  const OVERDUE_MINUTES = 25;
+  const isOverdue = (order) => {
+    if (order.status !== 'ready' || !order.readyAt) return false;
+    const minsSinceReady = (Date.now() - new Date(order.readyAt).getTime()) / 60000;
+    return minsSinceReady >= OVERDUE_MINUTES;
+  };
+
   return (
     <div className="flex flex-col-reverse md:flex-row min-h-[calc(100vh-80px)] relative select-none">
 
@@ -54,13 +64,19 @@ export default function StaffTakeawayPage() {
                   <div
                     key={o.id}
                     onClick={() => setSelectedOrderId(o.id)}
-                    className={`p-4 border border-muted-border hover:border-saffron-gold cursor-pointer bg-canvas-cream transition-all duration-300 ${
+                    className={`p-4 border cursor-pointer transition-all duration-300 ${
+                      isOverdue(o)
+                        ? 'border-red-400 bg-red-50 hover:border-red-500'
+                        : 'border-muted-border hover:border-saffron-gold bg-canvas-cream'
+                    } ${
                       selectedOrderId === o.id ? 'ring-2 ring-saffron-gold/30 border-saffron-gold' : ''
                     }`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <span className="font-label-caps text-xs font-bold text-ink-navy">{o.table}</span>
-                      <span className="text-[10px] text-subtle-text">{o.time}</span>
+                      <span className={`text-[10px] ${isOverdue(o) ? 'text-red-600 font-bold' : 'text-subtle-text'}`}>
+                        {isOverdue(o) ? 'OVERDUE' : o.time}
+                      </span>
                     </div>
                     <p className="text-[11px] text-subtle-text font-semibold uppercase tracking-wider">{o.guestName}</p>
                     <p className="text-xs text-ink-navy mt-2 line-clamp-1">
@@ -152,6 +168,11 @@ export default function StaffTakeawayPage() {
               {selectedOrder.status === 'ready' && (
                 <button
                   onClick={() => {
+                    const confirmed = window.confirm(
+                      `Have you tried calling ${selectedOrder.guestName} at ${selectedOrder.guestPhone} first?\n\n` +
+                      `Flagging as no-show will cancel this order and block ${selectedOrder.guestPhone} from placing new online takeout orders. This can't be easily undone.`
+                    );
+                    if (!confirmed) return;
                     flagCustomerNoShow(selectedOrder.guestPhone, selectedOrder.id);
                     setSelectedOrderId(null);
                   }}

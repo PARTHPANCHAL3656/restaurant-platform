@@ -21,11 +21,11 @@ api.interceptors.request.use(
       // 2. Customer Token from URL query params or sessionStorage
       const urlParams = new URLSearchParams(window.location.search);
       const urlToken = urlParams.get('token');
-      const tableToken = urlToken || sessionStorage.getItem('tableToken');
+      const tableToken = urlToken || localStorage.getItem('tableToken');
       if (tableToken) {
-        // Store in sessionStorage so it persists across page navigations
+        // Store in localStorage so it persists across page navigations
         if (urlToken) {
-          sessionStorage.setItem('tableToken', urlToken);
+          localStorage.setItem('tableToken', urlToken);
         }
         config.headers.Authorization = `Bearer ${tableToken}`;
       }

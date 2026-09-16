@@ -526,6 +526,7 @@ export function StaffProvider({ children }) {
       orderType: o.orderType || 'dine-in',
       orderNumber: o.orderNumber || '',
       pickupTime: o.pickupTime || '',
+      readyAt: o.readyAt || null,
       time: timeStr,
       status: mappedStatus,
       items: o.items.map(i => ({
@@ -625,7 +626,8 @@ export function StaffProvider({ children }) {
   }, []);
 
   const mapBackendInvoice = useCallback((inv) => {
-    const tableStr = "T-" + String(inv.tableNumber).padStart(2, '0');
+    const isTakeout = inv.orderType === 'takeout';
+    const tableStr = isTakeout ? (inv.orderNumber || 'Takeout') : "T-" + String(inv.tableNumber).padStart(2, '0');
     const dateStr = new Date(inv.createdAt).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
     const timeStr = new Date(inv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -640,7 +642,7 @@ export function StaffProvider({ children }) {
       status: inv.status,
       paymentMethod: inv.paymentMethod,
       generatedBy: inv.generatedBy || 'Floor Manager',
-      orderSource: inv.reservationId ? 'Reservation' : 'Walk-in',
+      orderSource: isTakeout ? 'Takeout' : (inv.reservationId ? 'Reservation' : 'Walk-in'),
       subtotal: inv.subtotal,
       gst: inv.gst,
       serviceCharge: inv.serviceCharge,
@@ -1136,8 +1138,8 @@ export function StaffProvider({ children }) {
     }
 
     try {
-      await api.patch(`/api/crm/customers/${phone}/blacklist`, { isBlacklisted: true });
       await api.patch(`/api/orders/${orderId}/status`, { status: 'Cancelled' });
+      await api.patch(`/api/crm/customers/${phone}/blacklist`, { isBlacklisted: true });
       await loadAllData();
       logActivity(
         'Customer flagged as no-show',

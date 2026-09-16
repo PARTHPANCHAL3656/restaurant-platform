@@ -50,6 +50,13 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  // Set when status first becomes "Ready" — lets staff see how long a
+  // takeout order has been sitting unpicked-up, since prepared food left
+  // too long is wasted money if the customer never shows.
+  readyAt: {
+    type: Date,
+    default: null
+  },
   // Same sessionId as what's in the JWT token
   // This is how we find the right order when customer places/adds items
   sessionId: {
@@ -68,9 +75,9 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  status: {
+    status: {
     type: String,
-    enum: ["Received", "Preparing", "Ready", "Served"],
+    enum: ["Received", "Preparing", "Ready", "Served", "Cancelled"],
     default: "Received"
   },
   totalAmount: {

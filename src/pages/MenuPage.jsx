@@ -12,7 +12,7 @@ const CATEGORIES = ['Starters', 'Mains', 'Rice & Biryani', 'Breads', 'Desserts',
 
 export default function MenuPage({ onCartToggle }) {
   const { menuItems, isMenuLoading, categories: staffCategories } = useStaff();
-  const { cartItems, addToCart, removeFromCart, getSubtotal, tableNumber, tableToken, sessionExpired, setSessionExpired, orderId, activeOrderItems, consumeFreshScan } = useCart();
+  const { cartItems, addToCart, removeFromCart, getSubtotal, tableNumber, tableToken, isTakeout, sessionExpired, setSessionExpired, orderId, activeOrderItems, consumeFreshScan } = useCart();
   const navigate = useNavigate();
   const previewMode = !tableToken;
 
@@ -83,7 +83,15 @@ export default function MenuPage({ onCartToggle }) {
             <span className="font-label-caps text-[11px] text-saffron-gold tracking-[0.2em] font-semibold uppercase">
               {previewMode ? 'OUR MENU' : 'DIGITAL MENU'}
             </span>
-            {!previewMode && (
+            {!previewMode && isTakeout && (
+              <>
+                <span className="opacity-30 text-xs text-subtle-text">•</span>
+                <span className="font-label-caps text-xs text-saffron-gold font-bold tracking-widest uppercase">
+                  Takeout Order
+                </span>
+              </>
+            )}
+            {!previewMode && !isTakeout && (
               <>
                 {sectionName.trim().toLowerCase() !== 'table' && (
                   <>

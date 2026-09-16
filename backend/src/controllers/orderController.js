@@ -1,4 +1,5 @@
 import Order from "../models/Order.js"
+import Invoice from "../models/Invoice.js"
 import { io } from "../index.js"
 
 // POST /api/orders/add-items
@@ -152,6 +153,9 @@ export const updateOrderStatus = async (req, res) => {
     if (!order) return res.status(404).json({ error: "Order not found." })
 
     order.status = status
+    if (status === "Ready" && !order.readyAt) {
+      order.readyAt = new Date()
+    }
     if (status === "Served") {
       // Everything ordered up to this point is now considered served.
       // If the guest orders again later, only that new round will show
@@ -159,6 +163,43 @@ export const updateOrderStatus = async (req, res) => {
       order.servedThroughRound = order.currentRound - 1
     }
     await order.save()
+
+    // Takeout has no "Generate Bill" step the way dine-in does (staff just
+    // confirms pickup) — so this is the only moment a takeout order ever
+    // gets billed. Without it, takeout revenue never reaches invoices,
+    // payment tracking, or analytics at all.
+    let generatedInvoice = null
+    if (status === "Served" && order.orderType === "takeout") {
+      const existingInvoice = await Invoice.findOne({ sessionId: order.sessionId })
+      if (!existingInvoice && order.items.length > 0) {
+        const subtotal = Math.round(order.items.reduce((sum, i) => sum + i.price * i.qty, 0))
+        const serviceCharge = Math.round(subtotal * 0.10)
+        const gst = Math.round(subtotal * 0.075)
+        const total = Math.round(subtotal + serviceCharge + gst)
+
+        const count = await Invoice.countDocuments()
+        const invoiceNumber = `INV-${1000 + count + 1}`
+
+        generatedInvoice = await Invoice.create({
+          invoiceNumber,
+          sessionId: order.sessionId,
+          orderId: order._id,
+          orderType: "takeout",
+          orderNumber: order.orderNumber,
+          guestName: order.guestName || "Guest",
+          guestPhone: order.guestPhone || "",
+          items: order.items.map(i => ({ itemId: i.itemId, name: i.name, price: i.price, qty: i.qty })),
+          subtotal,
+          serviceCharge,
+          gst,
+          total,
+          status: "unpaid",
+          generatedBy: "Takeout Counter"
+        })
+
+        io.emit("invoice:generated", generatedInvoice)
+      }
+    }
 
     // Notify customer — their status page updates live
     io.emit("order:statusChanged", {

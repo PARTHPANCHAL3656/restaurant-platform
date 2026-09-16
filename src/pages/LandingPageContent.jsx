@@ -321,6 +321,13 @@ export default function LandingPageContent() {
                     <span className="font-label-caps text-[10px] text-subtle-text tracking-widest uppercase">4.5 &bull; 35-45 min</span>
                   </a>
                 </div>
+                <button
+                  onClick={() => navigate('/takeout')}
+                  className="w-full flex flex-col items-center justify-center gap-1 bg-saffron-gold text-ink-navy py-5 mt-2 hover:brightness-110 transition-all group"
+                >
+                  <span className="font-cta-label text-cta-label uppercase tracking-widest">Order Takeout Direct</span>
+                  <span className="font-label-caps text-[10px] tracking-widest uppercase opacity-80">Skip the line &bull; No commission &bull; Pay at counter</span>
+                </button>
               </div>
 
               <div className="bg-ink-navy p-8 text-canvas-cream space-y-3 shadow-sm">
@@ -357,6 +364,14 @@ export default function LandingPageContent() {
             >
               REQUEST RESERVATION
             </button>
+            <div className="mt-6">
+              <button
+                onClick={() => navigate('/takeout')}
+                className="text-canvas-cream/70 font-cta-label text-cta-label uppercase tracking-widest hover:text-saffron-gold transition-colors duration-300 underline underline-offset-4"
+              >
+                Or Order Takeout / Pickup Instead
+              </button>
+            </div>
           </motion.div>
         </div>
       </section>

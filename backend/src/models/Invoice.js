@@ -26,14 +26,25 @@ const invoiceSchema = new mongoose.Schema({
     ref: "Order",
     required: true
   },
+  // "dine-in" invoices always have a tableId/tableNumber. "takeout"
+  // invoices don't — they're identified by orderNumber instead.
+  orderType: {
+    type: String,
+    enum: ["dine-in", "takeout"],
+    default: "dine-in"
+  },
+  orderNumber: {
+    type: String,
+    default: ""
+  },
   tableId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Table",
-    required: true
+    required: function () { return this.orderType === "dine-in" }
   },
   tableNumber: {
     type: Number,
-    required: true
+    required: function () { return this.orderType === "dine-in" }
   },
   guestName: {
     type: String,
