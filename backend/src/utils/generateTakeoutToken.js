@@ -5,7 +5,13 @@ import { v4 as uuidv4 } from "uuid"
 // Returns: { sessionId, token, menuUrl }
 export const generateTakeoutToken = () => {
   const sessionId = uuidv4()
+  return signTakeoutToken(sessionId)
+}
 
+// Call this to re-issue a token for an ALREADY-EXISTING session (resuming
+// an in-progress order on a different device, or after clearing storage).
+// Same session, same order, just a fresh token to carry it.
+export const signTakeoutToken = (sessionId) => {
   // JWT contains sessionId + orderType (no tableId — takeout has no table)
   // Same 8h expiry as dine-in sessions.
   const token = jwt.sign(

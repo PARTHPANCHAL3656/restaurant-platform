@@ -57,6 +57,13 @@ const orderSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  // Set only when a takeout order is cancelled via the no-show flow —
+  // a permanent record of why, for accountability if a customer disputes
+  // being blacklisted later.
+  noShowReason: {
+    type: String,
+    default: ""
+  },
   // Same sessionId as what's in the JWT token
   // This is how we find the right order when customer places/adds items
   sessionId: {

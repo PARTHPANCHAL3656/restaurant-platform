@@ -16,7 +16,8 @@ export default function StaffSidebar({ isOpen, onClose }) {
     { name: 'Takeaway Orders', path: '/staff/takeaway', icon: 'shopping_bag' },
     { name: 'Billing & Invoices', path: '/staff/billing', icon: 'payments' },
     { name: 'Guest Queue', path: '/staff/guest-queue', icon: 'hourglass_empty' },
-    { name: 'Menu Management', path: '/staff/menu', icon: 'restaurant_menu' }
+    { name: 'Menu Management', path: '/staff/menu', icon: 'restaurant_menu' },
+    { name: 'Settings', path: '/staff/settings', icon: 'tune' }
   ];
 
   const handleLogout = () => {

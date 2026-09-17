@@ -58,10 +58,12 @@ export default function TakeoutStartPage() {
   const { setTableToken } = useCart();
   const { restaurantInfo } = useStaff();
 
+  const [mode, setMode] = useState('new'); // 'new' | 'resume'
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [pickupChoice, setPickupChoice] = useState('ASAP');
   const [specificTime, setSpecificTime] = useState('');
+  const [resumePhone, setResumePhone] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -130,6 +132,25 @@ export default function TakeoutStartPage() {
     }
   };
 
+  const handleResume = async (e) => {
+    e.preventDefault();
+    if (!resumePhone.trim()) return;
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const res = await api.post('/api/takeout/resume', { guestPhone: resumePhone.trim() });
+      const { token } = res.data;
+      localStorage.setItem('tableToken', token);
+      setTableToken(token);
+      navigate('/menu');
+    } catch (err) {
+      setError(err.message || 'Could not find an active order for this number.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-canvas-cream flex flex-col">
       <div className="flex-grow flex items-center justify-center px-6 py-16">
@@ -144,7 +165,57 @@ export default function TakeoutStartPage() {
             </p>
           </div>
 
-          <form onSubmit={handleStart} className="bg-white border border-muted-border p-8 space-y-5">
+          <div className="flex border border-muted-border mb-0">
+            <button
+              type="button"
+              onClick={() => { setMode('new'); setError(''); }}
+              className={`flex-1 py-3 text-xs font-cta-label uppercase tracking-widest transition-colors ${mode === 'new' ? 'bg-ink-navy text-canvas-cream' : 'bg-white text-subtle-text hover:bg-canvas-cream'}`}
+            >
+              New Order
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode('resume'); setError(''); }}
+              className={`flex-1 py-3 text-xs font-cta-label uppercase tracking-widest transition-colors ${mode === 'resume' ? 'bg-ink-navy text-canvas-cream' : 'bg-white text-subtle-text hover:bg-canvas-cream'}`}
+            >
+              Resume My Order
+            </button>
+          </div>
+
+          {mode === 'resume' ? (
+            <form onSubmit={handleResume} className="bg-white border border-t-0 border-muted-border p-8 space-y-5">
+              <p className="text-xs text-subtle-text leading-relaxed">
+                Already started an order but closed the page, switched phones, or cleared your browser?
+                Enter the phone number you used and we'll bring your order back up — no QR code needed.
+              </p>
+              <div>
+                <label className="text-[11px] font-label-caps uppercase tracking-widest text-subtle-text font-bold">
+                  Phone Number Used
+                </label>
+                <input
+                  type="tel"
+                  value={resumePhone}
+                  onChange={(e) => setResumePhone(e.target.value)}
+                  required
+                  className="w-full mt-1 border border-muted-border px-3 h-11 text-sm focus:outline-none focus:border-saffron-gold"
+                  placeholder="10-digit mobile number"
+                />
+              </div>
+
+              {error && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2">{error}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting || !resumePhone.trim()}
+                className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[52px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isSubmitting ? 'Looking up your order...' : 'Resume My Order'}
+              </button>
+            </form>
+          ) : (
+          <form onSubmit={handleStart} className="bg-white border border-t-0 border-muted-border p-8 space-y-5">
             <div>
               <label className="text-[11px] font-label-caps uppercase tracking-widest text-subtle-text font-bold">
                 Your Name
@@ -232,6 +303,7 @@ export default function TakeoutStartPage() {
               Pay at the counter when you arrive — cash or UPI. No online payment needed.
             </p>
           </form>
+          )}
         </div>
       </div>
       <Footer />

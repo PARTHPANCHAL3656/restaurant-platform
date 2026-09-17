@@ -43,6 +43,34 @@ export function useStaff() {
 }
 
 export function StaffProvider({ children }) {
+  // Opening hours now live in the backend (Settings collection) so an
+  // owner/manager can update them without a developer redeploying code.
+  // This is the fallback shown until that fetch resolves (or if it fails).
+  const [openingHours, setOpeningHours] = useState([
+    { days: "Monday - Thursday", hours: "12:00 PM - 10:30 PM" },
+    { days: "Friday - Saturday", hours: "12:00 PM - 11:30 PM" },
+    { days: "Sunday", hours: "12:00 PM - 10:00 PM" }
+  ]);
+
+  useEffect(() => {
+    api.get('/api/settings')
+      .then(res => {
+        if (res.data?.openingHours?.length) {
+          setOpeningHours(res.data.openingHours);
+        }
+      })
+      .catch(() => {
+        // Backend offline or unreachable — keep the fallback above so the
+        // takeout pickup-time picker still works, just with stale hours.
+      });
+  }, []);
+
+  const updateOpeningHours = async (newHours) => {
+    const res = await api.patch('/api/settings', { openingHours: newHours });
+    setOpeningHours(res.data.openingHours);
+    return res.data.openingHours;
+  };
+
   // Static Restaurant Information Configuration
   const restaurantInfo = {
     name: "Spice Garden",
@@ -53,11 +81,7 @@ export function StaffProvider({ children }) {
     phone: "+91 265 234 5678",
     reservationPhone: "+91 70960 34960",
     email: "concierge@spicegarden.com",
-    openingHours: [
-      { days: "Monday - Thursday", hours: "12:00 PM - 10:30 PM" },
-      { days: "Friday - Saturday", hours: "12:00 PM - 11:30 PM" },
-      { days: "Sunday", hours: "12:00 PM - 10:00 PM" }
-    ],
+    openingHours,
     socials: {
       instagram: "@spicegarden.vadodara",
       facebook: "spicegarden.vadodara",
@@ -1124,13 +1148,13 @@ export function StaffProvider({ children }) {
   // Flags a takeout customer's phone number after a no-show, blocking that
   // number from self-starting new online takeout orders. This is the
   // no-OTP-needed anti-ghosting policy — see startTakeoutSession backend.
-  const flagCustomerNoShow = async (phone, orderId) => {
+  const flagCustomerNoShow = async (phone, orderId, reason = '') => {
     const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setOrders(prev => prev.filter(o => o.id !== orderId));
       logActivity(
         'Customer flagged as no-show',
-        `${phone} blocked from future online takeout orders`,
+        `${phone} blocked from future online takeout orders — ${reason || 'no reason given'}`,
         'block',
         '/staff/orders'
       );
@@ -1138,12 +1162,12 @@ export function StaffProvider({ children }) {
     }
 
     try {
-      await api.patch(`/api/orders/${orderId}/status`, { status: 'Cancelled' });
+      await api.patch(`/api/orders/${orderId}/status`, { status: 'Cancelled', noShowReason: reason });
       await api.patch(`/api/crm/customers/${phone}/blacklist`, { isBlacklisted: true });
       await loadAllData();
       logActivity(
         'Customer flagged as no-show',
-        `${phone} blocked from future online takeout orders`,
+        `${phone} blocked from future online takeout orders — ${reason || 'no reason given'}`,
         'block',
         '/staff/orders'
       );
@@ -1689,6 +1713,7 @@ export function StaffProvider({ children }) {
       advanceOrder,
       assignTable,
       markInvoicePaid,
+      updateOpeningHours,
       flagCustomerNoShow,
       finalizeTableBill,
       addGuestToQueue,

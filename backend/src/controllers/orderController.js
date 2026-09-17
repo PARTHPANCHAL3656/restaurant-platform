@@ -142,7 +142,7 @@ export const getAllActiveOrders = async (req, res) => {
 // Protected by staffAuth middleware
 export const updateOrderStatus = async (req, res) => {
   try {
-    const { status } = req.body
+    const { status, noShowReason } = req.body
     const validStatuses = ["Received", "Preparing", "Ready", "Served", "Cancelled"]
 
     if (!validStatuses.includes(status)) {
@@ -155,6 +155,9 @@ export const updateOrderStatus = async (req, res) => {
     order.status = status
     if (status === "Ready" && !order.readyAt) {
       order.readyAt = new Date()
+    }
+    if (status === "Cancelled" && noShowReason) {
+      order.noShowReason = noShowReason
     }
     if (status === "Served") {
       // Everything ordered up to this point is now considered served.

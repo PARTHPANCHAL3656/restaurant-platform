@@ -5,6 +5,9 @@ import { formatINR } from '../../utils/currency';
 export default function StaffTakeawayPage() {
   const { orders, advanceOrder, flagCustomerNoShow } = useStaff();
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [noShowModalOpen, setNoShowModalOpen] = useState(false);
+  const [noShowReason, setNoShowReason] = useState('');
+  const [hasCalledCustomer, setHasCalledCustomer] = useState(false);
 
   const takeoutOrders = orders.filter(o => o.orderType === 'takeout');
   const getOrdersByStatus = (status) => takeoutOrders.filter(o => o.status === status);
@@ -33,6 +36,30 @@ export default function StaffTakeawayPage() {
     if (order.status !== 'ready' || !order.readyAt) return false;
     const minsSinceReady = (Date.now() - new Date(order.readyAt).getTime()) / 60000;
     return minsSinceReady >= OVERDUE_MINUTES;
+  };
+
+  // Flagging a no-show is destructive (cancels the order, blocks the
+  // customer) — it should never be a reflexive misclick right after an
+  // order goes Ready. Staff can't even open the flow until this long has
+  // passed, giving a genuinely late customer room to still show up.
+  const MIN_NOSHOW_WAIT_MINUTES = 15;
+  const minutesSinceReady = (order) => {
+    if (!order?.readyAt) return 0;
+    return (Date.now() - new Date(order.readyAt).getTime()) / 60000;
+  };
+  const canFlagNoShow = (order) => order?.status === 'ready' && minutesSinceReady(order) >= MIN_NOSHOW_WAIT_MINUTES;
+  const minutesUntilEligible = (order) => Math.max(0, Math.ceil(MIN_NOSHOW_WAIT_MINUTES - minutesSinceReady(order)));
+
+  const closeNoShowModal = () => {
+    setNoShowModalOpen(false);
+    setNoShowReason('');
+    setHasCalledCustomer(false);
+  };
+
+  const confirmNoShow = () => {
+    flagCustomerNoShow(selectedOrder.guestPhone, selectedOrder.id, noShowReason);
+    closeNoShowModal();
+    setSelectedOrderId(null);
   };
 
   return (
@@ -166,25 +193,85 @@ export default function StaffTakeawayPage() {
                 {advanceLabel[selectedOrder.status]}
               </button>
               {selectedOrder.status === 'ready' && (
-                <button
-                  onClick={() => {
-                    const confirmed = window.confirm(
-                      `Have you tried calling ${selectedOrder.guestName} at ${selectedOrder.guestPhone} first?\n\n` +
-                      `Flagging as no-show will cancel this order and block ${selectedOrder.guestPhone} from placing new online takeout orders. This can't be easily undone.`
-                    );
-                    if (!confirmed) return;
-                    flagCustomerNoShow(selectedOrder.guestPhone, selectedOrder.id);
-                    setSelectedOrderId(null);
-                  }}
-                  className="w-full text-red-500 hover:text-red-600 text-xs font-semibold uppercase tracking-widest py-2 cursor-pointer"
-                >
-                  Flag as No-Show
-                </button>
+                canFlagNoShow(selectedOrder) ? (
+                  <button
+                    onClick={() => setNoShowModalOpen(true)}
+                    className="w-full text-red-500 hover:text-red-600 text-xs font-semibold uppercase tracking-widest py-2 cursor-pointer"
+                  >
+                    Flag as No-Show
+                  </button>
+                ) : (
+                  <p className="text-center text-[11px] text-subtle-text/70 py-2">
+                    No-show option available in {minutesUntilEligible(selectedOrder)} min — give them time, they might just be running late.
+                  </p>
+                )
               )}
             </div>
           </div>
         )}
       </div>
+
+      {/* No-Show Confirmation Modal */}
+      {noShowModalOpen && selectedOrder && (
+        <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" onClick={closeNoShowModal}>
+          <div className="bg-white w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 bg-red-600 text-white">
+              <h3 className="font-serif text-xl">Flag {selectedOrder.table} as No-Show?</h3>
+              <p className="text-xs text-white/80 mt-1">
+                This cancels the order and blocks {selectedOrder.guestPhone} from placing new online takeout orders.
+                The food already prepared for this order will go to waste.
+              </p>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="text-[11px] font-label-caps uppercase tracking-widest text-subtle-text font-bold">
+                  Reason
+                </label>
+                <select
+                  value={noShowReason}
+                  onChange={(e) => setNoShowReason(e.target.value)}
+                  className="w-full mt-1 border border-muted-border px-3 h-11 text-sm focus:outline-none focus:border-red-400 bg-white"
+                >
+                  <option value="">Select a reason...</option>
+                  <option value="No answer after calling">No answer after calling</option>
+                  <option value="Customer confirmed cancelling">Customer confirmed cancelling</option>
+                  <option value="Wrong number / unreachable">Wrong number / unreachable</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hasCalledCustomer}
+                  onChange={(e) => setHasCalledCustomer(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 accent-red-600"
+                />
+                <span className="text-xs text-ink-navy">
+                  I called <strong>{selectedOrder.guestPhone}</strong> and confirmed they are not coming, or could not reach them after trying.
+                </span>
+              </label>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={closeNoShowModal}
+                  className="flex-1 border border-muted-border text-ink-navy text-xs font-semibold uppercase tracking-widest py-3 hover:bg-canvas-cream cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmNoShow}
+                  disabled={!hasCalledCustomer || !noShowReason}
+                  className="flex-1 bg-red-600 text-white text-xs font-semibold uppercase tracking-widest py-3 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Confirm No-Show
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
