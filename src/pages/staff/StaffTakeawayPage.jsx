@@ -87,9 +87,9 @@ export default function StaffTakeawayPage() {
   };
 
   return (
-    <div className="flex flex-col-reverse md:flex-row min-h-[calc(100vh-80px)] relative select-none">
+    <div className="flex flex-col-reverse md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
 
-      <div className="flex-grow flex flex-col overflow-y-auto bg-surface">
+      <div className="flex-grow flex flex-col overflow-y-auto bg-surface" data-lenis-prevent>
         <div className="p-4 md:p-6 pb-0">
           <h2 className="font-serif text-xl text-ink-navy font-semibold">Takeaway Orders</h2>
           <p className="text-xs text-subtle-text mt-1">
@@ -107,7 +107,7 @@ export default function StaffTakeawayPage() {
                   {getOrdersByStatus(col.key).length}
                 </span>
               </div>
-              <div className="space-y-4 overflow-y-auto flex-grow hide-scrollbar">
+              <div className="space-y-4 overflow-y-auto flex-grow hide-scrollbar" data-lenis-prevent>
                 {getOrdersByStatus(col.key).length === 0 && (
                   <p className="text-xs text-subtle-text/60 italic">No orders here right now.</p>
                 )}
@@ -151,7 +151,7 @@ export default function StaffTakeawayPage() {
 
       {/* Detail Slide-over Panel */}
       {selectedOrder && <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedOrderId(null)} />}
-      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
+      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 min-h-0 transition-all duration-300 shadow-2xl flex flex-col ${
         selectedOrder ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         {selectedOrder && (
@@ -176,7 +176,7 @@ export default function StaffTakeawayPage() {
               </p>
             </div>
 
-            <div className="flex-grow overflow-y-auto p-6 space-y-6 hide-scrollbar">
+            <div className="flex-grow min-h-0 overflow-y-auto p-6 space-y-6 hide-scrollbar" data-lenis-prevent>
               <div className="space-y-3 pb-6 border-b border-muted-border text-xs">
                 <div className="flex justify-between">
                   <span className="text-subtle-text">Pickup Time:</span>

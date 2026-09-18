@@ -57,15 +57,6 @@ function GalleryImageCard({ src, alt, title, subtitle, aspect = 'aspect-square' 
 
 export default function GalleryPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email) {
-      alert(`Thank you for subscribing, ${email}!`);
-      setEmail('');
-    }
-  };
 
   return (
     <div className="bg-canvas-cream text-ink-navy min-h-screen pt-20 lg:pt-0">
@@ -180,39 +171,6 @@ export default function GalleryPage() {
           >
             Explore the Menu
           </button>
-        </div>
-      </section>
-
-      {/* Newsletter Signup Banner */}
-      <section className="px-margin-mobile md:px-margin-desktop py-12">
-        <div className="bg-ink-navy text-canvas-cream p-8 md:p-16 flex flex-col lg:flex-row justify-between items-center gap-12 max-w-container-max mx-auto shadow-md">
-          <div className="max-w-md space-y-4 text-center lg:text-left">
-            <h2 className="font-serif text-headline-md text-canvas-cream leading-tight">Join the Inner Circle</h2>
-            <p className="font-sans text-body-md opacity-70 leading-relaxed">
-              Be the first to hear about seasonal menu launches, chef's table events, and exclusive culinary experiences at Spice Garden.
-            </p>
-          </div>
-          <div className="w-full lg:w-1/3">
-            <form onSubmit={handleSubscribe} className="flex flex-col gap-6">
-              <div className="border-b border-canvas-cream/30 pb-2">
-                <label className="font-label-caps text-[10px] uppercase text-canvas-cream/50 tracking-wider mb-1 block">Email Address</label>
-                <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com" 
-                  className="bg-transparent border-none w-full text-canvas-cream focus:ring-0 placeholder:text-canvas-cream/20 font-body-md outline-none"
-                  required
-                />
-              </div>
-              <button 
-                type="submit" 
-                className="bg-saffron-gold text-ink-navy px-8 py-4 font-cta-label text-cta-label uppercase tracking-widest self-start hover:bg-canvas-cream hover:text-ink-navy transition-colors duration-300 focus:outline-none"
-              >
-                Subscribe
-              </button>
-            </form>
-          </div>
         </div>
       </section>
 

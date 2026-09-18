@@ -97,7 +97,7 @@ export default function CartDrawer({ isOpen, onClose }) {
               </div>
 
               {/* Items List — independently scrollable */}
-              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 space-y-6 bg-canvas-cream">
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 space-y-6 bg-canvas-cream" data-lenis-prevent>
                 {cartItems.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center py-12">
                     <span className="material-symbols-outlined text-5xl text-subtle-text/30 mb-4">shopping_bag</span>

@@ -172,14 +172,14 @@ export default function StaffTablesPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
       
       {/* Mobile backdrop for left drawer */}
       {leftDrawerOpen && (
         <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setLeftDrawerOpen(false)} />
       )}
       {/* Left Drawer (Collapsible Reservations Summary) */}
-      <div className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto bg-white border-r border-muted-border flex flex-col shrink-0 transition-all duration-300 ${
+      <div className={`fixed md:static inset-y-0 left-0 z-50 md:z-auto bg-white border-r border-muted-border flex flex-col shrink-0 min-h-0 transition-all duration-300 ${
         leftDrawerOpen ? 'w-80 translate-x-0' : 'w-80 -translate-x-full md:-translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         <div className="p-6 flex justify-between items-center border-b border-muted-border shrink-0">
@@ -193,7 +193,7 @@ export default function StaffTablesPage() {
         </div>
 
         {/* Reservations List */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-grow hide-scrollbar">
+        <div className="p-6 space-y-6 overflow-y-auto min-h-0 flex-grow hide-scrollbar" data-lenis-prevent>
           <div className="space-y-4">
             {upcomingReservations.length === 0 ? (
               <div className="text-center py-12 text-subtle-text italic">
@@ -372,7 +372,7 @@ export default function StaffTablesPage() {
                 </div>
 
                 {/* Drawer Content */}
-                <div className="flex-grow overflow-y-auto p-6 space-y-6 text-xs text-ink-navy">
+                <div className="flex-grow min-h-0 overflow-y-auto p-6 space-y-6 text-xs text-ink-navy" data-lenis-prevent>
                   
                   {/* Status Specific Section */}
                   {currentTable.status === 'occupied' && (
@@ -791,7 +791,7 @@ export default function StaffTablesPage() {
                   <span>Kitchen Status</span>
                 </div>
 
-                <div className="space-y-3 divide-y divide-muted-border/50 max-h-48 overflow-y-auto pr-2">
+                <div className="space-y-3 divide-y divide-muted-border/50 max-h-48 overflow-y-auto pr-2" data-lenis-prevent>
                   {currentTable && currentTable.items.length > 0 ? (
                     currentTable.items.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center pt-3 first:pt-0">

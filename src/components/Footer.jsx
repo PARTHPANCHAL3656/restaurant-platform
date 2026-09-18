@@ -1,21 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import { useStaff } from '../context/StaffContext';
 
 export default function Footer() {
   const { restaurantInfo } = useStaff();
-  const [email, setEmail] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email) {
-      alert(`Thank you for subscribing, ${email}!`);
-      setEmail('');
-    }
-  };
 
   const handleExperienceClick = (e) => {
     e.preventDefault();
@@ -76,7 +67,7 @@ export default function Footer() {
         </div>
 
         {/* 3. Opening Hours Section */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="md:col-span-3 space-y-6">
           <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Opening Hours</h3>
           <div className="font-body-md text-subtle-text text-sm leading-[1.7] space-y-3">
             {restaurantInfo.openingHours.map((oh, i) => (
@@ -89,7 +80,7 @@ export default function Footer() {
         </div>
 
         {/* 4. Quick Links Section */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="md:col-span-3 space-y-6">
           <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Quick Navigation</h3>
           <nav className="flex flex-col space-y-2 font-body-md text-sm text-subtle-text">
             <Link to="/" className="hover:text-saffron-gold transition-colors">Home</Link>
@@ -100,29 +91,6 @@ export default function Footer() {
             <Link to="/gallery" className="hover:text-saffron-gold transition-colors">Gallery</Link>
             <Link to="/contact" className="hover:text-saffron-gold transition-colors">Contact</Link>
           </nav>
-        </div>
-
-        {/* 5. Newsletter Section */}
-        <div className="md:col-span-2 space-y-6">
-          <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Stay Curated</h3>
-          <p className="font-body-md text-xs text-subtle-text leading-[1.6]">
-            Subscribe to receive seasonal releases and culinary stories.
-          </p>
-          <form onSubmit={handleSubscribe} className="flex border-b border-ink-navy pb-1">
-            <input 
-              type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email Address" 
-              className="bg-transparent border-none py-2 px-0 focus:ring-0 flex-grow placeholder:text-subtle-text/40 font-body-md text-xs outline-none w-full"
-              required
-            />
-            <button type="submit" className="p-1 group focus:outline-none" aria-label="Subscribe">
-              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform text-lg">
-                east
-              </span>
-            </button>
-          </form>
         </div>
 
         {/* Bottom copyright row */}

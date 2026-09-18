@@ -195,7 +195,7 @@ export default function StaffBillingPage() {
       </div>
 
       {/* Invoice Breakdown */}
-      <div className="flex-grow p-6 space-y-6 overflow-y-auto hide-scrollbar text-xs">
+      <div className="flex-grow min-h-0 p-6 space-y-6 overflow-y-auto hide-scrollbar text-xs" data-lenis-prevent>
         <div className="space-y-2 border-b border-muted-border pb-4">
           <div className="flex justify-between">
             <span className="text-subtle-text">Table:</span>
@@ -292,10 +292,10 @@ export default function StaffBillingPage() {
   ) : null;
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] relative select-none">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
       
       {/* Left side: Invoice List */}
-      <div className="flex-grow flex flex-col bg-surface p-4 md:p-6 overflow-y-auto">
+      <div className="flex-grow flex flex-col bg-surface p-4 md:p-6 overflow-y-auto" data-lenis-prevent>
         <div className="max-w-4xl w-full mx-auto space-y-6">
           
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white p-6 border border-muted-border">
@@ -390,8 +390,8 @@ export default function StaffBillingPage() {
         </div>
       </div>
 
-      {/* Desktop: in-flow panel, unchanged behavior — was never affected by the bug */}
-      <div className={`hidden md:flex md:static bg-white border-l border-muted-border shrink-0 transition-all duration-300 shadow-2xl flex-col ${
+      {/* Desktop: in-flow panel */}
+      <div className={`hidden md:flex md:static bg-white border-l border-muted-border shrink-0 min-h-0 transition-all duration-300 shadow-2xl flex-col ${
         selectedInvoice ? 'md:w-96 md:opacity-100' : 'md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         {invoicePreviewContent}

@@ -42,10 +42,10 @@ export default function StaffGuestQueuePage() {
   const averageWait = queue.length > 0 ? `${Math.round(waitTimes.reduce((sum, t) => sum + t, 0) / queue.length)} Mins` : '—';
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
       
       {/* Queue Grid Dashboard */}
-      <div className="flex-grow flex flex-col bg-surface p-4 md:p-6 overflow-y-auto">
+      <div className="flex-grow flex flex-col bg-surface p-4 md:p-6 overflow-y-auto" data-lenis-prevent>
         <div className="max-w-4xl w-full mx-auto space-y-8">
           
           {/* Summary counters */}
@@ -192,7 +192,7 @@ export default function StaffGuestQueuePage() {
         <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedGuestId(null)} />
       )}
       {/* Right Drawer details */}
-      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
+      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 min-h-0 transition-all duration-300 shadow-2xl flex flex-col ${
         selectedGuest ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         {selectedGuest && (
@@ -216,7 +216,7 @@ export default function StaffGuestQueuePage() {
             </div>
 
             {/* Content */}
-            <div className="flex-grow p-6 space-y-6 overflow-y-auto hide-scrollbar text-xs">
+            <div className="flex-grow min-h-0 p-6 space-y-6 overflow-y-auto hide-scrollbar text-xs" data-lenis-prevent>
               <div className="space-y-3.5 border-b border-muted-border pb-6">
                 <div className="flex justify-between">
                   <span className="text-subtle-text">Reservation ID:</span>

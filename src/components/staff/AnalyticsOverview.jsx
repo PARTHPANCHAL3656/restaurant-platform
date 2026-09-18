@@ -255,7 +255,7 @@ export default function AnalyticsOverview() {
             Repeat Customers {repeatCustomers ? `(≥ ${repeatCustomers.threshold} visits)` : ''}
           </p>
           {repeatCustomers?.customers?.filter(c => c.discountEligible).length > 0 ? (
-            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-1" data-lenis-prevent>
               {repeatCustomers.customers.filter(c => c.discountEligible).map((c) => (
                 <div key={c.phone} className="flex items-center justify-between text-xs border-b border-muted-border/50 pb-2 last:border-0">
                   <div>

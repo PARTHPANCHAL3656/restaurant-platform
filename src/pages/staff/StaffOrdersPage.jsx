@@ -20,10 +20,10 @@ export default function StaffOrdersPage() {
   const selectedOrder = orders.find(o => o.id === selectedOrderId);
 
   return (
-    <div className="flex flex-col-reverse md:flex-row min-h-[calc(100vh-80px)] relative select-none">
+    <div className="flex flex-col-reverse md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
       
       {/* 3-Column Service Pipeline */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-6 overflow-y-auto bg-surface">
+      <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-6 overflow-y-auto bg-surface" data-lenis-prevent>
         
         {/* Column 1: New Orders */}
         <div className="flex flex-col bg-white border border-muted-border p-4">
@@ -33,7 +33,7 @@ export default function StaffOrdersPage() {
               {getOrdersByStatus('new').length}
             </span>
           </div>
-          <div className="space-y-4 overflow-y-auto flex-grow hide-scrollbar">
+          <div className="space-y-4 overflow-y-auto flex-grow hide-scrollbar" data-lenis-prevent>
             {getOrdersByStatus('new').map(o => (
               <div 
                 key={o.id}
@@ -63,7 +63,7 @@ export default function StaffOrdersPage() {
               {getOrdersByStatus('preparing').length}
             </span>
           </div>
-          <div className="space-y-4 overflow-y-auto flex-grow hide-scrollbar">
+          <div className="space-y-4 overflow-y-auto flex-grow hide-scrollbar" data-lenis-prevent>
             {getOrdersByStatus('preparing').map(o => (
               <div 
                 key={o.id}
@@ -93,7 +93,7 @@ export default function StaffOrdersPage() {
               {getOrdersByStatus('ready').length}
             </span>
           </div>
-          <div className="space-y-4 overflow-y-auto flex-grow hide-scrollbar">
+          <div className="space-y-4 overflow-y-auto flex-grow hide-scrollbar" data-lenis-prevent>
             {getOrdersByStatus('ready').map(o => (
               <div 
                 key={o.id}
@@ -119,7 +119,7 @@ export default function StaffOrdersPage() {
 
       {/* Detail Slide-over Panel (Order Drawer) */}
       {selectedOrder && <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedOrderId(null)} />}
-      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 transition-all duration-300 shadow-2xl flex flex-col ${
+     <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 min-h-0 transition-all duration-300 shadow-2xl flex flex-col ${
         selectedOrder ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         {selectedOrder && (
@@ -147,7 +147,7 @@ export default function StaffOrdersPage() {
             </div>
 
             {/* List */}
-            <div className="flex-grow overflow-y-auto p-6 space-y-6 hide-scrollbar">
+            <div className="flex-grow min-h-0 overflow-y-auto p-6 space-y-6 hide-scrollbar" data-lenis-prevent>
               {/* Order Session Metadata */}
               <div className="space-y-3 pb-6 border-b border-muted-border text-xs">
                 <div className="flex justify-between">

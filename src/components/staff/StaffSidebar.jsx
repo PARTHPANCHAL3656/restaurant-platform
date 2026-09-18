@@ -53,7 +53,7 @@ export default function StaffSidebar({ isOpen, onClose }) {
         </div>
 
         {/* Primary Navigation Links */}
-        <nav className="flex-grow py-8 pl-8 pr-4 space-y-6 overflow-y-auto hide-scrollbar">
+        <nav className="flex-grow py-8 pl-8 pr-4 space-y-6 overflow-y-auto hide-scrollbar" data-lenis-prevent>
           {menuItems.map((item) => {
             const active = isActive(item.path);
             return (

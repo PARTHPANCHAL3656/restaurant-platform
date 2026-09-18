@@ -18,7 +18,7 @@ export default function DesktopSidebar() {
   };
 
   return (
-    <aside className="hidden lg:flex flex-col fixed left-0 top-0 w-[300px] h-screen bg-ink-navy text-canvas-cream border-r border-canvas-cream/10 z-30 pt-14 pb-8 justify-between overflow-y-auto hide-scrollbar select-none">
+    <aside className="hidden lg:flex flex-col fixed left-0 top-0 w-[300px] h-screen bg-ink-navy text-canvas-cream border-r border-canvas-cream/10 z-30 pt-14 pb-8 justify-between overflow-y-auto hide-scrollbar select-none" data-lenis-prevent>
       
       {/* 1. BRAND SECTION */}
       <div className="text-center flex flex-col items-center">

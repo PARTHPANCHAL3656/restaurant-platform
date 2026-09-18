@@ -589,7 +589,7 @@ export default function StaffMenuPage() {
                   </div>
 
                   {/* Body Preview */}
-                  <div className="flex-grow overflow-y-auto p-6 space-y-6 text-xs">
+                  <div className="flex-grow overflow-y-auto p-6 space-y-6 text-xs" data-lenis-prevent>
                     <div className="aspect-[16/10] overflow-hidden bg-surface border border-muted-border flex items-center justify-center">
                       {activeItem.image ? (
                         <img 
@@ -684,7 +684,7 @@ export default function StaffMenuPage() {
                   </div>
 
                   {/* Form Scroll Content */}
-                  <div className="flex-grow p-6 space-y-6 overflow-y-auto text-xs">
+                  <div className="flex-grow p-6 space-y-6 overflow-y-auto text-xs" data-lenis-prevent>
                     
                     {/* Image Upload Area */}
                     <div className="space-y-2">
@@ -1055,7 +1055,7 @@ export default function StaffMenuPage() {
               )}
 
               {/* List of existing categories */}
-              <div className="flex-grow overflow-y-auto p-6 space-y-2">
+              <div className="flex-grow overflow-y-auto p-6 space-y-2" data-lenis-prevent>
                 {staffCategories.length === 0 ? (
                   <p className="text-xs text-subtle-text text-center py-8">
                     No categories yet — add your first one above.
