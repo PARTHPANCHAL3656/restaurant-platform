@@ -17,7 +17,8 @@ export default function OrderTrackingPage() {
     orderStatus,
     activeOrderItems, 
     activeOrderTotal, 
-    tableNumber
+    tableNumber,
+    isTakeout
   } = useCart();
 
   const [localStatus, setLocalStatus] = useState('Received');
@@ -174,8 +175,10 @@ export default function OrderTrackingPage() {
               </div>
               <div className="w-px h-8 bg-muted-border hidden sm:block" />
               <div>
-                <p className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase mb-0.5">Table Number</p>
-                <p className="font-serif text-xl font-semibold">{tableNumber}</p>
+                <p className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase mb-0.5">
+                  {isTakeout ? 'Order Type' : 'Table Number'}
+                </p>
+                <p className="font-serif text-xl font-semibold">{isTakeout ? 'Takeout Order' : tableNumber}</p>
               </div>
               <div className="w-px h-8 bg-muted-border hidden sm:block" />
               <div>

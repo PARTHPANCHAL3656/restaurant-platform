@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStaff } from '../../context/StaffContext';
 import { formatINR } from '../../utils/currency';
 
@@ -8,6 +8,19 @@ export default function StaffTakeawayPage() {
   const [noShowModalOpen, setNoShowModalOpen] = useState(false);
   const [noShowReason, setNoShowReason] = useState('');
   const [hasCalledCustomer, setHasCalledCustomer] = useState(false);
+
+  // isOverdue/isStale/canFlagNoShow all compare against Date.now() at
+  // render time, but nothing was ever making this component re-render as
+  // time actually passed — orders only update via socket events, so a
+  // threshold crossing (e.g. hitting the 15-minute no-show mark) sat
+  // invisible until some unrelated update happened to re-render the page,
+  // which in practice meant a manual refresh. Ticking this every 15s
+  // forces exactly the re-renders needed for these to update live.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(id);
+  }, []);
 
   const takeoutOrders = orders.filter(o => o.orderType === 'takeout');
   const getOrdersByStatus = (status) => takeoutOrders.filter(o => o.status === status);
@@ -34,7 +47,7 @@ export default function StaffTakeawayPage() {
   const OVERDUE_MINUTES = 25;
   const isOverdue = (order) => {
     if (order.status !== 'ready' || !order.readyAt) return false;
-    const minsSinceReady = (Date.now() - new Date(order.readyAt).getTime()) / 60000;
+    const minsSinceReady = (now - new Date(order.readyAt).getTime()) / 60000;
     return minsSinceReady >= OVERDUE_MINUTES;
   };
 
@@ -45,7 +58,7 @@ export default function StaffTakeawayPage() {
   const STALE_MINUTES = 45;
   const isStale = (order) => {
     if (order.status !== 'new' && order.status !== 'preparing') return false;
-    const minsSinceCreated = (Date.now() - new Date(order.createdAt).getTime()) / 60000;
+    const minsSinceCreated = (now - new Date(order.createdAt).getTime()) / 60000;
     return minsSinceCreated >= STALE_MINUTES;
   };
 
@@ -56,7 +69,7 @@ export default function StaffTakeawayPage() {
   const MIN_NOSHOW_WAIT_MINUTES = 15;
   const minutesSinceReady = (order) => {
     if (!order?.readyAt) return 0;
-    return (Date.now() - new Date(order.readyAt).getTime()) / 60000;
+    return (now - new Date(order.readyAt).getTime()) / 60000;
   };
   const canFlagNoShow = (order) => order?.status === 'ready' && minutesSinceReady(order) >= MIN_NOSHOW_WAIT_MINUTES;
   const minutesUntilEligible = (order) => Math.max(0, Math.ceil(MIN_NOSHOW_WAIT_MINUTES - minutesSinceReady(order)));
