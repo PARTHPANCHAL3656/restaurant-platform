@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken"
+const VALID_ROLES = ["OWNER", "MANAGER", "STAFF"]
 
 // Attach this to any route that only staff should access
 const staffAuth = (req, res, next) => {
@@ -13,7 +14,7 @@ const staffAuth = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
-    if (decoded.role !== "staff") {
+    if (!VALID_ROLES.includes(decoded.role)) {
       return res.status(403).json({ error: "Not authorized as staff." })
     }
 

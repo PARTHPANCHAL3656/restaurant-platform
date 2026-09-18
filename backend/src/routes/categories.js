@@ -1,5 +1,6 @@
 import express from "express"
 import staffAuth from "../middleware/auth.js"
+import { requireRole } from "../middleware/roleCheck.js"
 import {
   getAllCategories,
   createCategory,
@@ -13,11 +14,11 @@ const router = express.Router()
 // Public — the customer menu renders section headers from this list too.
 router.get("/", getAllCategories)
 
-// Staff routes
-router.post("/", staffAuth, createCategory)
+// Owner/Manager only
+router.post("/", staffAuth, requireRole("OWNER", "MANAGER"), createCategory)
 // Must come before "/:id" — otherwise Express matches "reorder" as an :id.
-router.patch("/reorder", staffAuth, reorderCategories)
-router.patch("/:id", staffAuth, renameCategory)
-router.delete("/:id", staffAuth, deleteCategory)
+router.patch("/reorder", staffAuth, requireRole("OWNER", "MANAGER"), reorderCategories)
+router.patch("/:id", staffAuth, requireRole("OWNER", "MANAGER"), renameCategory)
+router.delete("/:id", staffAuth, requireRole("OWNER", "MANAGER"), deleteCategory)
 
 export default router

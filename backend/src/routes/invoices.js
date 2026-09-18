@@ -1,6 +1,7 @@
 import express from "express"
 import staffAuth from "../middleware/auth.js"
 import tableSession from "../middleware/tableSession.js"
+import { requireRole } from "../middleware/roleCheck.js"
 import {
   getAllInvoices,
   getMyInvoice,
@@ -15,8 +16,8 @@ const router = express.Router()
 router.get("/my-invoice", tableSession, getMyInvoice)
 
 // Staff routes
-router.get("/", staffAuth, getAllInvoices)
+router.get("/", staffAuth, requireRole("OWNER", "MANAGER"), getAllInvoices)
 router.post("/table/:id", staffAuth, generateInvoiceForTable)
-router.patch("/:id", staffAuth, updateInvoiceStatus)
-router.delete("/:id", staffAuth, deleteInvoice)
+router.patch("/:id", staffAuth, requireRole("OWNER", "MANAGER"), updateInvoiceStatus)
+router.delete("/:id", staffAuth, requireRole("OWNER"), deleteInvoice)
 export default router
