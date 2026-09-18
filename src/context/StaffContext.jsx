@@ -1046,6 +1046,25 @@ export function StaffProvider({ children }) {
     }
   };
 
+  // Plain cancel — no blacklist, no reason required. For clearing abandoned
+  // orders (empty cart, customer never came back) that never should count
+  // against the customer, unlike flagCustomerNoShow.
+  const cancelOrder = async (orderId) => {
+    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+      return;
+    }
+
+    try {
+      await api.patch(`/api/orders/${orderId}/status`, { status: 'Cancelled' });
+      await loadAllData();
+    } catch (err) {
+      console.error('Error cancelling order:', err);
+      alert(err.message || 'Failed to cancel order.');
+    }
+  };
+
   // Seating Guest from Queue or Reservation to Table
 
   const assignTable = async (assignId, tableId) => {
@@ -1711,6 +1730,7 @@ export function StaffProvider({ children }) {
       deleteReservation,
       addOrder,
       advanceOrder,
+      cancelOrder,
       assignTable,
       markInvoicePaid,
       updateOpeningHours,

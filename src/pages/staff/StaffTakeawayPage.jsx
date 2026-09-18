@@ -3,7 +3,7 @@ import { useStaff } from '../../context/StaffContext';
 import { formatINR } from '../../utils/currency';
 
 export default function StaffTakeawayPage() {
-  const { orders, advanceOrder, flagCustomerNoShow } = useStaff();
+  const { orders, advanceOrder, cancelOrder, flagCustomerNoShow } = useStaff();
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [noShowModalOpen, setNoShowModalOpen] = useState(false);
   const [noShowReason, setNoShowReason] = useState('');
@@ -36,6 +36,17 @@ export default function StaffTakeawayPage() {
     if (order.status !== 'ready' || !order.readyAt) return false;
     const minsSinceReady = (Date.now() - new Date(order.readyAt).getTime()) / 60000;
     return minsSinceReady >= OVERDUE_MINUTES;
+  };
+
+  // An order stuck in Received/Preparing for a long time was probably
+  // abandoned (empty or half-built cart, customer just never came back).
+  // Flag it so staff know to just clear it out — this is administrative
+  // cleanup, not a customer no-show, so it never touches the blacklist.
+  const STALE_MINUTES = 45;
+  const isStale = (order) => {
+    if (order.status !== 'new' && order.status !== 'preparing') return false;
+    const minsSinceCreated = (Date.now() - new Date(order.createdAt).getTime()) / 60000;
+    return minsSinceCreated >= STALE_MINUTES;
   };
 
   // Flagging a no-show is destructive (cancels the order, blocks the
@@ -92,7 +103,7 @@ export default function StaffTakeawayPage() {
                     key={o.id}
                     onClick={() => setSelectedOrderId(o.id)}
                     className={`p-4 border cursor-pointer transition-all duration-300 ${
-                      isOverdue(o)
+                      isOverdue(o) || isStale(o)
                         ? 'border-red-400 bg-red-50 hover:border-red-500'
                         : 'border-muted-border hover:border-saffron-gold bg-canvas-cream'
                     } ${
@@ -105,6 +116,11 @@ export default function StaffTakeawayPage() {
                         {isOverdue(o) ? 'OVERDUE' : o.time}
                       </span>
                     </div>
+                    {isStale(o) && (
+                      <p className="text-[10px] text-red-600 font-bold uppercase tracking-wide mb-1">
+                        Likely abandoned — no progress in {STALE_MINUTES}+ min
+                      </p>
+                    )}
                     <p className="text-[11px] text-subtle-text font-semibold uppercase tracking-wider">{o.guestName}</p>
                     <p className="text-xs text-ink-navy mt-2 line-clamp-1">
                       {o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
@@ -192,6 +208,19 @@ export default function StaffTakeawayPage() {
               >
                 {advanceLabel[selectedOrder.status]}
               </button>
+              {isStale(selectedOrder) && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('Cancel this order? Looks abandoned — no items progress in a while. This does NOT block the customer from ordering again.')) {
+                      cancelOrder(selectedOrder.id);
+                      setSelectedOrderId(null);
+                    }
+                  }}
+                  className="w-full text-red-500 hover:text-red-600 text-xs font-semibold uppercase tracking-widest py-2 cursor-pointer"
+                >
+                  Cancel Abandoned Order
+                </button>
+              )}
               {selectedOrder.status === 'ready' && (
                 canFlagNoShow(selectedOrder) ? (
                   <button
