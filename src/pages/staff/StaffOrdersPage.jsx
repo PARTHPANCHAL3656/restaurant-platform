@@ -20,7 +20,7 @@ export default function StaffOrdersPage() {
   const selectedOrder = orders.find(o => o.id === selectedOrderId);
 
   return (
-    <div className="flex flex-col-reverse md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
+    <div className="flex flex-col-reverse md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
       {/* 3-Column Service Pipeline */}
       <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-6 overflow-y-auto bg-surface" data-lenis-prevent>

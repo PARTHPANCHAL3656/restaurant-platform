@@ -42,7 +42,7 @@ export default function StaffGuestQueuePage() {
   const averageWait = queue.length > 0 ? `${Math.round(waitTimes.reduce((sum, t) => sum + t, 0) / queue.length)} Mins` : '—';
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
       {/* Queue Grid Dashboard */}
       <div className="flex-grow flex flex-col bg-surface p-4 md:p-6 overflow-y-auto" data-lenis-prevent>

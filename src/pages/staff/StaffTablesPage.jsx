@@ -172,7 +172,7 @@ export default function StaffTablesPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
       
       {/* Mobile backdrop for left drawer */}
       {leftDrawerOpen && (
