@@ -51,7 +51,7 @@ api.interceptors.response.use(
 
       // JWT Expired / Unauthorized - Notify application based on route context
       if (status === 401 || status === 403) {
-        const isStaffRoute = window.location.pathname.startsWith('/staff');
+        const isStaffRoute = window.location.pathname.startsWith('/staff') && window.location.pathname !== '/staff/login';
         if (isStaffRoute) {
           window.dispatchEvent(new Event('auth-session-expired'));
         } else {
