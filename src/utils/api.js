@@ -51,9 +51,14 @@ api.interceptors.response.use(
 
       // JWT Expired / Unauthorized - Notify application based on route context
       if (status === 401 || status === 403) {
-        const isStaffRoute = window.location.pathname.startsWith('/staff') && window.location.pathname !== '/staff/login';
+        const isStaffRoute = window.location.pathname.startsWith('/staff');
         if (isStaffRoute) {
-          window.dispatchEvent(new Event('auth-session-expired'));
+          // 403 means a valid token without permission for this one
+          // resource (role-gated route) - not an expired session. Only
+          // 401 means the token itself is invalid/expired.
+          if (status === 401) {
+            window.dispatchEvent(new Event('auth-session-expired'));
+          }
         } else {
           const isClosed = data?.status === 'closed' || data?.sessionEnded === true;
           if (isClosed) {

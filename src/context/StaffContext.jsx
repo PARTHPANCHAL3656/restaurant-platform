@@ -763,12 +763,15 @@ export function StaffProvider({ children }) {
     }
 
     try {
+      const staffRole = sessionStorage.getItem('staffRole');
+      const canViewInvoices = staffRole === 'OWNER' || staffRole === 'MANAGER';
+
       const [rawTables, rawReservations, rawOrders, rawQueue, rawInvoices] = await Promise.all([
         fetchTables(),
         fetchReservations(),
         fetchOrders(),
         fetchQueue(),
-        fetchInvoices(),
+        canViewInvoices ? fetchInvoices() : Promise.resolve([]),
       ]);
 
       const mappedOrders = rawOrders.map(mapBackendOrder);
