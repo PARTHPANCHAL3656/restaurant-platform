@@ -289,13 +289,13 @@ export default function StaffTablesPage() {
 
         {/* Dotted Floor Grid Map */}
         <div 
-          className="flex-grow flex items-center justify-center min-h-[400px] w-full max-w-4xl"
+          className="w-full max-w-4xl min-h-[400px]"
           style={{
             backgroundImage: 'radial-gradient(#E5E1DA 1px, transparent 1px)',
             backgroundSize: '50px 50px'
           }}
         >
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 p-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 p-8 justify-center">
             {tables.map((tbl) => (
               <button
                 key={tbl.id}
