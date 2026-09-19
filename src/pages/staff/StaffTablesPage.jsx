@@ -268,7 +268,7 @@ export default function StaffTablesPage() {
         )}
 
         {/* Floor Map Legend */}
-        <div className="mb-10 flex flex-wrap items-center justify-center gap-6 md:gap-10 bg-white/70 backdrop-blur-md px-6 py-3.5 border border-muted-border shadow-xs">
+        <div className="shrink-0 relative z-10 mb-10 flex flex-wrap items-center justify-center gap-6 md:gap-10 bg-white/70 backdrop-blur-md px-6 py-3.5 border border-muted-border shadow-xs">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 border border-saffron-gold" />
             <span className="text-[10px] font-label-caps uppercase tracking-wider text-subtle-text">Available</span>
