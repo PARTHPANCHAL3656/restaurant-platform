@@ -485,11 +485,11 @@ export function StaffProvider({ children }) {
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return sessionStorage.getItem('staffAuthenticated') === 'true' && !!localStorage.getItem('staffToken');
+    return sessionStorage.getItem('staffAuthenticated') === 'true' && !!sessionStorage.getItem('staffToken');
   });
 
   const logoutStaff = useCallback(() => {
-    localStorage.removeItem('staffToken');
+    sessionStorage.removeItem('staffToken');
     sessionStorage.removeItem('staffAuthenticated');
     sessionStorage.removeItem('staffName');
     sessionStorage.removeItem('staffRole');
@@ -508,7 +508,7 @@ export function StaffProvider({ children }) {
   }, []);
 
   const authenticateStaff = useCallback((token, name, role) => {
-    localStorage.setItem('staffToken', token);
+    sessionStorage.setItem('staffToken', token);
     sessionStorage.setItem('staffAuthenticated', 'true');
     sessionStorage.setItem('staffName', name);
     sessionStorage.setItem('staffRole', role);
@@ -745,13 +745,13 @@ export function StaffProvider({ children }) {
   }, [fetchMenuItems, fetchCategories]);
 
   const loadStaffData = useCallback(async () => {
-    if (!localStorage.getItem('staffToken')) return;
+    if (!sessionStorage.getItem('staffToken')) return;
     if (isFetchingRef.current) return;
     
     isFetchingRef.current = true;
     setIsError(false);
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setTables(prev => prev.length ? prev : MOCK_TABLES);
       setReservations(prev => prev.length ? prev : MOCK_RESERVATIONS);
@@ -886,7 +886,7 @@ export function StaffProvider({ children }) {
   // Actions:
   const addReservation = async (formData) => {
     const timeSlot = formData.timeSlot || '20:00';
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     
     if (isMock) {
       const newRes = {
@@ -932,7 +932,7 @@ export function StaffProvider({ children }) {
   };
 
   const updateReservationStatus = async (reservationId, status) => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setReservations(prev => prev.map(r => r.id === reservationId ? { ...r, status } : r));
       return;
@@ -946,7 +946,7 @@ export function StaffProvider({ children }) {
   };
 
   const deleteReservation = async (reservationId) => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setReservations(prev => prev.filter(r => r.id !== reservationId));
       return;
@@ -976,7 +976,7 @@ export function StaffProvider({ children }) {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       if (order.status === 'new') {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'preparing' } : o));
@@ -1053,7 +1053,7 @@ export function StaffProvider({ children }) {
   // orders (empty cart, customer never came back) that never should count
   // against the customer, unlike flagCustomerNoShow.
   const cancelOrder = async (orderId) => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setOrders(prev => prev.filter(o => o.id !== orderId));
       return;
@@ -1083,7 +1083,7 @@ export function StaffProvider({ children }) {
     const guestName = guest.name || guest.guest;
     const guestPartySize = guest.partySize;
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       if (!isReservation) {
         setQueue(prev => prev.filter(q => q.id !== assignId));
@@ -1135,7 +1135,7 @@ export function StaffProvider({ children }) {
     const invoice = invoices.find(i => i.id === invoiceId);
     if (!invoice) return;
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setInvoices(prev => prev.map(i => 
         i.id === invoiceId ? { ...i, status: 'paid', paymentMethod } : i
@@ -1171,7 +1171,7 @@ export function StaffProvider({ children }) {
   // number from self-starting new online takeout orders. This is the
   // no-OTP-needed anti-ghosting policy — see startTakeoutSession backend.
   const flagCustomerNoShow = async (phone, orderId, reason = '') => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setOrders(prev => prev.filter(o => o.id !== orderId));
       logActivity(
@@ -1204,7 +1204,7 @@ export function StaffProvider({ children }) {
     const table = tables.find(t => t.id === tableId);
     if (!table || !table._id) return null;
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       const invoiceId = `INV-0${Math.floor(43 + Math.random() * 50)}`;
       const sub = table.billTotal / 1.175;
@@ -1262,7 +1262,7 @@ export function StaffProvider({ children }) {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setTables(prev => prev.map(t => t.id === tableId ? {
         ...t,
@@ -1310,7 +1310,7 @@ export function StaffProvider({ children }) {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setTables(prev => prev.map(t => {
         if (t.id === tableId) {
@@ -1356,7 +1356,7 @@ export function StaffProvider({ children }) {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setTables(prev => prev.map(t => {
         if (t.id === tableId) {
@@ -1404,7 +1404,7 @@ export function StaffProvider({ children }) {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setTables(prev => prev.map(t => {
         if (t.id === tableId) {
@@ -1440,7 +1440,7 @@ export function StaffProvider({ children }) {
     const table = tables.find(t => t.id === tableId);
     if (!table) return;
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setTables(prev => prev.map(t => {
         if (t.id === tableId) {
@@ -1473,7 +1473,7 @@ export function StaffProvider({ children }) {
 
   // Add Walk-in/Guest to Queue
   const addGuestToQueue = async (guestDetails) => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       const newGuest = {
         id: 'Q-' + Date.now(),
@@ -1518,7 +1518,7 @@ export function StaffProvider({ children }) {
 
   // Menu Updates
   const addMenuItem = async (item) => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       const id = item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const newItem = {
@@ -1556,7 +1556,7 @@ export function StaffProvider({ children }) {
   };
 
   const reseedDemoMenu = async () => {
-  const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+  const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
   if (isMock) {
       logActivity(`Demo menu synced`, `Demo prices refreshed (preview mode, no backend call made)`, 'restaurant_menu', '/staff/menu');
       return { message: 'Preview mode: no backend call made.' };
@@ -1573,7 +1573,7 @@ export function StaffProvider({ children }) {
   };
 
   const updateMenuItem = async (updatedItem) => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setMenuItems(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
       logActivity(
@@ -1603,7 +1603,7 @@ export function StaffProvider({ children }) {
     const item = menuItems.find(i => i.id === itemId);
     if (!item) return;
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setMenuItems(prev => prev.filter(i => i.id !== itemId));
       logActivity(
@@ -1649,7 +1649,7 @@ export function StaffProvider({ children }) {
       return [...prev].sort((a, b) => byId[a.id] - byId[b.id]).map((c, i) => ({ ...c, sortOrder: i }));
     });
 
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) return;
 
     await api.patch('/api/categories/reorder', { orderedIds });
@@ -1657,7 +1657,7 @@ export function StaffProvider({ children }) {
   };
 
   const addCategory = async (name) => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       const fakeCategory = { id: `local-${Date.now()}`, name, sortOrder: categories.length };
       setCategories(prev => [...prev, fakeCategory]);
@@ -1672,7 +1672,7 @@ export function StaffProvider({ children }) {
   };
 
   const renameCategory = async (categoryId, newName) => {
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setCategories(prev => prev.map(c => c.id === categoryId ? { ...c, name: newName } : c));
       logActivity(`Category renamed`, `Renamed a category to "${newName}"`, 'category', '/staff/menu');
@@ -1693,7 +1693,7 @@ export function StaffProvider({ children }) {
   // disappearing.
   const deleteCategory = async (categoryId, reassignTo) => {
     const category = categories.find(c => c.id === categoryId);
-    const isMock = localStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setCategories(prev => prev.filter(c => c.id !== categoryId));
       if (reassignTo && category) {

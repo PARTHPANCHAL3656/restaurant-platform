@@ -11,8 +11,12 @@ api.interceptors.request.use(
     const isStaffRoute = window.location.pathname.startsWith('/staff');
 
     if (isStaffRoute) {
-      // 1. Staff Token from localStorage
-      const staffToken = localStorage.getItem('staffToken');
+      // 1. Staff Token from sessionStorage - deliberately NOT localStorage.
+      // Staff tokens must stay isolated per tab; localStorage is shared
+      // across every tab on the origin, so logging into a different
+      // role in one tab would silently swap the token every other open
+      // tab sends on its next request.
+      const staffToken = sessionStorage.getItem('staffToken');
       if (staffToken) {
         config.headers.Authorization = `Bearer ${staffToken}`;
         return config;
