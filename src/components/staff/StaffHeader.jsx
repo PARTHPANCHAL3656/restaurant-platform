@@ -124,7 +124,10 @@ export default function StaffHeader({ onMenuToggle }) {
                 {sessionStorage.getItem('staffName') || staffProfile.name}
               </span>
               <span className="text-[10px] text-subtle-text mt-0.5 leading-none">
-                {sessionStorage.getItem('staffRole') || staffProfile.role}
+                {(() => {
+                  const role = sessionStorage.getItem('staffRole');
+                  return role ? role.charAt(0) + role.slice(1).toLowerCase() : staffProfile.role;
+                })()}
               </span>
             </div>
           </button>

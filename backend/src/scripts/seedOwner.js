@@ -15,7 +15,7 @@ async function seed() {
     process.exit(1)
   }
 
-  await mongoose.connect(process.env.MONGODB_URI)
+  await mongoose.connect(process.env.MONGO_URI)
 
   const existing = await Staff.findOne({ role: "OWNER" })
   if (existing) {

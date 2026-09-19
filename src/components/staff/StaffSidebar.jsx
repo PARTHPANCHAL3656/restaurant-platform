@@ -8,17 +8,26 @@ export default function StaffSidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { logoutStaff } = useStaff();
 
-  const menuItems = [
-    { name: 'Dashboard', path: '/staff/dashboard', icon: 'dashboard' },
-    { name: 'Analytics', path: '/staff/analytics', icon: 'monitoring' },
-    { name: 'Tables & Reservations', path: '/staff/tables', icon: 'event_seat' },
-    { name: 'Order Management', path: '/staff/orders', icon: 'receipt_long' },
-    { name: 'Takeaway Orders', path: '/staff/takeaway', icon: 'shopping_bag' },
-    { name: 'Billing & Invoices', path: '/staff/billing', icon: 'payments' },
-    { name: 'Guest Queue', path: '/staff/guest-queue', icon: 'hourglass_empty' },
-    { name: 'Menu Management', path: '/staff/menu', icon: 'restaurant_menu' },
-    { name: 'Settings', path: '/staff/settings', icon: 'settings' }
+  // Mirrors the backend's requireRole boundaries exactly (see
+  // backend/src/routes/{categories,crm,invoices,menu,settings}.js) - a
+  // STAFF-role user hitting these would just get a 403, so there's no
+  // reason to show the link at all. `roles: null` means every staff role
+  // can access it (matches routes that only require staffAuth, no
+  // requireRole - orders, tables, takeaway, guest queue).
+  const allMenuItems = [
+    { name: 'Dashboard', path: '/staff/dashboard', icon: 'dashboard', roles: null },
+    { name: 'Analytics', path: '/staff/analytics', icon: 'monitoring', roles: ['OWNER', 'MANAGER'] },
+    { name: 'Tables & Reservations', path: '/staff/tables', icon: 'event_seat', roles: null },
+    { name: 'Order Management', path: '/staff/orders', icon: 'receipt_long', roles: null },
+    { name: 'Takeaway Orders', path: '/staff/takeaway', icon: 'shopping_bag', roles: null },
+    { name: 'Billing & Invoices', path: '/staff/billing', icon: 'payments', roles: ['OWNER', 'MANAGER'] },
+    { name: 'Guest Queue', path: '/staff/guest-queue', icon: 'hourglass_empty', roles: null },
+    { name: 'Menu Management', path: '/staff/menu', icon: 'restaurant_menu', roles: ['OWNER', 'MANAGER'] },
+    { name: 'Settings', path: '/staff/settings', icon: 'settings', roles: ['OWNER', 'MANAGER'] }
   ];
+
+  const staffRole = sessionStorage.getItem('staffRole');
+  const menuItems = allMenuItems.filter(item => !item.roles || item.roles.includes(staffRole));
 
   const handleLogout = () => {
     logoutStaff();

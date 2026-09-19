@@ -7,19 +7,17 @@ import { useStaff } from '../../context/StaffContext';
 export default function StaffLoginPage() {
   const navigate = useNavigate();
   const { authenticateStaff } = useStaff();
-  const [staffId, setStaffId] = useState('');
+  const [username, setUsername] = useState(() => localStorage.getItem('savedUsername') || '');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem('savedUsername'));
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [staffName, setStaffName] = useState('');
-  const [staffRole, setStaffRole] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!staffId.trim() || !password.trim() || !staffName.trim() || !staffRole) {
-      setError('Please fill in all security credentials.');
+    if (!username.trim() || !password.trim()) {
+      setError('Username and password are required.');
       return;
     }
 
@@ -28,28 +26,30 @@ export default function StaffLoginPage() {
 
     try {
       const response = await api.post('/api/auth/login', {
-        staffId: staffId.trim(),
+        username: username.trim(),
         password,
       });
 
-      const { token } = response.data;
+      // name and role are the server's, not self-declared - it's the only
+      // thing that can actually be trusted for role-gated access.
+      const { token, name, role } = response.data;
       if (!token) {
         throw new Error('Authentication token not received from server.');
       }
 
-      authenticateStaff(token, staffName.trim(), staffRole);
+      authenticateStaff(token, name, role);
 
       if (rememberMe) {
-        localStorage.setItem('savedStaffId', staffId);
+        localStorage.setItem('savedUsername', username.trim());
       } else {
-        localStorage.removeItem('savedStaffId');
+        localStorage.removeItem('savedUsername');
       }
 
       navigate('/staff/dashboard');
     } catch (err) {
       console.error("Authentication rejected by server:", err.message);
       setError(
-        err.response?.data?.error || err.message || 'Incorrect staff ID or password.'
+        err.response?.data?.error || err.message || 'Incorrect username or password.'
       );
     } finally {
       setLoading(false);
@@ -100,48 +100,15 @@ export default function StaffLoginPage() {
               </div>
             )}
 
-            {/* Full Name */}
+            {/* Username */}
             <div>
-              <label className="font-label-caps text-label-caps text-canvas-cream/40 uppercase block mb-2">Full Name</label>
+              <label className="font-label-caps text-label-caps text-canvas-cream/40 uppercase block mb-2">Username</label>
               <input 
                 type="text"
-                id="staff_name"
-                value={staffName}
-                onChange={(e) => { setStaffName(e.target.value); setError(''); }}
-                placeholder="E.g. Your Name"
-                className="w-full bg-transparent border-b border-canvas-cream/20 py-3 focus:outline-none focus:border-saffron-gold transition-colors font-body-md text-canvas-cream outline-none animate-none"
-                required
-              />
-            </div>
-
-            {/* Role */}
-            <div>
-              <label className="font-label-caps text-label-caps text-canvas-cream/40 uppercase block mb-2">Role</label>
-              <select
-                id="staff_role"
-                value={staffRole}
-                onChange={(e) => { setStaffRole(e.target.value); setError(''); }}
-                className="w-full bg-transparent border-b border-canvas-cream/20 py-3 focus:outline-none focus:border-saffron-gold transition-colors font-body-md text-canvas-cream outline-none animate-none cursor-pointer appearance-none"
-                required
-              >
-                <option value="" className="bg-ink-navy">Select your role</option>
-                <option value="Restaurant Manager" className="bg-ink-navy">Restaurant Manager</option>
-                <option value="Operations Manager" className="bg-ink-navy">Operations Manager</option>
-                <option value="Floor Manager" className="bg-ink-navy">Floor Manager</option>
-                <option value="Maitre D'" className="bg-ink-navy">Maitre D'</option>
-                <option value="Head Chef" className="bg-ink-navy">Head Chef</option>
-              </select>
-            </div>
-
-            {/* Staff ID */}
-            <div>
-              <label className="font-label-caps text-label-caps text-canvas-cream/40 uppercase block mb-2">Staff ID</label>
-              <input 
-                type="text"
-                id="staff_id"
-                value={staffId}
-                onChange={(e) => { setStaffId(e.target.value); setError(''); }}
-                placeholder="E.g. SG-1924"
+                id="username"
+                value={username}
+                onChange={(e) => { setUsername(e.target.value); setError(''); }}
+                placeholder="E.g. yourname"
                 className="w-full bg-transparent border-b border-canvas-cream/20 py-3 focus:outline-none focus:border-saffron-gold transition-colors font-body-md text-canvas-cream outline-none animate-none"
                 required
               />
