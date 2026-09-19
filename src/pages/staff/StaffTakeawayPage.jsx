@@ -87,9 +87,9 @@ export default function StaffTakeawayPage() {
   };
 
   return (
-    <div className="flex flex-col-reverse md:flex-row min-h-[calc(100vh-80px)] relative select-none">
+    <div className="flex flex-col-reverse md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
 
-      <div className="flex-grow flex flex-col overflow-y-auto bg-surface" data-lenis-prevent>
+      <div className="flex-grow flex flex-col overflow-y-auto bg-surface min-h-0" data-lenis-prevent>
         <div className="p-4 md:p-6 pb-0">
           <h2 className="font-serif text-xl text-ink-navy font-semibold">Takeaway Orders</h2>
           <p className="text-xs text-subtle-text mt-1">

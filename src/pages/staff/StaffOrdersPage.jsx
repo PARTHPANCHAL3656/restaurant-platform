@@ -20,10 +20,10 @@ export default function StaffOrdersPage() {
   const selectedOrder = orders.find(o => o.id === selectedOrderId);
 
   return (
-    <div className="flex flex-col-reverse md:flex-row min-h-[calc(100vh-80px)] relative select-none">
+    <div className="flex flex-col-reverse md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
       
       {/* 3-Column Service Pipeline */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-6 overflow-y-auto bg-surface" data-lenis-prevent>
+      <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-6 overflow-y-auto bg-surface min-h-0" data-lenis-prevent>
         
         {/* Column 1: New Orders */}
         <div className="flex flex-col bg-white border border-muted-border p-4">

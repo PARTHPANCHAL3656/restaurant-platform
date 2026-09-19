@@ -172,7 +172,7 @@ export default function StaffTablesPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] relative select-none">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
       
       {/* Mobile backdrop for left drawer */}
       {leftDrawerOpen && (
@@ -255,7 +255,7 @@ export default function StaffTablesPage() {
       </div>
 
       {/* Hero Workspace: Floor Map Grid */}
-      <div className="flex-grow bg-canvas-cream overflow-auto p-4 md:p-8 lg:p-16 flex flex-col items-center relative min-h-[500px]">
+      <div className="flex-grow bg-canvas-cream overflow-auto p-4 md:p-8 lg:p-16 flex flex-col items-center relative min-h-0">
         
         {/* Toggle Left Drawer Button */}
         {!leftDrawerOpen && (
