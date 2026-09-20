@@ -197,7 +197,7 @@ export const updateOrderStatus = async (req, res) => {
           gst,
           total,
           status: "unpaid",
-          generatedBy: "Takeout Counter"
+          generatedBy: req.staff.name
         })
 
         io.emit("invoice:generated", generatedInvoice)

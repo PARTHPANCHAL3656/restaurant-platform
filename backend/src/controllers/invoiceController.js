@@ -65,7 +65,7 @@ export const generateInvoiceForTable = async (req, res) => {
       gst,
       total,
       status: "unpaid",
-      generatedBy: req.body?.generatedBy || "Floor Manager"
+      generatedBy: req.staff.name
     })
 
     // Presenting bill sets order status to Served
