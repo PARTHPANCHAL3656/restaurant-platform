@@ -297,7 +297,7 @@ export default function LandingPageContent() {
               <iframe
                 title="Spice Garden Location"
                 className="w-full h-full min-h-[380px] grayscale-[15%] hover:grayscale-0 transition-all duration-700"
-                src="https://www.google.com/maps?q=Alkapuri,+Vadodara,+Gujarat+390007&output=embed"
+                src={restaurantInfo.googleMapsEmbedUrl}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
@@ -333,8 +333,8 @@ export default function LandingPageContent() {
               <div className="bg-ink-navy p-8 text-canvas-cream space-y-3 shadow-sm">
                 <h3 className="font-label-caps text-[11px] text-saffron-gold tracking-widest uppercase">Dine With Us</h3>
                 <p className="font-serif text-lg italic leading-snug">{restaurantInfo.address}</p>
-                <a href={`tel:${restaurantInfo.reservationPhone}`} className="font-body-md text-sm text-canvas-cream/80 hover:text-saffron-gold transition-colors block">
-                  {restaurantInfo.reservationPhone}
+                <a href={`tel:${restaurantInfo.secondaryPhone}`} className="font-body-md text-sm text-canvas-cream/80 hover:text-saffron-gold transition-colors block">
+                  {restaurantInfo.secondaryPhone}
                 </a>
               </div>
             </div>

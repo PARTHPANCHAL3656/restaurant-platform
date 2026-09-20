@@ -33,11 +33,11 @@ export default function Footer() {
             Est. 1924 • Michelin Starred Fine Dining
           </p>
           <div className="flex space-x-5 text-ink-navy">
-            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-saffron-gold transition-colors flex items-center gap-1.5" aria-label="Facebook">
+            <a href={restaurantInfo.links.facebook} target="_blank" rel="noreferrer" className="hover:text-saffron-gold transition-colors flex items-center gap-1.5" aria-label="Facebook">
               <span className="material-symbols-outlined text-[20px]">share</span>
               <span className="font-label-caps text-[10px] uppercase tracking-widest hidden md:inline">Facebook</span>
             </a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-saffron-gold transition-colors flex items-center gap-1.5" aria-label="Instagram">
+            <a href={restaurantInfo.links.instagram} target="_blank" rel="noreferrer" className="hover:text-saffron-gold transition-colors flex items-center gap-1.5" aria-label="Instagram">
               <span className="material-symbols-outlined text-[20px]">public</span>
               <span className="font-label-caps text-[10px] uppercase tracking-widest hidden md:inline">Instagram</span>
             </a>
@@ -53,8 +53,8 @@ export default function Footer() {
             </p>
             <p>
               <span className="font-semibold text-ink-navy">Phone:</span>{' '}
-              <a href={`tel:${restaurantInfo.phone}`} className="hover:text-saffron-gold transition-colors">
-                {restaurantInfo.phone}
+              <a href={`tel:${restaurantInfo.primaryPhone}`} className="hover:text-saffron-gold transition-colors">
+                {restaurantInfo.primaryPhone}
               </a>
             </p>
             <p>

@@ -16,7 +16,7 @@ const GROUPS = [
     description: 'Phone, WhatsApp, email, and the Google Maps link guests see.',
     path: '/staff/settings/contact',
     ownerOnly: true,
-    live: false
+    live: true
   },
   {
     key: 'billing',

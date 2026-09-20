@@ -31,21 +31,24 @@ const settingsSchema = new mongoose.Schema({
 
   // Guest-facing contact details. Owner-only to edit.
   contact: {
-    phone: { type: String, default: "+91 265 234 5678" },
-    reservationPhone: { type: String, default: "+91 70960 34960" },
+    primaryPhone: { type: String, default: "+91 265 234 5678" },
+    whatsappNumber: { type: String, default: "" },
+    secondaryPhone: { type: String, default: "+91 70960 34960" },
     email: { type: String, default: "concierge@spicegarden.com" },
-    socials: {
-      instagram: { type: String, default: "@spicegarden.vadodara" },
-      facebook: { type: String, default: "spicegarden.vadodara" },
-      twitter: { type: String, default: "@spicegardenvd" }
-    }
+    googleMapsUrl: { type: String, default: "https://www.google.com/maps/search/?api=1&query=12+Alkapuri+Boulevard%2C+Vadodara%2C+Gujarat+390007" },
+    googleMapsEmbedUrl: { type: String, default: "https://www.google.com/maps?q=Alkapuri,+Vadodara,+Gujarat+390007&output=embed" }
   },
 
-  // External ordering links. Owner or Manager can edit — these change
-  // more often than legal/contact info and carry no compliance risk.
+  // External ordering + social links. Owner or Manager can edit — these
+  // change more often than legal/contact info and carry no compliance
+  // risk. Social links used to live under `contact` (Owner-only) — moved
+  // here to match the Owner+Manager access they should actually have.
   links: {
     zomato: { type: String, default: "" },
-    swiggy: { type: String, default: "" }
+    swiggy: { type: String, default: "" },
+    instagram: { type: String, default: "https://instagram.com/spicegarden.vadodara" },
+    facebook: { type: String, default: "https://facebook.com/spicegarden.vadodara" },
+    twitter: { type: String, default: "https://twitter.com/spicegardenvd" }
   }
 }, { timestamps: true })
 

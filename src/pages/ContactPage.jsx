@@ -43,8 +43,8 @@ export default function ContactPage() {
               <div className="space-y-3">
                 <h3 className="font-label-caps text-[10px] text-subtle-text tracking-widest uppercase">The Garden Estate</h3>
                 <p className="font-serif text-headline-sm text-ink-navy font-semibold leading-snug">{restaurantInfo.address}</p>
-                <a href={`tel:${restaurantInfo.phone}`} className="font-body-md text-saffron-gold hover:underline transition-all block font-semibold">
-                  {restaurantInfo.phone}
+                <a href={`tel:${restaurantInfo.primaryPhone}`} className="font-body-md text-saffron-gold hover:underline transition-all block font-semibold">
+                  {restaurantInfo.primaryPhone}
                 </a>
               </div>
 
@@ -82,30 +82,21 @@ export default function ContactPage() {
 
           {/* Map Column */}
           <div className="lg:col-span-8 relative min-h-[450px] border border-muted-border overflow-hidden shadow-sm">
-            <div className="w-full h-full bg-surface-container relative">
-              <img 
-                src={getImage('contact-map.jpg')} 
-                alt="Spice Garden Location Map Mayfair" 
-                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-[1500ms]"
-              />
-              {/* Pulsing Pin Overlay */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                <motion.div 
-                  className="w-12 h-12 bg-ink-navy rounded-full flex items-center justify-center shadow-xl border border-saffron-gold"
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
-                >
-                  <span className="material-symbols-outlined text-saffron-gold text-2xl font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    restaurant
-                  </span>
-                </motion.div>
-                <div className="mt-4 bg-canvas-cream px-6 py-2 shadow-lg border border-muted-border inline-block">
-                  <p className="font-label-caps text-label-caps text-ink-navy uppercase whitespace-nowrap tracking-wider text-xs">
-                    Spice Garden London
-                  </p>
-                </div>
-              </div>
-            </div>
+            <iframe
+              title="Spice Garden Location"
+              className="w-full h-full min-h-[450px] grayscale-[15%] hover:grayscale-0 transition-all duration-700"
+              src={restaurantInfo.googleMapsEmbedUrl}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            <a
+              href={restaurantInfo.googleMapsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="absolute bottom-4 right-4 bg-canvas-cream px-5 py-2.5 shadow-lg border border-muted-border font-label-caps text-[11px] text-ink-navy uppercase tracking-widest hover:bg-saffron-gold transition-colors"
+            >
+              Get Directions
+            </a>
           </div>
 
         </div>

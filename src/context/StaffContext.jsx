@@ -64,19 +64,20 @@ export function StaffProvider({ children }) {
   });
 
   const [contact, setContact] = useState({
-    phone: "+91 265 234 5678",
-    reservationPhone: "+91 70960 34960",
+    primaryPhone: "+91 265 234 5678",
+    whatsappNumber: "",
+    secondaryPhone: "+91 70960 34960",
     email: "concierge@spicegarden.com",
-    socials: {
-      instagram: "@spicegarden.vadodara",
-      facebook: "spicegarden.vadodara",
-      twitter: "@spicegardenvd"
-    }
+    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=12+Alkapuri+Boulevard%2C+Vadodara%2C+Gujarat+390007",
+    googleMapsEmbedUrl: "https://www.google.com/maps?q=Alkapuri,+Vadodara,+Gujarat+390007&output=embed"
   });
 
   const [links, setLinks] = useState({
     zomato: "",
-    swiggy: ""
+    swiggy: "",
+    instagram: "https://instagram.com/spicegarden.vadodara",
+    facebook: "https://facebook.com/spicegarden.vadodara",
+    twitter: "https://twitter.com/spicegardenvd"
   });
 
   useEffect(() => {
@@ -113,6 +114,13 @@ export function StaffProvider({ children }) {
     const res = await api.patch('/api/settings', { legal: newLegal });
     setLegal(res.data.legal);
     return res.data.legal;
+  };
+
+  // Owner-only on the backend, same as updateLegalInfo.
+  const updateContactInfo = async (newContact) => {
+    const res = await api.patch('/api/settings', { contact: newContact });
+    setContact(res.data.contact);
+    return res.data.contact;
   };
 
   // Restaurant Information — now sourced from the backend Settings
@@ -1774,6 +1782,7 @@ export function StaffProvider({ children }) {
       markInvoicePaid,
       updateOpeningHours,
       updateLegalInfo,
+      updateContactInfo,
       flagCustomerNoShow,
       finalizeTableBill,
       addGuestToQueue,

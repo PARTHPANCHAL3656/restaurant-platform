@@ -125,7 +125,7 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
       {/* Footer */}
       <footer className="thermal-footer">
         <p className="thermal-thanks">Thank You! Visit Again.</p>
-        <p>Phone: {restaurantInfo.phone} &nbsp;|&nbsp; Email: {restaurantInfo.email}</p>
+        <p>Phone: {restaurantInfo.primaryPhone} &nbsp;|&nbsp; Email: {restaurantInfo.email}</p>
         <p className="thermal-disclaimer">
           Please verify the bill before payment. No complaints will be entertained thereafter.
         </p>
