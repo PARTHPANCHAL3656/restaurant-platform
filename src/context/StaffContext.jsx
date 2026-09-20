@@ -123,6 +123,14 @@ export function StaffProvider({ children }) {
     return res.data.contact;
   };
 
+  // Owner OR Manager on the backend — no role check needed here, the
+  // route itself already allows both.
+  const updateLinksInfo = async (newLinks) => {
+    const res = await api.patch('/api/settings', { links: newLinks });
+    setLinks(res.data.links);
+    return res.data.links;
+  };
+
   // Restaurant Information — now sourced from the backend Settings
   // collection (legal + contact + links + openingHours) instead of
   // being hardcoded here.
@@ -1783,6 +1791,7 @@ export function StaffProvider({ children }) {
       updateOpeningHours,
       updateLegalInfo,
       updateContactInfo,
+      updateLinksInfo,
       flagCustomerNoShow,
       finalizeTableBill,
       addGuestToQueue,

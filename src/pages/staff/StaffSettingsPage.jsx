@@ -40,7 +40,7 @@ const GROUPS = [
     description: 'Zomato, Swiggy, and social links shown on the website.',
     path: '/staff/settings/links',
     ownerOnly: false,
-    live: false
+    live: true
   },
   {
     key: 'staff',
