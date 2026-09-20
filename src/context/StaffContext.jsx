@@ -55,11 +55,12 @@ export function StaffProvider({ children }) {
   ]);
 
   const [legal, setLegal] = useState({
-    name: "Spice Garden",
+    legalBusinessName: "Spice Garden",
     tagline: "Modern Indian Fine Dining",
     address: "12 Alkapuri Boulevard, Vadodara, Gujarat 390007",
     gstin: "24AABCS1429B1Z8",
-    fssai: "21423011000123"
+    fssai: "21423011000123",
+    sacCode: "996331"
   });
 
   const [contact, setContact] = useState({

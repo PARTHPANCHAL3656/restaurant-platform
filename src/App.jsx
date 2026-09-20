@@ -39,6 +39,8 @@ const StaffBillingPage = React.lazy(() => import('./pages/staff/StaffBillingPage
 const StaffGuestQueuePage = React.lazy(() => import('./pages/staff/StaffGuestQueuePage'));
 const StaffMenuPage = React.lazy(() => import('./pages/staff/StaffMenuPage'));
 const StaffSettingsPage = React.lazy(() => import('./pages/staff/StaffSettingsPage'));
+const StaffSettingsLegalPage = React.lazy(() => import('./pages/staff/StaffSettingsLegalPage'));
+const StaffSettingsOperationsPage = React.lazy(() => import('./pages/staff/StaffSettingsOperationsPage'));
 
 // Premium Minimalist Loader
 function PageLoader() {
@@ -169,6 +171,8 @@ function MainAppRouter() {
             <Route path="/staff/guest-queue" element={<StaffGuestQueuePage />} />
             <Route path="/staff/menu" element={<StaffMenuPage />} />
             <Route path="/staff/settings" element={<StaffSettingsPage />} />
+            <Route path="/staff/settings/legal" element={<StaffSettingsLegalPage />} />
+            <Route path="/staff/settings/operations" element={<StaffSettingsOperationsPage />} />
           </Route>
         </Routes>
       </ErrorBoundary>

@@ -21,11 +21,12 @@ const settingsSchema = new mongoose.Schema({
   // Business identity + tax/licence numbers printed on every invoice.
   // Owner-only to edit — enforced in settingsController.js, not here.
   legal: {
-    name: { type: String, default: "Spice Garden" },
+    legalBusinessName: { type: String, default: "Spice Garden" },
     tagline: { type: String, default: "Modern Indian Fine Dining" },
     address: { type: String, default: "12 Alkapuri Boulevard, Vadodara, Gujarat 390007" },
     gstin: { type: String, default: "24AABCS1429B1Z8", trim: true },
-    fssai: { type: String, default: "21423011000123", trim: true }
+    fssai: { type: String, default: "21423011000123", trim: true },
+    sacCode: { type: String, default: "996331", trim: true }
   },
 
   // Guest-facing contact details. Owner-only to edit.

@@ -30,11 +30,11 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
     <section className="thermal-receipt">
       {/* Brand header */}
       <header className="thermal-brand">
-        <h2>{restaurantInfo.name.toUpperCase()}</h2>
+        <h2>{restaurantInfo.legalBusinessName.toUpperCase()}</h2>
         <p className="thermal-tagline">{restaurantInfo.tagline}</p>
         <p className="thermal-address">{restaurantInfo.address}</p>
         <p className="thermal-licences">
-          GSTIN: {restaurantInfo.gstin} &nbsp;|&nbsp; FSSAI: {restaurantInfo.fssai}
+          GSTIN: {restaurantInfo.gstin} &nbsp;|&nbsp; FSSAI: {restaurantInfo.fssai} &nbsp;|&nbsp; SAC: {restaurantInfo.sacCode}
         </p>
       </header>
 
