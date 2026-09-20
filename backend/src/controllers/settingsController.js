@@ -42,9 +42,13 @@ export const updateSettings = async (req, res) => {
 
     const settings = await Settings.getSingleton()
     if (openingHours) settings.openingHours = openingHours
-    if (legal) settings.legal = legal
-    if (contact) settings.contact = contact
-    if (links) settings.links = links
+    // Merged field-by-field, not replaced wholesale — sending just
+    // { legal: { gstin: "..." } } updates only the GSTIN and leaves
+    // name/tagline/address/fssai untouched. openingHours stays a full
+    // replace above since it's a list, not a field bag.
+    if (legal) settings.legal = { ...settings.legal.toObject(), ...legal }
+    if (contact) settings.contact = { ...settings.contact.toObject(), ...contact }
+    if (links) settings.links = { ...settings.links.toObject(), ...links }
     await settings.save()
 
     res.json(settings)

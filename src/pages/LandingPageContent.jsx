@@ -312,11 +312,11 @@ export default function LandingPageContent() {
                   Can&apos;t make it in? Our full menu is available for delivery through our partners below.
                 </p>
                 <div className="grid grid-cols-2 gap-4 pt-2">
-                  <a href="https://www.zomato.com" target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center gap-2 border border-muted-border py-6 hover:border-saffron-gold transition-colors group">
+                  <a href={restaurantInfo.links?.zomato || 'https://www.zomato.com'} target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center gap-2 border border-muted-border py-6 hover:border-saffron-gold transition-colors group">
                     <span className="font-serif text-xl italic text-ink-navy group-hover:text-saffron-gold transition-colors">Zomato</span>
                     <span className="font-label-caps text-[10px] text-subtle-text tracking-widest uppercase">4.6 &bull; 30-40 min</span>
                   </a>
-                  <a href="https://www.swiggy.com" target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center gap-2 border border-muted-border py-6 hover:border-saffron-gold transition-colors group">
+                  <a href={restaurantInfo.links?.swiggy || 'https://www.swiggy.com'} target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center gap-2 border border-muted-border py-6 hover:border-saffron-gold transition-colors group">
                     <span className="font-serif text-xl italic text-ink-navy group-hover:text-saffron-gold transition-colors">Swiggy</span>
                     <span className="font-label-caps text-[10px] text-subtle-text tracking-widest uppercase">4.5 &bull; 35-45 min</span>
                   </a>

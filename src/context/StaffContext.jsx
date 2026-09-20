@@ -43,14 +43,40 @@ export function useStaff() {
 }
 
 export function StaffProvider({ children }) {
-  // Opening hours now live in the backend (Settings collection) so an
+  // Opening hours, legal/tax identity, contact details, and ordering
+  // links all live in the backend Settings collection now, so an
   // owner/manager can update them without a developer redeploying code.
-  // This is the fallback shown until that fetch resolves (or if it fails).
+  // These are the fallbacks shown until the fetch below resolves (or if
+  // it fails) — the exact values that used to be hardcoded here for good.
   const [openingHours, setOpeningHours] = useState([
     { days: "Monday - Thursday", hours: "12:00 PM - 10:30 PM" },
     { days: "Friday - Saturday", hours: "12:00 PM - 11:30 PM" },
     { days: "Sunday", hours: "12:00 PM - 10:00 PM" }
   ]);
+
+  const [legal, setLegal] = useState({
+    name: "Spice Garden",
+    tagline: "Modern Indian Fine Dining",
+    address: "12 Alkapuri Boulevard, Vadodara, Gujarat 390007",
+    gstin: "24AABCS1429B1Z8",
+    fssai: "21423011000123"
+  });
+
+  const [contact, setContact] = useState({
+    phone: "+91 265 234 5678",
+    reservationPhone: "+91 70960 34960",
+    email: "concierge@spicegarden.com",
+    socials: {
+      instagram: "@spicegarden.vadodara",
+      facebook: "spicegarden.vadodara",
+      twitter: "@spicegardenvd"
+    }
+  });
+
+  const [links, setLinks] = useState({
+    zomato: "",
+    swiggy: ""
+  });
 
   useEffect(() => {
     api.get('/api/settings')
@@ -58,10 +84,19 @@ export function StaffProvider({ children }) {
         if (res.data?.openingHours?.length) {
           setOpeningHours(res.data.openingHours);
         }
+        if (res.data?.legal) {
+          setLegal(res.data.legal);
+        }
+        if (res.data?.contact) {
+          setContact(res.data.contact);
+        }
+        if (res.data?.links) {
+          setLinks(res.data.links);
+        }
       })
       .catch(() => {
-        // Backend offline or unreachable — keep the fallback above so the
-        // takeout pickup-time picker still works, just with stale hours.
+        // Backend offline or unreachable — keep the fallbacks above so
+        // the site still renders, just with stale/default info.
       });
   }, []);
 
@@ -71,22 +106,22 @@ export function StaffProvider({ children }) {
     return res.data.openingHours;
   };
 
-  // Static Restaurant Information Configuration
+  // Owner-only on the backend — a MANAGER calling this gets a 403, which
+  // the settings UI surfaces as an error message rather than silently failing.
+  const updateLegalInfo = async (newLegal) => {
+    const res = await api.patch('/api/settings', { legal: newLegal });
+    setLegal(res.data.legal);
+    return res.data.legal;
+  };
+
+  // Restaurant Information — now sourced from the backend Settings
+  // collection (legal + contact + links + openingHours) instead of
+  // being hardcoded here.
   const restaurantInfo = {
-    name: "Spice Garden",
-    tagline: "Modern Indian Fine Dining",
-    address: "12 Alkapuri Boulevard, Vadodara, Gujarat 390007",
-    gstin: "24AABCS1429B1Z8",
-    fssai: "21423011000123",
-    phone: "+91 265 234 5678",
-    reservationPhone: "+91 70960 34960",
-    email: "concierge@spicegarden.com",
+    ...legal,
+    ...contact,
     openingHours,
-    socials: {
-      instagram: "@spicegarden.vadodara",
-      facebook: "spicegarden.vadodara",
-      twitter: "@spicegardenvd"
-    }
+    links
   };
 
   // Staff Profile state
@@ -1737,6 +1772,7 @@ export function StaffProvider({ children }) {
       assignTable,
       markInvoicePaid,
       updateOpeningHours,
+      updateLegalInfo,
       flagCustomerNoShow,
       finalizeTableBill,
       addGuestToQueue,
