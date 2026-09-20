@@ -64,9 +64,8 @@ export default function StaffSettingsPage() {
       </p>
 
       <div className="grid sm:grid-cols-2 gap-4">
-        {GROUPS.map((group) => {
-          const locked = group.ownerOnly && !isOwner;
-          const clickable = group.live && !locked;
+        {GROUPS.filter((group) => isOwner || !group.ownerOnly).map((group) => {
+          const clickable = group.live;
 
           const card = (
             <div
@@ -76,12 +75,7 @@ export default function StaffSettingsPage() {
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-serif text-lg text-ink-navy">{group.title}</h3>
-                {locked && (
-                  <span className="font-label-caps text-[10px] text-red-500 uppercase tracking-widest border border-red-200 bg-red-50 px-2 py-0.5">
-                    Owner only
-                  </span>
-                )}
-                {!group.live && !locked && (
+                {!group.live && (
                   <span className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest border border-muted-border px-2 py-0.5">
                     Coming soon
                   </span>
