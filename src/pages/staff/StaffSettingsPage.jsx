@@ -48,7 +48,7 @@ const GROUPS = [
     description: 'Who can log in, and what role they have.',
     path: '/staff/settings/staff',
     ownerOnly: true,
-    live: false
+    live: true
   }
 ];
 
