@@ -10,7 +10,7 @@ import { formatINR } from '../utils/currency'
 export default function CartDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { addOrder } = useStaff();
+  const { addOrder, restaurantInfo } = useStaff();
   const { 
     cartItems, 
     addToCart, 
@@ -18,15 +18,18 @@ export default function CartDrawer({ isOpen, onClose }) {
     deleteFromCart, 
     getSubtotal, 
     getServiceCharge, 
+    getPackagingFee,
     getGST, 
     getGrandTotal, 
-    placeOrder 
+    placeOrder,
+    isTakeout
   } = useCart();
 
   const [specialNotes, setSpecialNotes] = useState('');
 
   const subtotal = getSubtotal();
   const serviceCharge = getServiceCharge(subtotal);
+  const packagingFee = getPackagingFee();
   const gst = getGST(subtotal);
   const total = getGrandTotal();
 
@@ -192,12 +195,20 @@ export default function CartDrawer({ isOpen, onClose }) {
                       <span className="font-label-caps tracking-wider">Subtotal</span>
                       <span className="font-body-md">{formatINR(subtotal)}</span>
                     </div>
+                    {!isTakeout && restaurantInfo.serviceChargeEnabled && (
+                      <div className="flex justify-between text-sm text-subtle-text">
+                        <span className="font-label-caps tracking-wider">Service Charge ({restaurantInfo.serviceChargePercent}%)</span>
+                        <span className="font-body-md">{formatINR(serviceCharge)}</span>
+                      </div>
+                    )}
+                    {isTakeout && restaurantInfo.packagingFeeEnabled && (
+                      <div className="flex justify-between text-sm text-subtle-text">
+                        <span className="font-label-caps tracking-wider">{restaurantInfo.packagingFeeLabel}</span>
+                        <span className="font-body-md">{formatINR(packagingFee)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm text-subtle-text">
-                      <span className="font-label-caps tracking-wider">Service Charge (12.5%)</span>
-                      <span className="font-body-md">{formatINR(serviceCharge)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-subtle-text">
-                      <span className="font-label-caps tracking-wider">GST (5%)</span>
+                      <span className="font-label-caps tracking-wider">GST ({restaurantInfo.cgstRate + restaurantInfo.sgstRate}%)</span>
                       <span className="font-body-md">{formatINR(gst)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-subtle-text">

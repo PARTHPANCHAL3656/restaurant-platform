@@ -80,6 +80,22 @@ export function StaffProvider({ children }) {
     twitter: "https://twitter.com/spicegardenvd"
   });
 
+  const [billing, setBilling] = useState({
+    gstMode: "CUSTOM",
+    cgstRate: 3.75,
+    sgstRate: 3.75,
+    pricesIncludeGst: false,
+    serviceChargeEnabled: true,
+    serviceChargePercent: 10,
+    serviceChargeTaxable: false,
+    packagingFeeEnabled: true,
+    packagingFeeAmount: 30,
+    packagingFeeLabel: "Packaging Charges",
+    billFooterNote: "Please verify the bill before payment. No complaints will be entertained thereafter.",
+    takeoutBillNote: "Pay at counter. Collect within 20 min of ready time.",
+    invoicePrefix: "SG"
+  });
+
   useEffect(() => {
     api.get('/api/settings')
       .then(res => {
@@ -94,6 +110,9 @@ export function StaffProvider({ children }) {
         }
         if (res.data?.links) {
           setLinks(res.data.links);
+        }
+        if (res.data?.billing) {
+          setBilling(res.data.billing);
         }
       })
       .catch(() => {
@@ -130,6 +149,13 @@ export function StaffProvider({ children }) {
     setLinks(res.data.links);
     return res.data.links;
   };
+  // Owner-only on the backend — this is the tax/fee math, so it's locked
+  // down the same as legal/contact.
+  const updateBillingInfo = async (newBilling) => {
+    const res = await api.patch('/api/settings', { billing: newBilling });
+    setBilling(res.data.billing);
+    return res.data.billing;
+  };
 
   // Restaurant Information — now sourced from the backend Settings
   // collection (legal + contact + links + openingHours) instead of
@@ -137,6 +163,7 @@ export function StaffProvider({ children }) {
   const restaurantInfo = {
     ...legal,
     ...contact,
+    ...billing,
     openingHours,
     links
   };
@@ -1791,6 +1818,7 @@ export function StaffProvider({ children }) {
       updateOpeningHours,
       updateLegalInfo,
       updateContactInfo,
+      updateBillingInfo,
       updateLinksInfo,
       flagCustomerNoShow,
       finalizeTableBill,

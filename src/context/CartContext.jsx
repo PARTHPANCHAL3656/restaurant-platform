@@ -10,7 +10,7 @@ export function useCart() {
 }
 
 export function CartProvider({ children }) {
-  const { orders, addOrder } = useStaff();
+  const { orders, addOrder, restaurantInfo } = useStaff();
   const [cartItems, setCartItems] = useState([]);
   const [orderId, setOrderId] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('lastOrderId') : null) || null);
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -255,7 +255,14 @@ export function CartProvider({ children }) {
     : [];
   const activeOrderTotal = activeOrder ? (() => {
     const sub = activeOrder.items.reduce((sum, i) => sum + (i.price * i.qty), 0);
-    return sub + sub * 0.10 + sub * 0.075;
+    const isOrderTakeout = activeOrder.orderType === 'takeout';
+    const sc = (restaurantInfo.serviceChargeEnabled && !isOrderTakeout)
+      ? sub * (restaurantInfo.serviceChargePercent / 100) : 0;
+    const pkg = (restaurantInfo.packagingFeeEnabled && isOrderTakeout)
+      ? restaurantInfo.packagingFeeAmount : 0;
+    const taxableValue = restaurantInfo.serviceChargeTaxable ? sub + sc : sub;
+    const gstAmt = taxableValue * ((restaurantInfo.cgstRate + restaurantInfo.sgstRate) / 100);
+    return sub + sc + pkg + gstAmt;
   })() : 0;
   const activeOrderTime = activeOrder ? new Date(activeOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
   const activeOrderBillNumber = activeOrder ? activeOrder.billNumber : null;
@@ -294,16 +301,24 @@ export function CartProvider({ children }) {
   };
 
   const getServiceCharge = (sub) => {
-    return sub * 0.10;
+    return (restaurantInfo.serviceChargeEnabled && !isTakeout)
+      ? sub * (restaurantInfo.serviceChargePercent / 100) : 0;
+  };
+
+  const getPackagingFee = () => {
+    return (restaurantInfo.packagingFeeEnabled && isTakeout)
+      ? restaurantInfo.packagingFeeAmount : 0;
   };
 
   const getGST = (sub) => {
-    return sub * 0.075;
+    const serviceCharge = getServiceCharge(sub);
+    const taxableValue = restaurantInfo.serviceChargeTaxable ? sub + serviceCharge : sub;
+    return taxableValue * ((restaurantInfo.cgstRate + restaurantInfo.sgstRate) / 100);
   };
 
   const getGrandTotal = () => {
     const sub = getSubtotal();
-    return sub + getServiceCharge(sub) + getGST(sub);
+    return sub + getServiceCharge(sub) + getPackagingFee() + getGST(sub);
   };
 
   const placeOrder = async (guestPhone) => {
@@ -363,6 +378,7 @@ export function CartProvider({ children }) {
       clearCart,
       getSubtotal,
       getServiceCharge,
+      getPackagingFee,
       getGST,
       getGrandTotal,
       placeOrder,

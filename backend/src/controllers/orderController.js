@@ -1,6 +1,8 @@
 import Order from "../models/Order.js"
 import Invoice from "../models/Invoice.js"
 import { io } from "../index.js"
+import Settings from "../models/Settings.js"
+import { calculateBill } from "../utils/calculateBill.js"
 
 // POST /api/orders/add-items
 // Customer places first order OR adds more items (same endpoint for both)
@@ -175,13 +177,14 @@ export const updateOrderStatus = async (req, res) => {
     if (status === "Served" && order.orderType === "takeout") {
       const existingInvoice = await Invoice.findOne({ sessionId: order.sessionId })
       if (!existingInvoice && order.items.length > 0) {
-        const subtotal = Math.round(order.items.reduce((sum, i) => sum + i.price * i.qty, 0))
-        const serviceCharge = Math.round(subtotal * 0.10)
-        const gst = Math.round(subtotal * 0.075)
-        const total = Math.round(subtotal + serviceCharge + gst)
+        const settings = await Settings.getSingleton()
+        const { subtotal, serviceCharge, packagingFee, gst, total } = calculateBill({
+          items: order.items,
+          orderType: "takeout",
+          billing: settings.billing
+        })
 
-        const count = await Invoice.countDocuments()
-        const invoiceNumber = `INV-${1000 + count + 1}`
+        const invoiceNumber = order.billNumber || `INV-${1000 + (await Invoice.countDocuments()) + 1}`
 
         generatedInvoice = await Invoice.create({
           invoiceNumber,
@@ -194,6 +197,7 @@ export const updateOrderStatus = async (req, res) => {
           items: order.items.map(i => ({ itemId: i.itemId, name: i.name, price: i.price, qty: i.qty })),
           subtotal,
           serviceCharge,
+          packagingFee,
           gst,
           total,
           status: "unpaid",

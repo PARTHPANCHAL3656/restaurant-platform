@@ -49,6 +49,27 @@ const settingsSchema = new mongoose.Schema({
     instagram: { type: String, default: "https://instagram.com/spicegarden.vadodara" },
     facebook: { type: String, default: "https://facebook.com/spicegarden.vadodara" },
     twitter: { type: String, default: "https://twitter.com/spicegardenvd" }
+  },
+
+  // The "second wall" — staff cannot quietly change tax math. Owner-only.
+  // Defaults below preserve exactly what was already hardcoded across the
+  // app (10% service charge, 3.75%+3.75% GST) so this deploy changes
+  // nothing until you actually edit it. The 7.5% total GST is NOT a real
+  // Indian restaurant slab (5% or 18% are) — verify and correct this.
+  billing: {
+    gstMode: { type: String, enum: ["GST_5", "GST_18", "CUSTOM"], default: "CUSTOM" },
+    cgstRate: { type: Number, default: 3.75 },
+    sgstRate: { type: Number, default: 3.75 },
+    pricesIncludeGst: { type: Boolean, default: false },
+    serviceChargeEnabled: { type: Boolean, default: true },
+    serviceChargePercent: { type: Number, default: 10 },
+    serviceChargeTaxable: { type: Boolean, default: false },
+    packagingFeeEnabled: { type: Boolean, default: true },
+    packagingFeeAmount: { type: Number, default: 30 },
+    packagingFeeLabel: { type: String, default: "Packaging Charges" },
+    billFooterNote: { type: String, default: "Please verify the bill before payment. No complaints will be entertained thereafter." },
+    takeoutBillNote: { type: String, default: "Pay at counter. Collect within 20 min of ready time." },
+    invoicePrefix: { type: String, default: "SG", trim: true }
   }
 }, { timestamps: true })
 

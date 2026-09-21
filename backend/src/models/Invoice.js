@@ -65,6 +65,7 @@ const invoiceSchema = new mongoose.Schema({
   items: [invoiceItemSchema],
   subtotal: { type: Number, required: true },
   serviceCharge: { type: Number, required: true },
+  packagingFee: { type: Number, default: 0 },
   gst: { type: Number, required: true },
   discount: { type: Number, default: 0 },
   total: { type: Number, required: true },

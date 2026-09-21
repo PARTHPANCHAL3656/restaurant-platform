@@ -24,7 +24,7 @@ const GROUPS = [
     description: 'GST rate, service charge, and packaging fee logic used on every bill.',
     path: '/staff/settings/billing',
     ownerOnly: true,
-    live: false
+    live: true
   },
   {
     key: 'operations',

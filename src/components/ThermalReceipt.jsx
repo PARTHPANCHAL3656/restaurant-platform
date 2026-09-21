@@ -18,6 +18,7 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
   const items = invoice.items || [];
   const subtotal = Number(invoice.subtotal || 0);
   const serviceCharge = Number(invoice.serviceCharge || 0);
+  const packagingFee = Number(invoice.packagingFee || 0);
   const gst = Number(invoice.gst || 0);
   const total = Number(invoice.total ?? invoice.amount ?? 0);
 
@@ -88,10 +89,18 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
           <span>Sub Total</span>
           <strong>{formatINR(subtotal)}</strong>
         </div>
-        <div className="thermal-row">
-          <span>Service Charge @ {percentOf(serviceCharge, subtotal)}%</span>
-          <strong>{formatINR(serviceCharge)}</strong>
-        </div>
+        {serviceCharge > 0 && (
+          <div className="thermal-row">
+            <span>Service Charge @ {percentOf(serviceCharge, subtotal)}%</span>
+            <strong>{formatINR(serviceCharge)}</strong>
+          </div>
+        )}
+        {packagingFee > 0 && (
+          <div className="thermal-row">
+            <span>{restaurantInfo.packagingFeeLabel || 'Packaging Charges'}</span>
+            <strong>{formatINR(packagingFee)}</strong>
+          </div>
+        )}
         <div className="thermal-row">
           <span>CGST @ {percentOf(gst / 2, subtotal)}%</span>
           <strong>{formatINR(gst / 2)}</strong>
@@ -127,7 +136,7 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
         <p className="thermal-thanks">Thank You! Visit Again.</p>
         <p>Phone: {restaurantInfo.primaryPhone} &nbsp;|&nbsp; Email: {restaurantInfo.email}</p>
         <p className="thermal-disclaimer">
-          Please verify the bill before payment. No complaints will be entertained thereafter.
+          {restaurantInfo.billFooterNote}
         </p>
       </footer>
     </section>

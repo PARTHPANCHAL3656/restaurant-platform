@@ -70,8 +70,10 @@ export default function BillSummaryPage() {
     : hasActiveOrder ? activeOrderItems : [];
   const subtotal = hasInvoice ? invoice.subtotal
     : hasActiveOrder ? items.reduce((sum, item) => sum + (item.price * item.quantity), 0) : 0;
-  const serviceCharge = hasInvoice ? invoice.serviceCharge : hasActiveOrder ? subtotal * 0.10 : 0;
-  const gst = hasInvoice ? invoice.gst : hasActiveOrder ? subtotal * 0.075 : 0;
+  const serviceCharge = hasInvoice ? invoice.serviceCharge
+    : hasActiveOrder && restaurantInfo.serviceChargeEnabled ? Math.round(subtotal * (restaurantInfo.serviceChargePercent / 100)) : 0;
+  const gst = hasInvoice ? invoice.gst
+    : hasActiveOrder ? Math.round((restaurantInfo.serviceChargeTaxable ? subtotal + serviceCharge : subtotal) * ((restaurantInfo.cgstRate + restaurantInfo.sgstRate) / 100)) : 0;
   const grandTotal = hasInvoice ? invoice.total : hasActiveOrder ? activeOrderTotal : 0;
 
   // The ID shown to the guest: the invoice number once an Invoice exists,
@@ -311,6 +313,7 @@ export default function BillSummaryPage() {
                 items: items.map(item => ({ ...item, qty: item.quantity })),
                 subtotal,
                 serviceCharge,
+                packagingFee: hasInvoice ? (invoice.packagingFee || 0) : 0,
                 gst,
                 total: grandTotal,
                 ...(hasInvoice && {

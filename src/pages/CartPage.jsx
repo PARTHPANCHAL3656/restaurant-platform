@@ -14,13 +14,17 @@ export default function CartPage() {
     deleteFromCart, 
     getSubtotal, 
     getServiceCharge, 
+    getPackagingFee,
     getGST, 
     getGrandTotal, 
-    placeOrder 
+    placeOrder,
+    isTakeout
   } = useCart();
+  const { restaurantInfo } = useStaff();
 
   const subtotal = getSubtotal();
   const serviceCharge = getServiceCharge(subtotal);
+  const packagingFee = getPackagingFee();
   const gst = getGST(subtotal);
   const total = getGrandTotal();
 
@@ -130,12 +134,20 @@ export default function CartPage() {
                   <span className="font-label-caps tracking-wide">Subtotal</span>
                   <span className="text-ink-navy">{formatINR(subtotal)}</span>
                 </div>
+                {!isTakeout && restaurantInfo.serviceChargeEnabled && (
+                  <div className="flex justify-between">
+                    <span className="font-label-caps tracking-wide">Service Charge ({restaurantInfo.serviceChargePercent}%)</span>
+                    <span className="text-ink-navy">{formatINR(serviceCharge)}</span>
+                  </div>
+                )}
+                {isTakeout && restaurantInfo.packagingFeeEnabled && (
+                  <div className="flex justify-between">
+                    <span className="font-label-caps tracking-wide">{restaurantInfo.packagingFeeLabel}</span>
+                    <span className="text-ink-navy">{formatINR(packagingFee)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
-                  <span className="font-label-caps tracking-wide">Service Charge (12.5%)</span>
-                  <span className="text-ink-navy">{formatINR(serviceCharge)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-label-caps tracking-wide">GST (5%)</span>
+                  <span className="font-label-caps tracking-wide">GST ({restaurantInfo.cgstRate + restaurantInfo.sgstRate}%)</span>
                   <span className="text-ink-navy">{formatINR(gst)}</span>
                 </div>
                 

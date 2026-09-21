@@ -3,6 +3,8 @@ import Table from "../models/Table.js"
 import Order from "../models/Order.js"
 import Reservation from "../models/Reservation.js"
 import Customer from "../models/Customer.js"
+import Settings from "../models/Settings.js"
+import { calculateBill } from "../utils/calculateBill.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { io } from "../index.js"
 
@@ -37,10 +39,12 @@ export const generateInvoiceForTable = async (req, res) => {
       await order.save()
     }
 
-    const subtotal = Math.round(order.items.reduce((sum, i) => sum + i.price * i.qty, 0))
-    const serviceCharge = Math.round(subtotal * 0.10)
-    const gst = Math.round(subtotal * 0.075)
-    const total = Math.round(subtotal + serviceCharge + gst)
+    const settings = await Settings.getSingleton()
+    const { subtotal, serviceCharge, packagingFee, gst, total } = calculateBill({
+      items: order.items,
+      orderType: "dine-in",
+      billing: settings.billing
+    })
 
     // Reuse the number already minted on this order at creation time (see
     // utils/nextBillNumber.js) so the customer's pre-invoice bill and this
@@ -62,6 +66,7 @@ export const generateInvoiceForTable = async (req, res) => {
       items: order.items.map(i => ({ itemId: i.itemId, name: i.name, price: i.price, qty: i.qty })),
       subtotal,
       serviceCharge,
+      packagingFee,
       gst,
       total,
       status: "unpaid",
