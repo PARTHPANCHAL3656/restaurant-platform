@@ -70,6 +70,19 @@ const settingsSchema = new mongoose.Schema({
     billFooterNote: { type: String, default: "Please verify the bill before payment. No complaints will be entertained thereafter." },
     takeoutBillNote: { type: String, default: "Pay at counter. Collect within 20 min of ready time." },
     invoicePrefix: { type: String, default: "SG", trim: true }
+  },
+
+  // Last 50 settings changes — who changed which section, and when.
+  // Capped by slicing in the controller after every save, not by a
+  // Mongo-side limit, so it stays a plain array you can read normally.
+  auditLog: {
+    type: [{
+      section: { type: String, required: true },
+      updatedBy: { type: String, required: true },
+      role: { type: String, required: true },
+      timestamp: { type: Date, default: Date.now }
+    }],
+    default: []
   }
 }, { timestamps: true })
 

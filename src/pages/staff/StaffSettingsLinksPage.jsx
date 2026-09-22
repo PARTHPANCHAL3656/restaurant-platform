@@ -56,13 +56,13 @@ export default function StaffSettingsLinksPage() {
         </p>
 
         <div className="space-y-3">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={form.zomato}
               onChange={(e) => updateField('zomato', e.target.value)}
               placeholder="Zomato page URL"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
             <input
               type="text"

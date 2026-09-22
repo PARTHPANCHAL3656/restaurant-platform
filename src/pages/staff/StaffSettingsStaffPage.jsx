@@ -132,34 +132,34 @@ export default function StaffSettingsStaffPage() {
         </p>
 
         <div className="space-y-3">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={newAccount.username}
               onChange={(e) => setNewAccount(prev => ({ ...prev, username: e.target.value }))}
               placeholder="Username"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
             <input
               type="text"
               value={newAccount.name}
               onChange={(e) => setNewAccount(prev => ({ ...prev, name: e.target.value }))}
               placeholder="Full name"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="password"
               value={newAccount.password}
               onChange={(e) => setNewAccount(prev => ({ ...prev, password: e.target.value }))}
               placeholder="Password (min. 8 characters)"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
             <select
               value={newAccount.role}
               onChange={(e) => setNewAccount(prev => ({ ...prev, role: e.target.value }))}
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold bg-white"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold bg-white"
             >
               {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
@@ -202,7 +202,7 @@ export default function StaffSettingsStaffPage() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <select
                         value={s.role}
                         disabled={isMe}

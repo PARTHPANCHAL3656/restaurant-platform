@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
+import { fillEmptyFields } from '../../utils/settingsHelpers';
 
 export default function StaffSettingsBillingPage() {
   const { restaurantInfo, updateBillingInfo } = useStaff();
@@ -48,19 +49,23 @@ export default function StaffSettingsBillingPage() {
 
   const handleSave = async () => {
     setError('');
-    if (form.cgstRate < 0 || form.sgstRate < 0 || form.serviceChargePercent < 0 || form.packagingFeeAmount < 0) {
+    const requiredKeys = ['cgstRate', 'sgstRate', 'serviceChargePercent', 'packagingFeeAmount', 'packagingFeeLabel', 'invoicePrefix', 'billFooterNote', 'takeoutBillNote'];
+    const safeForm = fillEmptyFields(form, restaurantInfo, requiredKeys);
+    const numericForm = {
+      ...safeForm,
+      cgstRate: Number(safeForm.cgstRate),
+      sgstRate: Number(safeForm.sgstRate),
+      serviceChargePercent: Number(safeForm.serviceChargePercent),
+      packagingFeeAmount: Number(safeForm.packagingFeeAmount)
+    };
+    if (numericForm.cgstRate < 0 || numericForm.sgstRate < 0 || numericForm.serviceChargePercent < 0 || numericForm.packagingFeeAmount < 0) {
       setError('Rates and amounts cannot be negative.');
       return;
     }
+    setForm(numericForm);
     setIsSaving(true);
     try {
-      await updateBillingInfo({
-        ...form,
-        cgstRate: Number(form.cgstRate),
-        sgstRate: Number(form.sgstRate),
-        serviceChargePercent: Number(form.serviceChargePercent),
-        packagingFeeAmount: Number(form.packagingFeeAmount)
-      });
+      await updateBillingInfo(numericForm);
       setSavedMessage('Saved. New rates apply to every bill generated from now on — bills already issued keep their original numbers.');
       setTimeout(() => setSavedMessage(''), 5000);
     } catch (err) {
@@ -99,14 +104,14 @@ export default function StaffSettingsBillingPage() {
 
         <div className="space-y-3">
           <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">GST</h3>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="number"
               step="0.01"
               value={form.cgstRate}
               onChange={(e) => updateField('cgstRate', e.target.value)}
               placeholder="CGST %"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
             <input
               type="number"
@@ -165,21 +170,21 @@ export default function StaffSettingsBillingPage() {
             />
             Charge a packaging fee on takeout orders
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="number"
               step="1"
               value={form.packagingFeeAmount}
               onChange={(e) => updateField('packagingFeeAmount', e.target.value)}
               placeholder="Amount (₹)"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
             <input
               type="text"
               value={form.packagingFeeLabel}
               onChange={(e) => updateField('packagingFeeLabel', e.target.value)}
               placeholder="Bill line text"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
           </div>
         </div>

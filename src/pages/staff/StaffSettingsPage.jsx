@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../../utils/api';
 
 const GROUPS = [
   {
@@ -56,6 +57,16 @@ export default function StaffSettingsPage() {
   const staffRole = sessionStorage.getItem('staffRole');
   const isOwner = staffRole === 'OWNER';
 
+  const [auditLog, setAuditLog] = useState([]);
+
+  useEffect(() => {
+    if (isOwner) {
+      api.get('/api/settings')
+        .then(res => setAuditLog((res.data.auditLog || []).slice().reverse()))
+        .catch(() => {});
+    }
+  }, [isOwner]);
+
   return (
     <div className="p-4 md:p-6 max-w-3xl">
       <h2 className="font-serif text-xl text-ink-navy font-semibold">Settings</h2>
@@ -92,6 +103,22 @@ export default function StaffSettingsPage() {
           );
         })}
       </div>
+
+      {isOwner && auditLog.length > 0 && (
+        <div className="bg-white border border-muted-border p-6 mt-6 max-w-full">
+          <h3 className="font-serif text-lg text-ink-navy mb-4">Recent Changes</h3>
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {auditLog.map((entry, i) => (
+              <div key={i} className="flex flex-wrap justify-between gap-2 text-xs text-subtle-text border-b border-muted-border pb-2 last:border-0">
+                <span>
+                  <span className="text-ink-navy font-semibold">{entry.updatedBy}</span> ({entry.role}) updated <span className="text-ink-navy">{entry.section}</span>
+                </span>
+                <span>{new Date(entry.timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

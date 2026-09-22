@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
+import { fillEmptyFields } from '../../utils/settingsHelpers';
 
 export default function StaffSettingsContactPage() {
   const { restaurantInfo, updateContactInfo } = useStaff();
@@ -36,14 +37,14 @@ export default function StaffSettingsContactPage() {
 
   const handleSave = async () => {
     setError('');
-    const invalid = !form.primaryPhone.trim() || !form.email.trim();
-    if (invalid) {
-      setError('Primary phone and email are required — they appear on the website and footer.');
-      return;
-    }
+    // whatsappNumber and secondaryPhone stay out of this list on purpose
+    // — they're genuinely optional and should stay clearable.
+    const requiredKeys = ['primaryPhone', 'email', 'googleMapsUrl', 'googleMapsEmbedUrl'];
+    const safeForm = fillEmptyFields(form, restaurantInfo, requiredKeys);
+    setForm(safeForm);
     setIsSaving(true);
     try {
-      await updateContactInfo(form);
+      await updateContactInfo(safeForm);
       setSavedMessage('Saved. This updates the website immediately.');
       setTimeout(() => setSavedMessage(''), 4000);
     } catch (err) {
@@ -78,20 +79,20 @@ export default function StaffSettingsContactPage() {
         </p>
 
         <div className="space-y-3">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={form.primaryPhone}
               onChange={(e) => updateField('primaryPhone', e.target.value)}
               placeholder="Primary phone"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
             <input
               type="text"
               value={form.secondaryPhone}
               onChange={(e) => updateField('secondaryPhone', e.target.value)}
               placeholder="Reservation phone"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
           </div>
           <input

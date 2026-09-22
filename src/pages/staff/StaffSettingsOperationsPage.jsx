@@ -27,14 +27,24 @@ export default function StaffSettingsOperationsPage() {
 
   const handleSave = async () => {
     setError('');
-    const invalid = hours.some(h => !h.days.trim() || !h.hours.trim());
-    if (invalid) {
-      setError('Every row needs both a days range and hours — remove any empty rows.');
-      return;
-    }
+    // A row that already existed reverts to its own previous value if
+    // left empty; a brand-new row that's still empty has nothing to
+    // revert to, so it's dropped rather than saved blank.
+    const previous = restaurantInfo.openingHours;
+    const safeHours = hours
+      .map((h, idx) => {
+        const prev = previous[idx];
+        return {
+          days: h.days.trim() || (prev ? prev.days : ''),
+          hours: h.hours.trim() || (prev ? prev.hours : '')
+        };
+      })
+      .filter(h => h.days && h.hours);
+    setHours(safeHours);
     setIsSaving(true);
     try {
-      await updateOpeningHours(hours);
+      const saved = await updateOpeningHours(safeHours);
+      setHours(saved);
       setSavedMessage('Saved. This takes effect immediately for new takeout orders.');
       setTimeout(() => setSavedMessage(''), 4000);
     } catch (err) {
@@ -57,24 +67,24 @@ export default function StaffSettingsOperationsPage() {
 
         <div className="space-y-3">
           {hours.map((entry, idx) => (
-            <div key={idx} className="flex gap-3 items-center">
+            <div key={idx} className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center pb-3 sm:pb-0 border-b sm:border-b-0 border-muted-border last:border-0 last:pb-0">
               <input
                 type="text"
                 value={entry.days}
                 onChange={(e) => updateEntry(idx, 'days', e.target.value)}
                 placeholder="e.g. Monday - Thursday"
-                className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+                className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
               />
               <input
                 type="text"
                 value={entry.hours}
                 onChange={(e) => updateEntry(idx, 'hours', e.target.value)}
                 placeholder="e.g. 12:00 PM - 10:30 PM"
-                className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+                className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
               />
               <button
                 onClick={() => removeEntry(idx)}
-                className="text-red-500 hover:text-red-600 p-2"
+                className="self-end sm:self-auto text-red-500 hover:text-red-600 p-2"
                 title="Remove this row"
               >
                 <span className="material-symbols-outlined normal-case text-[18px]">delete</span>

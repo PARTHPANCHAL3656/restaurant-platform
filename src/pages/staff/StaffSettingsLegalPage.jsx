@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
+import { fillEmptyFields } from '../../utils/settingsHelpers';
 
 export default function StaffSettingsLegalPage() {
   const { restaurantInfo, updateLegalInfo } = useStaff();
@@ -36,14 +37,12 @@ export default function StaffSettingsLegalPage() {
 
   const handleSave = async () => {
     setError('');
-    const invalid = !form.legalBusinessName.trim() || !form.address.trim() || !form.gstin.trim() || !form.fssai.trim();
-    if (invalid) {
-      setError('Business name, address, GSTIN and FSSAI number are all required — they print on every invoice.');
-      return;
-    }
+    const requiredKeys = ['legalBusinessName', 'tagline', 'address', 'gstin', 'fssai', 'sacCode'];
+    const safeForm = fillEmptyFields(form, restaurantInfo, requiredKeys);
+    setForm(safeForm);
     setIsSaving(true);
     try {
-      await updateLegalInfo(form);
+      await updateLegalInfo(safeForm);
       setSavedMessage('Saved. This updates the website, bills, and invoices immediately.');
       setTimeout(() => setSavedMessage(''), 4000);
     } catch (err) {
@@ -101,13 +100,13 @@ export default function StaffSettingsLegalPage() {
             placeholder="Full address"
             className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
           />
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={form.gstin}
               onChange={(e) => updateField('gstin', e.target.value)}
               placeholder="GSTIN"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
             <input
               type="text"
