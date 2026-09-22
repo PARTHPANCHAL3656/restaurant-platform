@@ -107,13 +107,20 @@ export default function StaffSettingsPage() {
       {isOwner && auditLog.length > 0 && (
         <div className="bg-white border border-muted-border p-6 mt-6 max-w-full">
           <h3 className="font-serif text-lg text-ink-navy mb-4">Recent Changes</h3>
-          <div className="space-y-2 max-h-80 overflow-y-auto">
+          <div className="space-y-3 max-h-96 overflow-y-auto">
             {auditLog.map((entry, i) => (
-              <div key={i} className="flex flex-wrap justify-between gap-2 text-xs text-subtle-text border-b border-muted-border pb-2 last:border-0">
-                <span>
-                  <span className="text-ink-navy font-semibold">{entry.updatedBy}</span> ({entry.role}) updated <span className="text-ink-navy">{entry.section}</span>
-                </span>
-                <span>{new Date(entry.timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+              <div key={i} className="text-xs text-subtle-text border-b border-muted-border pb-3 last:border-0">
+                <div className="flex flex-wrap justify-between gap-2 mb-1">
+                  <span>
+                    <span className="text-ink-navy font-semibold">{entry.updatedBy}</span> ({entry.role}) &middot; <span className="text-ink-navy">{entry.section}</span>
+                  </span>
+                  <span>{new Date(entry.timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                </div>
+                {entry.changes && entry.changes.length > 0 && (
+                  <ul className="list-disc list-inside space-y-0.5">
+                    {entry.changes.map((c, ci) => <li key={ci}>{c}</li>)}
+                  </ul>
+                )}
               </div>
             ))}
           </div>

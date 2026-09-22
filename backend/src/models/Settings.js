@@ -72,14 +72,17 @@ const settingsSchema = new mongoose.Schema({
     invoicePrefix: { type: String, default: "SG", trim: true }
   },
 
-  // Last 50 settings changes — who changed which section, and when.
-  // Capped by slicing in the controller after every save, not by a
-  // Mongo-side limit, so it stays a plain array you can read normally.
+  // Last 50 settings changes — who changed which section, when, and
+  // exactly what changed (e.g. `["cgstRate changed from \"3.75\" to
+  // \"2.5\""]`). Capped by slicing in the controller after every save,
+  // not by a Mongo-side limit, so it stays a plain array you can read
+  // normally.
   auditLog: {
     type: [{
       section: { type: String, required: true },
       updatedBy: { type: String, required: true },
       role: { type: String, required: true },
+      changes: { type: [String], default: [] },
       timestamp: { type: Date, default: Date.now }
     }],
     default: []

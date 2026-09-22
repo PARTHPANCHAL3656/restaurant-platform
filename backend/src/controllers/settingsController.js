@@ -1,4 +1,5 @@
 import Settings from "../models/Settings.js"
+import { describeFieldChanges, describeOpeningHoursChanges } from "../utils/describeSettingsChanges.js"
 
 const MAX_AUDIT_LOG_ENTRIES = 50
 
@@ -43,26 +44,49 @@ export const updateSettings = async (req, res) => {
     }
 
     const settings = await Settings.getSingleton()
-    const changedSections = []
+    // Snapshot taken before anything is overwritten, so every diff below
+    // compares against what was actually in the database a moment ago.
+    const before = settings.toObject()
 
-    if (openingHours) { settings.openingHours = openingHours; changedSections.push("openingHours") }
+    const auditEntries = []
+    const recordChange = (section, changes) => {
+      if (changes.length) {
+        auditEntries.push({
+          section,
+          updatedBy: req.staff.name,
+          role: req.staff.role,
+          changes,
+          timestamp: new Date()
+        })
+      }
+    }
+
+    if (openingHours) {
+      recordChange("openingHours", describeOpeningHoursChanges(before.openingHours, openingHours))
+      settings.openingHours = openingHours
+    }
     // Merged field-by-field, not replaced wholesale — sending just
     // { legal: { gstin: "..." } } updates only the GSTIN and leaves
     // name/tagline/address/fssai untouched. openingHours stays a full
     // replace above since it's a list, not a field bag.
-    if (legal) { settings.legal = { ...settings.legal.toObject(), ...legal }; changedSections.push("legal") }
-    if (contact) { settings.contact = { ...settings.contact.toObject(), ...contact }; changedSections.push("contact") }
-    if (billing) { settings.billing = { ...settings.billing.toObject(), ...billing }; changedSections.push("billing") }
-    if (links) { settings.links = { ...settings.links.toObject(), ...links }; changedSections.push("links") }
-
-    for (const section of changedSections) {
-      settings.auditLog.push({
-        section,
-        updatedBy: req.staff.name,
-        role: req.staff.role,
-        timestamp: new Date()
-      })
+    if (legal) {
+      recordChange("legal", describeFieldChanges(before.legal, legal))
+      settings.legal = { ...settings.legal.toObject(), ...legal }
     }
+    if (contact) {
+      recordChange("contact", describeFieldChanges(before.contact, contact))
+      settings.contact = { ...settings.contact.toObject(), ...contact }
+    }
+    if (billing) {
+      recordChange("billing", describeFieldChanges(before.billing, billing))
+      settings.billing = { ...settings.billing.toObject(), ...billing }
+    }
+    if (links) {
+      recordChange("links", describeFieldChanges(before.links, links))
+      settings.links = { ...settings.links.toObject(), ...links }
+    }
+
+    settings.auditLog.push(...auditEntries)
     if (settings.auditLog.length > MAX_AUDIT_LOG_ENTRIES) {
       settings.auditLog = settings.auditLog.slice(-MAX_AUDIT_LOG_ENTRIES)
     }

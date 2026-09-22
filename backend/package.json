@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "reset-password": "node src/scripts/resetOwnerPassword.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
