@@ -922,6 +922,18 @@ export function StaffProvider({ children }) {
       loadPublicData();
     };
 
+    const handleSettingsUpdated = () => {
+      api.get('/api/settings')
+        .then(res => {
+          if (res.data?.openingHours?.length) setOpeningHours(res.data.openingHours);
+          if (res.data?.legal) setLegal(res.data.legal);
+          if (res.data?.contact) setContact(res.data.contact);
+          if (res.data?.billing) setBilling(res.data.billing);
+          if (res.data?.links) setLinks(res.data.links);
+        })
+        .catch(() => {});
+    };
+
     socket.on('table:updated', handleTableUpdate);
     socket.on('table:released', handleTableUpdate);
     socket.on('order:updated', handleOrderUpdate);
@@ -933,6 +945,7 @@ export function StaffProvider({ children }) {
     socket.on('category:updated', handleMenuUpdated);
     socket.on('invoice:generated', handleTableUpdate);
     socket.on('invoice:paid', handleTableUpdate);
+    socket.on('settings:updated', handleSettingsUpdated);
 
     return () => {
       socket.off('table:updated', handleTableUpdate);
@@ -946,6 +959,7 @@ export function StaffProvider({ children }) {
       socket.off('category:updated', handleMenuUpdated);
       socket.off('invoice:generated', handleTableUpdate);
       socket.off('invoice:paid', handleTableUpdate);
+      socket.off('settings:updated', handleSettingsUpdated);
     };
   }, [isAuthenticated, loadStaffData, loadPublicData, mapBackendReservation]);
 

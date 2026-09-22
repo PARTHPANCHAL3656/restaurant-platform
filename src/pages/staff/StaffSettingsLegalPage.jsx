@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
 import { fillEmptyFields } from '../../utils/settingsHelpers';
 
@@ -46,25 +46,14 @@ export default function StaffSettingsLegalPage() {
       setSavedMessage('Saved. This updates the website, bills, and invoices immediately.');
       setTimeout(() => setSavedMessage(''), 4000);
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Could not save. Please try again.');
+      setError(err.message || 'Could not save. Please try again.');
     } finally {
       setIsSaving(false);
     }
   };
 
   if (!isOwner) {
-    return (
-      <div className="p-4 md:p-6 max-w-2xl">
-        <Link to="/staff/settings" className="text-xs font-semibold text-saffron-gold uppercase tracking-widest">&larr; Back to Settings</Link>
-        <div className="bg-white border border-muted-border p-6 mt-6">
-          <h2 className="font-serif text-xl text-ink-navy font-semibold mb-2">Business &amp; Legal</h2>
-          <p className="text-sm text-subtle-text">
-            This section is Owner-only. GSTIN, FSSAI, and legal business details affect tax compliance,
-            so only the Owner account can view and edit them here.
-          </p>
-        </div>
-      </div>
-    );
+    return <Navigate to="/staff/settings" replace />;
   }
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import api from '../../utils/api';
 
 // The JWT payload isn't secret (it's signed, not encrypted), and
@@ -42,7 +42,7 @@ export default function StaffSettingsStaffPage() {
     setIsLoading(true);
     api.get('/api/staff')
       .then(res => { setStaffList(res.data); setListError(''); })
-      .catch(err => setListError(err.response?.data?.error || 'Could not load staff accounts.'))
+      .catch(err => setListError(err.message || 'Could not load staff accounts.'))
       .finally(() => setIsLoading(false));
   };
 
@@ -62,7 +62,7 @@ export default function StaffSettingsStaffPage() {
       setNewAccount({ username: '', password: '', name: '', role: 'STAFF' });
       loadStaff();
     } catch (err) {
-      setCreateError(err.response?.data?.error || 'Could not create account.');
+      setCreateError(err.message || 'Could not create account.');
     } finally {
       setIsCreating(false);
     }
@@ -74,7 +74,7 @@ export default function StaffSettingsStaffPage() {
       await api.patch(`/api/staff/${id}`, { role });
       loadStaff();
     } catch (err) {
-      setRowError(prev => ({ ...prev, [id]: err.response?.data?.error || 'Could not update role.' }));
+      setRowError(prev => ({ ...prev, [id]: err.message || 'Could not update role.' }));
     }
   };
 
@@ -84,7 +84,7 @@ export default function StaffSettingsStaffPage() {
       await api.patch(`/api/staff/${id}`, { active });
       loadStaff();
     } catch (err) {
-      setRowError(prev => ({ ...prev, [id]: err.response?.data?.error || 'Could not update status.' }));
+      setRowError(prev => ({ ...prev, [id]: err.message || 'Could not update status.' }));
     }
   };
 
@@ -100,24 +100,14 @@ export default function StaffSettingsStaffPage() {
       setResetTarget(null);
       setResetPassword('');
     } catch (err) {
-      setResetError(err.response?.data?.error || 'Could not reset password.');
+      setResetError(err.message || 'Could not reset password.');
     } finally {
       setIsResetting(false);
     }
   };
 
   if (!isOwner) {
-    return (
-      <div className="p-4 md:p-6 max-w-2xl">
-        <Link to="/staff/settings" className="text-xs font-semibold text-saffron-gold uppercase tracking-widest">&larr; Back to Settings</Link>
-        <div className="bg-white border border-muted-border p-6 mt-6">
-          <h2 className="font-serif text-xl text-ink-navy font-semibold mb-2">Staff Accounts</h2>
-          <p className="text-sm text-subtle-text">
-            This section is Owner-only.
-          </p>
-        </div>
-      </div>
-    );
+    return <Navigate to="/staff/settings" replace />;
   }
 
   return (

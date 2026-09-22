@@ -38,7 +38,7 @@ export default function StaffSettingsLinksPage() {
       setSavedMessage('Saved. This updates the website immediately.');
       setTimeout(() => setSavedMessage(''), 4000);
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Could not save. Please try again.');
+            setError(err.message || 'Could not save. Please try again.');
     } finally {
       setIsSaving(false);
     }

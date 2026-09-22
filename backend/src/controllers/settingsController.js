@@ -1,5 +1,6 @@
 import Settings from "../models/Settings.js"
 import { describeFieldChanges, describeOpeningHoursChanges } from "../utils/describeSettingsChanges.js"
+import { io } from "../index.js"
 
 const MAX_AUDIT_LOG_ENTRIES = 50
 
@@ -92,6 +93,11 @@ export const updateSettings = async (req, res) => {
     }
 
     await settings.save()
+
+    // Push to every connected staff session so an already-open dashboard
+    // (Manager's screen, the landing page's live data) reflects this
+    // immediately instead of only updating on the next manual refresh.
+    io.emit("settings:updated")
 
     res.json(settings)
   } catch (err) {
