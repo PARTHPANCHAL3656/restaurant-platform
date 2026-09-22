@@ -19,6 +19,7 @@ import categoryRoutes from "./routes/categories.js"
 import { setMenuIo } from "./controllers/menuController.js"
 
 import authRoutes from "./routes/auth.js"
+import { runEmergencyPasswordResetIfConfigured } from "./utils/emergencyPasswordReset.js"
 import paymentRoutes from "./routes/payments.js"
 import invoiceRoutes from "./routes/invoices.js"
 import analyticsRoutes from "./routes/analytics.js"
@@ -26,6 +27,7 @@ import crmRoutes from "./routes/crm.js"
 
 dotenv.config()
 connectDB()
+runEmergencyPasswordResetIfConfigured()
 
 const app = express()
 app.set('trust proxy', 1)
