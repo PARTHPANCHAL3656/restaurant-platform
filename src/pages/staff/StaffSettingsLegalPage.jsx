@@ -113,7 +113,7 @@ export default function StaffSettingsLegalPage() {
               value={form.fssai}
               onChange={(e) => updateField('fssai', e.target.value)}
               placeholder="FSSAI number"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
           </div>
           <input

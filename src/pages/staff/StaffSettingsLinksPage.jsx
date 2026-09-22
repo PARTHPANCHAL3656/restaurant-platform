@@ -69,7 +69,7 @@ export default function StaffSettingsLinksPage() {
               value={form.swiggy}
               onChange={(e) => updateField('swiggy', e.target.value)}
               placeholder="Swiggy page URL"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
           </div>
           <input

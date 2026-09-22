@@ -104,9 +104,12 @@ export default function StaffSettingsPage() {
         })}
       </div>
 
-      {isOwner && auditLog.length > 0 && (
+      {isOwner && (
         <div className="bg-white border border-muted-border p-6 mt-6 max-w-full">
           <h3 className="font-serif text-lg text-ink-navy mb-4">Recent Changes</h3>
+          {auditLog.length === 0 && (
+            <p className="text-xs text-subtle-text">No changes recorded yet — this fills in as settings get saved.</p>
+          )}
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {auditLog.map((entry, i) => (
               <div key={i} className="text-xs text-subtle-text border-b border-muted-border pb-3 last:border-0">

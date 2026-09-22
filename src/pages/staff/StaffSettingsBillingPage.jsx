@@ -105,22 +105,26 @@ export default function StaffSettingsBillingPage() {
         <div className="space-y-3">
           <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">GST</h3>
           <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="number"
-              step="0.01"
-              value={form.cgstRate}
-              onChange={(e) => updateField('cgstRate', e.target.value)}
-              placeholder="CGST %"
-              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
-            />
-            <input
-              type="number"
-              step="0.01"
-              value={form.sgstRate}
-              onChange={(e) => updateField('sgstRate', e.target.value)}
-              placeholder="SGST %"
-              className="flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
-            />
+            <div className="w-full sm:flex-1">
+              <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">CGST %</span>
+              <input
+                type="number"
+                step="0.01"
+                value={form.cgstRate}
+                onChange={(e) => updateField('cgstRate', e.target.value)}
+                className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              />
+            </div>
+            <div className="w-full sm:flex-1">
+              <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">SGST %</span>
+              <input
+                type="number"
+                step="0.01"
+                value={form.sgstRate}
+                onChange={(e) => updateField('sgstRate', e.target.value)}
+                className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              />
+            </div>
           </div>
           <label className="flex items-center gap-2 text-sm text-subtle-text">
             <input
@@ -142,14 +146,16 @@ export default function StaffSettingsBillingPage() {
             />
             Apply service charge on dine-in bills
           </label>
-          <input
-            type="number"
-            step="0.01"
-            value={form.serviceChargePercent}
-            onChange={(e) => updateField('serviceChargePercent', e.target.value)}
-            placeholder="Service charge %"
-            className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
-          />
+          <div>
+            <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Service Charge %</span>
+            <input
+              type="number"
+              step="0.01"
+              value={form.serviceChargePercent}
+              onChange={(e) => updateField('serviceChargePercent', e.target.value)}
+              className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+            />
+          </div>
           <label className="flex items-center gap-2 text-sm text-subtle-text">
             <input
               type="checkbox"
@@ -171,47 +177,57 @@ export default function StaffSettingsBillingPage() {
             Charge a packaging fee on takeout orders
           </label>
           <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="number"
-              step="1"
-              value={form.packagingFeeAmount}
-              onChange={(e) => updateField('packagingFeeAmount', e.target.value)}
-              placeholder="Amount (₹)"
-              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
-            />
-            <input
-              type="text"
-              value={form.packagingFeeLabel}
-              onChange={(e) => updateField('packagingFeeLabel', e.target.value)}
-              placeholder="Bill line text"
-              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
-            />
+            <div className="w-full sm:flex-1">
+              <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Amount (₹)</span>
+              <input
+                type="number"
+                step="1"
+                value={form.packagingFeeAmount}
+                onChange={(e) => updateField('packagingFeeAmount', e.target.value)}
+                className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              />
+            </div>
+            <div className="w-full sm:flex-1">
+              <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Bill line text</span>
+              <input
+                type="text"
+                value={form.packagingFeeLabel}
+                onChange={(e) => updateField('packagingFeeLabel', e.target.value)}
+                className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              />
+            </div>
           </div>
         </div>
 
         <div className="space-y-3">
           <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Invoice Numbering &amp; Notes</h3>
-          <input
-            type="text"
-            value={form.invoicePrefix}
-            onChange={(e) => updateField('invoicePrefix', e.target.value)}
-            placeholder="Invoice prefix (e.g. SG)"
-            className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
-          />
-          <textarea
-            value={form.billFooterNote}
-            onChange={(e) => updateField('billFooterNote', e.target.value)}
-            placeholder="Bill footer note"
-            rows={2}
-            className="w-full border border-muted-border px-3 py-2 text-sm focus:outline-none focus:border-saffron-gold"
-          />
-          <textarea
-            value={form.takeoutBillNote}
-            onChange={(e) => updateField('takeoutBillNote', e.target.value)}
-            placeholder="Takeout-specific note"
-            rows={2}
-            className="w-full border border-muted-border px-3 py-2 text-sm focus:outline-none focus:border-saffron-gold"
-          />
+          <div>
+            <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Invoice prefix (e.g. SG)</span>
+            <input
+              type="text"
+              value={form.invoicePrefix}
+              onChange={(e) => updateField('invoicePrefix', e.target.value)}
+              className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+            />
+          </div>
+          <div>
+            <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Bill footer note</span>
+            <textarea
+              value={form.billFooterNote}
+              onChange={(e) => updateField('billFooterNote', e.target.value)}
+              rows={2}
+              className="w-full border border-muted-border px-3 py-2 text-sm focus:outline-none focus:border-saffron-gold"
+            />
+          </div>
+          <div>
+            <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Takeout-specific note</span>
+            <textarea
+              value={form.takeoutBillNote}
+              onChange={(e) => updateField('takeoutBillNote', e.target.value)}
+              rows={2}
+              className="w-full border border-muted-border px-3 py-2 text-sm focus:outline-none focus:border-saffron-gold"
+            />
+          </div>
         </div>
 
         {error && (
