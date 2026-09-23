@@ -21,6 +21,13 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
   const packagingFee = Number(invoice.packagingFee || 0);
   const gst = Number(invoice.gst || 0);
   const total = Number(invoice.total ?? invoice.amount ?? 0);
+  // cgst/sgst/rates are only present on invoices generated after this
+  // field existed — older invoices fall back to the old 50/50 estimate
+  // so they still render instead of showing blank or NaN.
+  const cgstAmount = invoice.cgst !== undefined ? Number(invoice.cgst) : gst / 2;
+  const sgstAmount = invoice.sgst !== undefined ? Number(invoice.sgst) : gst / 2;
+  const cgstRateDisplay = invoice.cgstRate !== undefined ? invoice.cgstRate : percentOf(cgstAmount, subtotal);
+  const sgstRateDisplay = invoice.sgstRate !== undefined ? invoice.sgstRate : percentOf(sgstAmount, subtotal);
 
   const orderSourceSuffix =
     invoice.orderSource === 'Reservation' ? ' (Reserved)' :
@@ -50,11 +57,11 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
         <div><dt>Table:</dt><dd>{value(invoice.table)}{orderSourceSuffix}</dd></div>
         <div><dt>Date:</dt><dd>{value(invoice.date)}</dd></div>
         <div><dt>Time:</dt><dd>{value(invoice.time)}</dd></div>
-        {(invoice.cashier || invoice.guest) && (
-          <>
-            <div><dt>Cashier:</dt><dd>{value(invoice.cashier)}</dd></div>
-            <div><dt>Customer:</dt><dd>{value(invoice.guest)}</dd></div>
-          </>
+        {invoice.cashier && (
+          <div><dt>Cashier:</dt><dd>{value(invoice.cashier)}</dd></div>
+        )}
+        {invoice.guest && (
+          <div><dt>Customer:</dt><dd>{value(invoice.guest)}</dd></div>
         )}
       </dl>
 
@@ -102,12 +109,12 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
           </div>
         )}
         <div className="thermal-row">
-          <span>CGST @ {percentOf(gst / 2, subtotal)}%</span>
-          <strong>{formatINR(gst / 2)}</strong>
+          <span>CGST @ {cgstRateDisplay}%</span>
+          <strong>{formatINR(cgstAmount)}</strong>
         </div>
         <div className="thermal-row">
-          <span>SGST @ {percentOf(gst / 2, subtotal)}%</span>
-          <strong>{formatINR(gst / 2)}</strong>
+          <span>SGST @ {sgstRateDisplay}%</span>
+          <strong>{formatINR(sgstAmount)}</strong>
         </div>
         <div className="thermal-grand">
           <span>Grand Total</span>

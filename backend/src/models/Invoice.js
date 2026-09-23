@@ -66,6 +66,15 @@ const invoiceSchema = new mongoose.Schema({
   subtotal: { type: Number, required: true },
   serviceCharge: { type: Number, required: true },
   packagingFee: { type: Number, default: 0 },
+  // gst stays as the combined total (used in bill math elsewhere);
+  // cgst/sgst/cgstRate/sgstRate are the actual applied split, snapshotted
+  // at generation time so the receipt never has to guess or re-derive a
+  // percentage from amounts later — and so CGST and SGST can genuinely
+  // differ if they're ever configured that way.
+  cgst: { type: Number, default: 0 },
+  sgst: { type: Number, default: 0 },
+  cgstRate: { type: Number, default: 0 },
+  sgstRate: { type: Number, default: 0 },
   gst: { type: Number, required: true },
   discount: { type: Number, default: 0 },
   total: { type: Number, required: true },

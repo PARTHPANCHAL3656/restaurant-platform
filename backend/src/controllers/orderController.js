@@ -178,7 +178,7 @@ export const updateOrderStatus = async (req, res) => {
       const existingInvoice = await Invoice.findOne({ sessionId: order.sessionId })
       if (!existingInvoice && order.items.length > 0) {
         const settings = await Settings.getSingleton()
-        const { subtotal, serviceCharge, packagingFee, gst, total } = calculateBill({
+        const { subtotal, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, total } = calculateBill({
           items: order.items,
           orderType: "takeout",
           billing: settings.billing
@@ -198,6 +198,10 @@ export const updateOrderStatus = async (req, res) => {
           subtotal,
           serviceCharge,
           packagingFee,
+          cgst,
+          sgst,
+          cgstRate,
+          sgstRate,
           gst,
           total,
           status: "unpaid",

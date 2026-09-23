@@ -61,6 +61,12 @@ export default function BillSummaryPage() {
   const displayTime = hasInvoice
     ? new Date(invoice.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).replace(',', ' —')
     : hasActiveOrder ? `${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} — ${activeOrderTime}` : 'October 24, 2023 — 8:42 PM';
+  // Date-only, for the receipt's separate Date cell — displayTime above
+  // already bakes date+time together and stays used as-is for the
+  // on-screen summary a few lines down.
+  const displayDateOnly = hasInvoice
+    ? new Date(invoice.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   // Once a real invoice exists it's the source of truth (frozen at the
   // moment staff presented the bill) - prefer it over the live cart, which
@@ -306,7 +312,7 @@ export default function BillSummaryPage() {
               invoice={{
                 number: displayOrderId,
                 table: displayTable,
-                date: displayTime,
+                date: displayDateOnly,
                 time: hasInvoice
                   ? new Date(invoice.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
                   : (activeOrderTime || '—'),
@@ -314,11 +320,20 @@ export default function BillSummaryPage() {
                 subtotal,
                 serviceCharge,
                 packagingFee: hasInvoice ? (invoice.packagingFee || 0) : 0,
+                cgst: hasInvoice ? invoice.cgst : undefined,
+                sgst: hasInvoice ? invoice.sgst : undefined,
+                cgstRate: hasInvoice ? invoice.cgstRate : undefined,
+                sgstRate: hasInvoice ? invoice.sgstRate : undefined,
                 gst,
                 total: grandTotal,
+                // Guest name shows even before a formal invoice exists —
+                // there's no reason to hide who the bill is for just
+                // because staff hasn't clicked "generate invoice" yet.
+                // Cashier genuinely doesn't exist until that happens, so
+                // it stays gated.
+                guest: hasInvoice ? (invoice.guestName || 'Guest') : 'Guest',
                 ...(hasInvoice && {
                   cashier: invoice.generatedBy || 'Floor Manager',
-                  guest: invoice.guestName || 'Guest',
                   paymentMethod: invoice.paymentMethod && invoice.paymentMethod !== '—' ? invoice.paymentMethod : 'Pay at Counter',
                   status: invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)
                 })

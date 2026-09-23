@@ -40,7 +40,7 @@ export const generateInvoiceForTable = async (req, res) => {
     }
 
     const settings = await Settings.getSingleton()
-    const { subtotal, serviceCharge, packagingFee, gst, total } = calculateBill({
+    const { subtotal, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, total } = calculateBill({
       items: order.items,
       orderType: "dine-in",
       billing: settings.billing
@@ -67,6 +67,10 @@ export const generateInvoiceForTable = async (req, res) => {
       subtotal,
       serviceCharge,
       packagingFee,
+      cgst,
+      sgst,
+      cgstRate,
+      sgstRate,
       gst,
       total,
       status: "unpaid",

@@ -41,5 +41,10 @@ export function calculateBill({ items, orderType, billing }) {
   const gst = cgst + sgst
   const total = Math.round(subtotal + serviceCharge + packagingFee + gst)
 
-  return { subtotal, serviceCharge, packagingFee, gst, total }
+  return {
+    subtotal, serviceCharge, packagingFee,
+    cgst, sgst, gst,
+    cgstRate: billing.cgstRate, sgstRate: billing.sgstRate,
+    total
+  }
 }
