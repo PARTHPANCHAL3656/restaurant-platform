@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import api from '../../utils/api';
 
-// The JWT payload isn't secret (it's signed, not encrypted), and
-// staffId was never stored separately in sessionStorage the way
-// staffName/staffRole were — so it's read straight out of the token
-// instead of touching the shared login flow just for this one page.
 function getMyStaffId() {
   try {
     const token = sessionStorage.getItem('staffToken');
@@ -27,21 +23,39 @@ export default function StaffSettingsStaffPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [listError, setListError] = useState('');
 
-  const [newAccount, setNewAccount] = useState({ username: '', password: '', name: '', role: 'STAFF' });
+  const [newAccount, setNewAccount] = useState({ username: '', password: '', name: '', role: 'STAFF', jobTitle: '' });
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState('');
+
+  const [myProfile, setMyProfile] = useState({ name: '', jobTitle: '' });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileSaved, setProfileSaved] = useState('');
 
   const [resetTarget, setResetTarget] = useState(null);
   const [resetPassword, setResetPassword] = useState('');
   const [resetError, setResetError] = useState('');
   const [isResetting, setIsResetting] = useState(false);
 
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   const [rowError, setRowError] = useState({});
+  const [rowJobTitle, setRowJobTitle] = useState({});
 
   const loadStaff = () => {
     setIsLoading(true);
     api.get('/api/staff')
-      .then(res => { setStaffList(res.data); setListError(''); })
+      .then(res => {
+        setStaffList(res.data);
+        setListError('');
+        const me = res.data.find(s => s._id === myId);
+        if (me) setMyProfile({ name: me.name, jobTitle: me.jobTitle || '' });
+        const titles = {};
+        res.data.forEach(s => { titles[s._id] = s.jobTitle || ''; });
+        setRowJobTitle(titles);
+      })
       .catch(err => setListError(err.message || 'Could not load staff accounts.'))
       .finally(() => setIsLoading(false));
   };
@@ -59,12 +73,31 @@ export default function StaffSettingsStaffPage() {
     setIsCreating(true);
     try {
       await api.post('/api/staff', newAccount);
-      setNewAccount({ username: '', password: '', name: '', role: 'STAFF' });
+      setNewAccount({ username: '', password: '', name: '', role: 'STAFF', jobTitle: '' });
       loadStaff();
     } catch (err) {
       setCreateError(err.message || 'Could not create account.');
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setProfileError('');
+    if (!myProfile.name.trim()) {
+      setProfileError('Name cannot be empty.');
+      return;
+    }
+    setIsSavingProfile(true);
+    try {
+      await api.patch(`/api/staff/${myId}`, { name: myProfile.name, jobTitle: myProfile.jobTitle });
+      setProfileSaved('Saved.');
+      setTimeout(() => setProfileSaved(''), 3000);
+      loadStaff();
+    } catch (err) {
+      setProfileError(err.message || 'Could not save.');
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -88,6 +121,19 @@ export default function StaffSettingsStaffPage() {
     }
   };
 
+  const handleJobTitleBlur = async (id) => {
+    const current = staffList.find(s => s._id === id);
+    const newTitle = rowJobTitle[id] || '';
+    if (!current || newTitle === (current.jobTitle || '')) return;
+    setRowError(prev => ({ ...prev, [id]: '' }));
+    try {
+      await api.patch(`/api/staff/${id}`, { jobTitle: newTitle });
+      loadStaff();
+    } catch (err) {
+      setRowError(prev => ({ ...prev, [id]: err.message || 'Could not update job title.' }));
+    }
+  };
+
   const handleResetPassword = async () => {
     setResetError('');
     if (!resetPassword || resetPassword.length < 8) {
@@ -106,6 +152,20 @@ export default function StaffSettingsStaffPage() {
     }
   };
 
+  const handleDelete = async () => {
+    setDeleteError('');
+    setIsDeleting(true);
+    try {
+      await api.delete(`/api/staff/${deleteTarget._id}`);
+      setDeleteTarget(null);
+      loadStaff();
+    } catch (err) {
+      setDeleteError(err.message || 'Could not delete account.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (!isOwner) {
     return <Navigate to="/staff/settings" replace />;
   }
@@ -113,6 +173,47 @@ export default function StaffSettingsStaffPage() {
   return (
     <div className="p-4 md:p-6 max-w-3xl">
       <Link to="/staff/settings" className="text-xs font-semibold text-saffron-gold uppercase tracking-widest">&larr; Back to Settings</Link>
+
+      {/* My Profile — name/job title only, never role/active */}
+      <div className="bg-white border border-muted-border p-6 mt-6">
+        <h2 className="font-serif text-xl text-ink-navy font-semibold mb-1">My Profile</h2>
+        <p className="text-xs text-subtle-text mb-5">
+          Your own display name and job title. Role and active status can't be changed here — ask another Owner if that's ever needed.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="w-full sm:flex-1">
+            <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Name</span>
+            <input
+              type="text"
+              value={myProfile.name}
+              onChange={(e) => setMyProfile(prev => ({ ...prev, name: e.target.value }))}
+              className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+            />
+          </div>
+          <div className="w-full sm:flex-1">
+            <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Job Title (e.g. Cook, Waiter, Cashier)</span>
+            <input
+              type="text"
+              value={myProfile.jobTitle}
+              onChange={(e) => setMyProfile(prev => ({ ...prev, jobTitle: e.target.value }))}
+              className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+            />
+          </div>
+        </div>
+        {profileError && (
+          <p className="text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2 mt-4">{profileError}</p>
+        )}
+        {profileSaved && (
+          <p className="text-xs text-green-700 bg-green-50 border border-green-200 px-3 py-2 mt-4">{profileSaved}</p>
+        )}
+        <button
+          onClick={handleSaveProfile}
+          disabled={isSavingProfile}
+          className="w-full mt-5 bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[48px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+        >
+          {isSavingProfile ? 'Saving...' : 'Save My Profile'}
+        </button>
+      </div>
 
       {/* Add Account */}
       <div className="bg-white border border-muted-border p-6 mt-6">
@@ -154,6 +255,13 @@ export default function StaffSettingsStaffPage() {
               {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
+          <input
+            type="text"
+            value={newAccount.jobTitle}
+            onChange={(e) => setNewAccount(prev => ({ ...prev, jobTitle: e.target.value }))}
+            placeholder="Job title (optional, e.g. Cook, Waiter, Cashier)"
+            className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+          />
         </div>
 
         {createError && (
@@ -221,7 +329,27 @@ export default function StaffSettingsStaffPage() {
                       >
                         Reset Password
                       </button>
+
+                      <button
+                        disabled={isMe}
+                        onClick={() => { setDeleteTarget(s); setDeleteError(''); }}
+                        className="px-3 h-9 text-xs uppercase tracking-widest border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Delete
+                      </button>
                     </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Job Title</span>
+                    <input
+                      type="text"
+                      value={rowJobTitle[s._id] ?? ''}
+                      onChange={(e) => setRowJobTitle(prev => ({ ...prev, [s._id]: e.target.value }))}
+                      onBlur={() => handleJobTitleBlur(s._id)}
+                      placeholder="e.g. Cook, Waiter, Cashier"
+                      className="w-full sm:w-64 border border-muted-border px-3 h-9 text-sm focus:outline-none focus:border-saffron-gold"
+                    />
                   </div>
 
                   {rowError[s._id] && (
@@ -234,7 +362,7 @@ export default function StaffSettingsStaffPage() {
         )}
       </div>
 
-      {/* Reset Password Modal (inline, not a real overlay — matches this app's simple form style) */}
+      {/* Reset Password */}
       {resetTarget && (
         <div className="bg-white border border-muted-border p-6 mt-6">
           <h3 className="font-serif text-lg text-ink-navy mb-1">Reset password for {resetTarget.name}</h3>
@@ -259,6 +387,35 @@ export default function StaffSettingsStaffPage() {
             </button>
             <button
               onClick={() => setResetTarget(null)}
+              className="px-6 h-[44px] border border-muted-border text-ink-navy text-xs uppercase tracking-widest hover:border-saffron-gold"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <div className="bg-white border border-red-300 p-6 mt-6">
+          <h3 className="font-serif text-lg text-ink-navy mb-1">Delete {deleteTarget.name}'s account?</h3>
+          <p className="text-xs text-subtle-text mb-4">
+            This is permanent — unlike Deactivate, there's no undo. Past invoices generated by this
+            account keep their record of who generated them either way; only the login itself is removed.
+          </p>
+          {deleteError && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2 mb-4">{deleteError}</p>
+          )}
+          <div className="flex gap-3">
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="flex-1 bg-red-600 text-white font-cta-label text-cta-label h-[44px] uppercase tracking-widest hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+            </button>
+            <button
+              onClick={() => setDeleteTarget(null)}
               className="px-6 h-[44px] border border-muted-border text-ink-navy text-xs uppercase tracking-widest hover:border-saffron-gold"
             >
               Cancel

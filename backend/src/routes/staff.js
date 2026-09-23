@@ -1,7 +1,7 @@
 import express from "express"
 import staffAuth from "../middleware/auth.js"
 import { requireRole } from "../middleware/roleCheck.js"
-import { listStaff, createStaff, updateStaff, resetStaffPassword } from "../controllers/staffController.js"
+import { listStaff, createStaff, updateStaff, deleteStaff, resetStaffPassword } from "../controllers/staffController.js"
 
 const router = express.Router()
 
@@ -13,6 +13,7 @@ router.use(staffAuth, requireRole("OWNER"))
 router.get("/", listStaff)
 router.post("/", createStaff)
 router.patch("/:id", updateStaff)
+router.delete("/:id", deleteStaff)
 router.patch("/:id/password", resetStaffPassword)
 
 export default router
