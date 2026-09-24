@@ -96,16 +96,6 @@ export default function StaffHeader({ onMenuToggle }) {
 
         <div className="h-6 w-px bg-muted-border hidden md:block" />
 
-        {/* Search Field (Understated) */}
-        <div className="relative hidden lg:block w-64">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-subtle-text text-sm">search</span>
-          <input 
-            type="text" 
-            placeholder="Search portal..." 
-            className="w-full bg-transparent border-b border-saffron-gold/20 py-1.5 pl-9 pr-4 focus:outline-none focus:border-saffron-gold font-body-md text-xs placeholder:text-subtle-text/30 outline-none"
-          />
-        </div>
-
         {/* Notifications Icon */}
         <button className="relative text-ink-navy hover:text-saffron-gold transition-colors focus:outline-none">
           <span className="material-symbols-outlined">notifications</span>
@@ -143,16 +133,7 @@ export default function StaffHeader({ onMenuToggle }) {
                 </div>
                 
                 <Link 
-                  to="#" 
-                  onClick={() => setDropdownOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-xs font-label-caps text-ink-navy hover:bg-surface-container-low transition-colors"
-                >
-                  <span className="material-symbols-outlined text-lg text-saffron-gold">person</span>
-                  <span>My Profile</span>
-                </Link>
-
-                <Link 
-                  to="#" 
+                  to="/staff/settings" 
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-3 px-4 py-2.5 text-xs font-label-caps text-ink-navy hover:bg-surface-container-low transition-colors"
                 >

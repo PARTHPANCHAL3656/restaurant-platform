@@ -93,7 +93,10 @@ export function StaffProvider({ children }) {
     packagingFeeLabel: "Packaging Charges",
     billFooterNote: "Please verify the bill before payment. No complaints will be entertained thereafter.",
     takeoutBillNote: "Pay at counter. Collect within 20 min of ready time.",
-    invoicePrefix: "SG"
+    invoicePrefix: "SG",
+    repeatCustomerDiscountEnabled: true,
+    repeatCustomerVisitThreshold: 3,
+    repeatCustomerDiscountPercent: 5
   });
 
   useEffect(() => {
@@ -661,7 +664,13 @@ export function StaffProvider({ children }) {
 
     const items = associatedOrder ? associatedOrder.items : [];
     const subtotal = items.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
-    const total = subtotal > 0 ? subtotal * 1.175 : 0;
+    // Was hardcoded to * 1.175 (10% SC + 7.5% GST, the old pre-settings
+    // defaults) — this is a live preview of an unbilled table, so it uses
+    // the same real, configurable rates the actual invoice will use.
+    const serviceCharge = billing.serviceChargeEnabled ? Math.round(subtotal * (billing.serviceChargePercent / 100)) : 0;
+    const taxableValue = billing.serviceChargeTaxable ? subtotal + serviceCharge : subtotal;
+    const gstAmount = subtotal > 0 ? Math.round(taxableValue * ((billing.cgstRate + billing.sgstRate) / 100)) : 0;
+    const total = subtotal > 0 ? subtotal + serviceCharge + gstAmount : 0;
 
     return {
       id: tableStr,
@@ -683,7 +692,7 @@ export function StaffProvider({ children }) {
       reservationId: t.reservationId,
       token: t.token
     };
-  }, []);
+  }, [billing]);
 
   const mapBackendReservation = useCallback((r) => {
     return {
@@ -745,7 +754,7 @@ export function StaffProvider({ children }) {
       status: inv.status,
       paymentMethod: inv.paymentMethod,
       generatedBy: inv.generatedBy || 'Floor Manager',
-      orderSource: isTakeout ? 'Takeout' : (inv.reservationId ? 'Reservation' : 'Walk-in'),
+      orderSource: inv.orderSource || (isTakeout ? 'Takeout' : (inv.reservationId ? 'Reservation' : 'Walk-in')),
       subtotal: inv.subtotal,
       gst: inv.gst,
       serviceCharge: inv.serviceCharge,
@@ -1311,7 +1320,7 @@ export function StaffProvider({ children }) {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'unpaid',
         paymentMethod: '—',
-        orderSource: table.reservationId ? 'Reservation' : 'Walk-in',
+        orderSource: table.orderSource || (table.reservationId ? 'Reservation' : 'Walk-in'),
         subtotal: Math.round(sub),
         gst: Math.round(sub * 0.05),
         serviceCharge: Math.round(sub * 0.125)

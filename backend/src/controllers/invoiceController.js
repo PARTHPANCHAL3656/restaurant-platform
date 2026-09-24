@@ -8,6 +8,16 @@ import { calculateBill } from "../utils/calculateBill.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { io } from "../index.js"
 
+// Reservation.source is "Customer" (a real advance booking) or "Walk-in"
+// (seated from the Guest Queue) — the correct distinction, unlike
+// "does this table have a reservationId at all," which both cases satisfy.
+async function resolveOrderSource(table) {
+  if (!table.reservationId) return "Walk-in"
+  const reservation = await Reservation.findById(table.reservationId)
+  if (!reservation) return "Walk-in"
+  return reservation.source === "Walk-in" ? "Walk-in" : "Reservation"
+}
+
 // POST /api/invoices/table/:id
 // Staff generates a final bill for a table's current order.
 // Protected by staffAuth
@@ -40,11 +50,21 @@ export const generateInvoiceForTable = async (req, res) => {
     }
 
     const settings = await Settings.getSingleton()
-    const { subtotal, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, total } = calculateBill({
+
+    const normalizedPhone = normalizePhone(order.guestPhone)
+    const existingCustomer = normalizedPhone ? await Customer.findOne({ phone: normalizedPhone }) : null
+    const isRepeatCustomer = Boolean(
+      existingCustomer && existingCustomer.visitCount >= settings.billing.repeatCustomerVisitThreshold
+    )
+
+    const { subtotal, discount, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, total } = calculateBill({
       items: order.items,
       orderType: "dine-in",
-      billing: settings.billing
+      billing: settings.billing,
+      isRepeatCustomer
     })
+
+    const orderSource = await resolveOrderSource(table)
 
     // Reuse the number already minted on this order at creation time (see
     // utils/nextBillNumber.js) so the customer's pre-invoice bill and this
@@ -63,8 +83,10 @@ export const generateInvoiceForTable = async (req, res) => {
       guestName: table.guestName || "Guest",
       guestPhone: order.guestPhone || "",
       partySize: table.guestCount || null,
+      orderSource,
       items: order.items.map(i => ({ itemId: i.itemId, name: i.name, price: i.price, qty: i.qty })),
       subtotal,
+      discount,
       serviceCharge,
       packagingFee,
       cgst,

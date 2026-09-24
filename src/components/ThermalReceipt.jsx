@@ -24,6 +24,7 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
   // cgst/sgst/rates are only present on invoices generated after this
   // field existed — older invoices fall back to the old 50/50 estimate
   // so they still render instead of showing blank or NaN.
+  const discount = Number(invoice.discount || 0);
   const cgstAmount = invoice.cgst !== undefined ? Number(invoice.cgst) : gst / 2;
   const sgstAmount = invoice.sgst !== undefined ? Number(invoice.sgst) : gst / 2;
   const cgstRateDisplay = invoice.cgstRate !== undefined ? invoice.cgstRate : percentOf(cgstAmount, subtotal);
@@ -96,6 +97,12 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
           <span>Sub Total</span>
           <strong>{formatINR(subtotal)}</strong>
         </div>
+        {discount > 0 && (
+          <div className="thermal-row">
+            <span>Repeat Customer Discount</span>
+            <strong>-{formatINR(discount)}</strong>
+          </div>
+        )}
         {serviceCharge > 0 && (
           <div className="thermal-row">
             <span>Service Charge @ {percentOf(serviceCharge, subtotal)}%</span>

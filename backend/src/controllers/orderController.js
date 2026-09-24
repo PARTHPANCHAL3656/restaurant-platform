@@ -178,10 +178,18 @@ export const updateOrderStatus = async (req, res) => {
       const existingInvoice = await Invoice.findOne({ sessionId: order.sessionId })
       if (!existingInvoice && order.items.length > 0) {
         const settings = await Settings.getSingleton()
-        const { subtotal, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, total } = calculateBill({
+
+        const normalizedPhone = normalizePhone(order.guestPhone)
+        const existingCustomer = normalizedPhone ? await Customer.findOne({ phone: normalizedPhone }) : null
+        const isRepeatCustomer = Boolean(
+          existingCustomer && existingCustomer.visitCount >= settings.billing.repeatCustomerVisitThreshold
+        )
+
+        const { subtotal, discount, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, total } = calculateBill({
           items: order.items,
           orderType: "takeout",
-          billing: settings.billing
+          billing: settings.billing,
+          isRepeatCustomer
         })
 
         const invoiceNumber = order.billNumber || `INV-${1000 + (await Invoice.countDocuments()) + 1}`
@@ -194,8 +202,10 @@ export const updateOrderStatus = async (req, res) => {
           orderNumber: order.orderNumber,
           guestName: order.guestName || "Guest",
           guestPhone: order.guestPhone || "",
+          orderSource: "Takeout",
           items: order.items.map(i => ({ itemId: i.itemId, name: i.name, price: i.price, qty: i.qty })),
           subtotal,
+          discount,
           serviceCharge,
           packagingFee,
           cgst,

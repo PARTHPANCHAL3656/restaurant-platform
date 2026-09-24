@@ -49,16 +49,18 @@ export default function StaffSettingsBillingPage() {
 
   const handleSave = async () => {
     setError('');
-    const requiredKeys = ['cgstRate', 'sgstRate', 'serviceChargePercent', 'packagingFeeAmount', 'packagingFeeLabel', 'invoicePrefix', 'billFooterNote', 'takeoutBillNote'];
+    const requiredKeys = ['cgstRate', 'sgstRate', 'serviceChargePercent', 'packagingFeeAmount', 'packagingFeeLabel', 'invoicePrefix', 'billFooterNote', 'takeoutBillNote', 'repeatCustomerVisitThreshold', 'repeatCustomerDiscountPercent'];
     const safeForm = fillEmptyFields(form, restaurantInfo, requiredKeys);
     const numericForm = {
       ...safeForm,
       cgstRate: Number(safeForm.cgstRate),
       sgstRate: Number(safeForm.sgstRate),
       serviceChargePercent: Number(safeForm.serviceChargePercent),
-      packagingFeeAmount: Number(safeForm.packagingFeeAmount)
+      packagingFeeAmount: Number(safeForm.packagingFeeAmount),
+      repeatCustomerVisitThreshold: Number(safeForm.repeatCustomerVisitThreshold),
+      repeatCustomerDiscountPercent: Number(safeForm.repeatCustomerDiscountPercent)
     };
-    if (numericForm.cgstRate < 0 || numericForm.sgstRate < 0 || numericForm.serviceChargePercent < 0 || numericForm.packagingFeeAmount < 0) {
+    if (numericForm.cgstRate < 0 || numericForm.sgstRate < 0 || numericForm.serviceChargePercent < 0 || numericForm.packagingFeeAmount < 0 || numericForm.repeatCustomerVisitThreshold < 1 || numericForm.repeatCustomerDiscountPercent < 0) {
       setError('Rates and amounts cannot be negative.');
       return;
     }
@@ -186,6 +188,43 @@ export default function StaffSettingsBillingPage() {
               />
             </div>
           </div>
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Repeat Customer Discount</h3>
+          <label className="flex items-center gap-2 text-sm text-subtle-text">
+            <input
+              type="checkbox"
+              checked={form.repeatCustomerDiscountEnabled}
+              onChange={(e) => updateField('repeatCustomerDiscountEnabled', e.target.checked)}
+            />
+            Give a discount to repeat customers
+          </label>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="w-full sm:flex-1">
+              <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Visits before "repeat"</span>
+              <input
+                type="number"
+                step="1"
+                value={form.repeatCustomerVisitThreshold}
+                onChange={(e) => updateField('repeatCustomerVisitThreshold', e.target.value)}
+                className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              />
+            </div>
+            <div className="w-full sm:flex-1">
+              <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Discount %</span>
+              <input
+                type="number"
+                step="0.01"
+                value={form.repeatCustomerDiscountPercent}
+                onChange={(e) => updateField('repeatCustomerDiscountPercent', e.target.value)}
+                className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-subtle-text">
+            Applied to the subtotal before service charge and GST — the tax itself goes down too, matching how discounts are meant to work under GST law.
+          </p>
         </div>
 
         <div className="space-y-3">

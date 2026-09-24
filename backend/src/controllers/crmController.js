@@ -1,15 +1,21 @@
 import Customer from "../models/Customer.js"
+import Settings from "../models/Settings.js"
 
 // -------------------------------------------------------
 // SHARED GROUND RULES FOR CRM (Part 3):
-// - "Repeat customer" / discount-eligible = visitCount >= 3 (lifetime)
+// - "Repeat customer" / discount-eligible = visitCount >= threshold
+//   (Owner-configurable in Settings → Billing, default 3 — this used to
+//   be a hardcoded constant here; now it's the same number that actually
+//   drives the real invoice discount, so this list and what customers
+//   get charged can never disagree with each other)
 // - "Churned" = lastVisit older than 30 days
-// These thresholds are intentionally hardcoded constants below, not
-// magic numbers scattered in queries — change them in ONE place if
-// the business rule ever changes.
 // -------------------------------------------------------
-const REPEAT_VISIT_THRESHOLD = 3
 const CHURN_DAYS = 30
+
+async function getRepeatVisitThreshold() {
+  const settings = await Settings.getSingleton()
+  return settings.billing.repeatCustomerVisitThreshold
+}
 
 // GET /api/crm/repeat-customers
 // Every customer with visitCount >= 3, sorted by most frequent first.

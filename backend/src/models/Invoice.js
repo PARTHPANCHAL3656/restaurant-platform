@@ -77,6 +77,13 @@ const invoiceSchema = new mongoose.Schema({
   sgstRate: { type: Number, default: 0 },
   gst: { type: Number, required: true },
   discount: { type: Number, default: 0 },
+  // Snapshotted at generation time from the Reservation's own `source`
+  // field, instead of being re-guessed later from whether a
+  // reservationId happens to exist — a walk-in seated from the Guest
+  // Queue also gets a Reservation record (for table-assignment
+  // bookkeeping), so "has a reservationId" was never a safe proxy for
+  // "was actually booked in advance."
+  orderSource: { type: String, enum: ["Reservation", "Walk-in", "Takeout"], default: "Walk-in" },
   total: { type: Number, required: true },
   status: {
     type: String,

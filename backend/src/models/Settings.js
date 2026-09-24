@@ -69,7 +69,14 @@ const settingsSchema = new mongoose.Schema({
     packagingFeeLabel: { type: String, default: "Packaging Charges" },
     billFooterNote: { type: String, default: "Please verify the bill before payment. No complaints will be entertained thereafter." },
     takeoutBillNote: { type: String, default: "Pay at counter. Collect within 20 min of ready time." },
-    invoicePrefix: { type: String, default: "SG", trim: true }
+    invoicePrefix: { type: String, default: "SG", trim: true },
+    // Same rule crmController.js already used as a hardcoded constant
+    // (REPEAT_VISIT_THRESHOLD = 3) — now the single, configurable source
+    // of truth both the CRM "repeat customers" list and real invoice
+    // discounting read from.
+    repeatCustomerDiscountEnabled: { type: Boolean, default: true },
+    repeatCustomerVisitThreshold: { type: Number, default: 3 },
+    repeatCustomerDiscountPercent: { type: Number, default: 5 }
   },
 
   // Last 50 settings changes — who changed which section, when, and
