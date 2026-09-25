@@ -5,6 +5,7 @@ import { requireRole } from "../middleware/roleCheck.js"
 import {
   getAllInvoices,
   getMyInvoice,
+  getMyBillPreview,
   updateInvoiceStatus,
   generateInvoiceForTable,
   deleteInvoice
@@ -12,8 +13,9 @@ import {
 
 const router = express.Router()
 
-// Customer route — needs valid table QR token, scoped to their own session
+// Customer routes — need valid table QR token, scoped to their own session
 router.get("/my-invoice", tableSession, getMyInvoice)
+router.get("/my-bill-preview", tableSession, getMyBillPreview)
 
 // Staff routes
 router.get("/", staffAuth, requireRole("OWNER", "MANAGER"), getAllInvoices)

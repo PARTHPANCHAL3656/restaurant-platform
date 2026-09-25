@@ -185,7 +185,7 @@ export const updateOrderStatus = async (req, res) => {
           existingCustomer && existingCustomer.visitCount >= settings.billing.repeatCustomerVisitThreshold
         )
 
-        const { subtotal, discount, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, total } = calculateBill({
+        const { subtotal, discount, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, serviceChargePercent, total } = calculateBill({
           items: order.items,
           orderType: "takeout",
           billing: settings.billing,
@@ -207,6 +207,7 @@ export const updateOrderStatus = async (req, res) => {
           subtotal,
           discount,
           serviceCharge,
+          serviceChargePercent,
           packagingFee,
           cgst,
           sgst,

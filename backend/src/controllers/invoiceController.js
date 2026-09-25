@@ -57,7 +57,7 @@ export const generateInvoiceForTable = async (req, res) => {
       existingCustomer && existingCustomer.visitCount >= settings.billing.repeatCustomerVisitThreshold
     )
 
-    const { subtotal, discount, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, total } = calculateBill({
+    const { subtotal, discount, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, serviceChargePercent, total } = calculateBill({
       items: order.items,
       orderType: "dine-in",
       billing: settings.billing,
@@ -88,6 +88,7 @@ export const generateInvoiceForTable = async (req, res) => {
       subtotal,
       discount,
       serviceCharge,
+      serviceChargePercent,
       packagingFee,
       cgst,
       sgst,
@@ -128,6 +129,56 @@ export const getMyInvoice = async (req, res) => {
     }
  
     res.json(invoice)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+// GET /api/invoices/my-bill-preview
+// Customer-facing live estimate for a table session that hasn't been
+// formally invoiced yet. Runs the exact same calculateBill() the real
+// invoice will use, with the exact same repeat-customer check — so this
+// number can never drift from what generateInvoiceForTable eventually
+// charges. The previous version of this estimate was computed entirely
+// client-side with different logic, which is exactly how a customer
+// could see one total, then get charged a different one moments later.
+export const getMyBillPreview = async (req, res) => {
+  try {
+    const { sessionId } = req.tableSession
+
+    const existingInvoice = await Invoice.findOne({ sessionId })
+    if (existingInvoice) {
+      return res.status(200).json(existingInvoice)
+    }
+
+    const table = await Table.findOne({ currentSessionId: sessionId })
+    if (!table || !table.currentOrderId) {
+      return res.status(404).json({ error: "No active order for this session." })
+    }
+
+    const order = await Order.findById(table.currentOrderId)
+    if (!order || order.items.length === 0) {
+      return res.status(404).json({ error: "No items to estimate yet." })
+    }
+
+    const settings = await Settings.getSingleton()
+    const normalizedPhone = normalizePhone(order.guestPhone)
+    const existingCustomer = normalizedPhone ? await Customer.findOne({ phone: normalizedPhone }) : null
+    const isRepeatCustomer = Boolean(
+      existingCustomer && existingCustomer.visitCount >= settings.billing.repeatCustomerVisitThreshold
+    )
+
+    const bill = calculateBill({
+      items: order.items,
+      orderType: "dine-in",
+      billing: settings.billing,
+      isRepeatCustomer
+    })
+
+    res.json({
+      items: order.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
+      ...bill
+    })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

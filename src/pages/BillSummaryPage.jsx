@@ -32,25 +32,37 @@ export default function BillSummaryPage() {
   // guessing at those fields, and switches to the real bill the moment
   // one is presented.
   const [invoice, setInvoice] = useState(null);
-  const hasInvoice = Boolean(invoice);
+  const hasInvoice = Boolean(invoice && invoice.status !== undefined);
 
   useEffect(() => {
     let cancelled = false;
-    const fetchInvoice = () => {
+    // Both the real invoice AND the pre-invoice estimate now come from the
+    // backend, running the exact same calculateBill() with the exact same
+    // repeat-customer check. Previously the estimate was computed entirely
+    // client-side with different logic, which is how a customer could see
+    // one total on screen and then be charged a different one the moment
+    // staff generated the real invoice — same order, two different sets of
+    // math. That gap is gone: /my-invoice and /my-bill-preview both return
+    // the identical shape, and this just displays whichever exists.
+    const fetchBill = () => {
       api.get('/api/invoices/my-invoice')
         .then((res) => { if (!cancelled) setInvoice(res.data); })
-        .catch(() => { if (!cancelled) setInvoice(null); }); // 404 = no bill presented yet, not an error
+        .catch(() => {
+          api.get('/api/invoices/my-bill-preview')
+            .then((res) => { if (!cancelled) setInvoice(res.data); })
+            .catch(() => { if (!cancelled) setInvoice(null); });
+        });
     };
 
-    fetchInvoice();
-    // Live-refresh the instant staff presents the bill, instead of making
-    // the customer reload to see it. The endpoint is scoped server-side to
-    // this table's own session, so re-fetching on any table's event is
-    // harmless — it just no-ops for tables that aren't ours.
-    socket.on('invoice:generated', fetchInvoice);
+    fetchBill();
+    const interval = setInterval(fetchBill, 15000);
+    socket.on('invoice:generated', fetchBill);
+    socket.on('order:updated', fetchBill);
     return () => {
       cancelled = true;
-      socket.off('invoice:generated', fetchInvoice);
+      clearInterval(interval);
+      socket.off('invoice:generated', fetchBill);
+      socket.off('order:updated', fetchBill);
     };
   }, []);
 
@@ -76,10 +88,9 @@ export default function BillSummaryPage() {
     : hasActiveOrder ? activeOrderItems : [];
   const subtotal = hasInvoice ? invoice.subtotal
     : hasActiveOrder ? items.reduce((sum, item) => sum + (item.price * item.quantity), 0) : 0;
-  const serviceCharge = hasInvoice ? invoice.serviceCharge
-    : hasActiveOrder && restaurantInfo.serviceChargeEnabled ? Math.round(subtotal * (restaurantInfo.serviceChargePercent / 100)) : 0;
-  const gst = hasInvoice ? invoice.gst
-    : hasActiveOrder ? Math.round((restaurantInfo.serviceChargeTaxable ? subtotal + serviceCharge : subtotal) * ((restaurantInfo.cgstRate + restaurantInfo.sgstRate) / 100)) : 0;
+  const serviceCharge = invoice ? (invoice.serviceCharge || 0) : 0;
+  const gst = invoice ? (invoice.gst || 0) : 0;
+  const discount = invoice ? (invoice.discount || 0) : 0;
   const grandTotal = hasInvoice ? invoice.total : hasActiveOrder ? activeOrderTotal : 0;
 
   // The ID shown to the guest: the invoice number once an Invoice exists,
@@ -318,14 +329,16 @@ export default function BillSummaryPage() {
                   : (activeOrderTime || '—'),
                 items: items.map(item => ({ ...item, qty: item.quantity })),
                 subtotal,
+                discount,
                 serviceCharge,
-                packagingFee: hasInvoice ? (invoice.packagingFee || 0) : 0,
-                cgst: hasInvoice ? invoice.cgst : undefined,
-                sgst: hasInvoice ? invoice.sgst : undefined,
-                cgstRate: hasInvoice ? invoice.cgstRate : undefined,
-                sgstRate: hasInvoice ? invoice.sgstRate : undefined,
+                serviceChargePercent: invoice ? invoice.serviceChargePercent : undefined,
+                packagingFee: invoice ? (invoice.packagingFee || 0) : 0,
+                cgst: invoice ? invoice.cgst : undefined,
+                sgst: invoice ? invoice.sgst : undefined,
+                cgstRate: invoice ? invoice.cgstRate : undefined,
+                sgstRate: invoice ? invoice.sgstRate : undefined,
                 gst,
-                total: grandTotal,
+                total: invoice ? invoice.total : grandTotal,
                 // Guest name shows even before a formal invoice exists —
                 // there's no reason to hide who the bill is for just
                 // because staff hasn't clicked "generate invoice" yet.

@@ -105,7 +105,7 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
         )}
         {serviceCharge > 0 && (
           <div className="thermal-row">
-            <span>Service Charge @ {percentOf(serviceCharge, subtotal)}%</span>
+            <span>Service Charge @ {invoice.serviceChargePercent !== undefined ? invoice.serviceChargePercent : percentOf(serviceCharge, subtotal)}%</span>
             <strong>{formatINR(serviceCharge)}</strong>
           </div>
         )}

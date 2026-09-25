@@ -65,6 +65,11 @@ const invoiceSchema = new mongoose.Schema({
   items: [invoiceItemSchema],
   subtotal: { type: Number, required: true },
   serviceCharge: { type: Number, required: true },
+  // The rate actually applied, snapshotted — same reasoning as
+  // cgstRate/sgstRate. Deriving this later as serviceCharge÷subtotal
+  // breaks the instant a repeat-customer discount changes what subtotal
+  // the charge was actually computed against.
+  serviceChargePercent: { type: Number, default: 0 },
   packagingFee: { type: Number, default: 0 },
   // gst stays as the combined total (used in bill math elsewhere);
   // cgst/sgst/cgstRate/sgstRate are the actual applied split, snapshotted

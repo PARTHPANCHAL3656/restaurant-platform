@@ -47,6 +47,7 @@ export function calculateBill({ items, orderType, billing, isRepeatCustomer = fa
     subtotal, discount, serviceCharge, packagingFee,
     cgst, sgst, gst,
     cgstRate: billing.cgstRate, sgstRate: billing.sgstRate,
+    serviceChargePercent: billing.serviceChargeEnabled ? billing.serviceChargePercent : 0,
     total
   }
 }
