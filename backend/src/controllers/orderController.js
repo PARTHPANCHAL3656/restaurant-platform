@@ -2,7 +2,9 @@ import Order from "../models/Order.js"
 import Invoice from "../models/Invoice.js"
 import { io } from "../index.js"
 import Settings from "../models/Settings.js"
+import Customer from "../models/Customer.js"
 import { calculateBill } from "../utils/calculateBill.js"
+import { normalizePhone } from "../utils/normalizePhone.js"
 
 // POST /api/orders/add-items
 // Customer places first order OR adds more items (same endpoint for both)

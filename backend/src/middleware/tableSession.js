@@ -62,4 +62,31 @@ const tableSession = async (req, res, next) => {
   }
 }
 
+// A lighter check for the one thing that should still work after a table
+// is released or a takeout order is marked served: looking up an invoice
+// that already exists. tableSession's strict "is this table/order still
+// active" rule is correct for ordering and for live bill *estimates* (no
+// point estimating a bill for an order that's already done), but it was
+// also blocking the customer from ever seeing the REAL, already-generated
+// invoice once staff wrapped things up — which could happen within
+// seconds of the bill being presented. This only verifies the JWT is
+// genuinely theirs; it doesn't care whether the table/order is still open.
+export const invoiceLookupSession = (req, res, next) => {
+  const authHeader = req.headers.authorization
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "No session token. Scan the QR code to access the menu." })
+  }
+
+  const token = authHeader.split(" ")[1]
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    req.tableSession = { sessionId: decoded.sessionId, orderType: decoded.orderType || "dine-in" }
+    next()
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired session. Please scan the QR code again." })
+  }
+}
+
 export default tableSession

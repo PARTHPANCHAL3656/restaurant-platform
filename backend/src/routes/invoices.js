@@ -1,6 +1,6 @@
 import express from "express"
 import staffAuth from "../middleware/auth.js"
-import tableSession from "../middleware/tableSession.js"
+import tableSession, { invoiceLookupSession } from "../middleware/tableSession.js"
 import { requireRole } from "../middleware/roleCheck.js"
 import {
   getAllInvoices,
@@ -13,8 +13,13 @@ import {
 
 const router = express.Router()
 
-// Customer routes — need valid table QR token, scoped to their own session
-router.get("/my-invoice", tableSession, getMyInvoice)
+// Customer routes — need a valid QR/session token.
+// my-invoice uses the relaxed check: viewing an already-generated invoice
+// must keep working even after staff releases the table or marks a
+// takeout order served, which can happen within seconds of the bill
+// being presented. my-bill-preview keeps the strict check — there's
+// nothing meaningful to estimate for an order that's already finished.
+router.get("/my-invoice", invoiceLookupSession, getMyInvoice)
 router.get("/my-bill-preview", tableSession, getMyBillPreview)
 
 // Staff routes

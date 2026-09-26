@@ -6,7 +6,12 @@ export default function StaffOrdersPage() {
   const { orders, advanceOrder } = useStaff();
   const [selectedOrderId, setSelectedOrderId] = useState(null);
 
-  const getOrdersByStatus = (status) => orders.filter(o => o.status === status);
+  // Takeout orders live exclusively on the Takeaway Orders page now — a
+  // dedicated Received/Preparing/Ready-for-Pickup board already exists
+  // there, so showing the same order here too was pure duplication, and
+  // a real risk (two different screens, two different staff, same order
+  // prepared twice).
+  const getOrdersByStatus = (status) => orders.filter(o => o.status === status && o.orderType !== 'takeout');
 
   const handleAdvanceStatus = (orderId, currentStatus) => {
     advanceOrder(orderId);
