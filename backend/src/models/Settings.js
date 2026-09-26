@@ -74,7 +74,10 @@ const settingsSchema = new mongoose.Schema({
     // (REPEAT_VISIT_THRESHOLD = 3) — now the single, configurable source
     // of truth both the CRM "repeat customers" list and real invoice
     // discounting read from.
-    repeatCustomerDiscountEnabled: { type: Boolean, default: true },
+    // Defaults to OFF — a discount program is a deliberate business
+    // decision an Owner should turn on, not something that silently
+    // starts giving money away the moment repeat customers exist.
+    repeatCustomerDiscountEnabled: { type: Boolean, default: false },
     repeatCustomerVisitThreshold: { type: Number, default: 3 },
     repeatCustomerDiscountPercent: { type: Number, default: 5 }
   },

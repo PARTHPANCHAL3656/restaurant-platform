@@ -18,6 +18,9 @@ export default function StaffSettingsBillingPage() {
     packagingFeeEnabled: restaurantInfo.packagingFeeEnabled,
     packagingFeeAmount: restaurantInfo.packagingFeeAmount,
     packagingFeeLabel: restaurantInfo.packagingFeeLabel,
+    repeatCustomerDiscountEnabled: restaurantInfo.repeatCustomerDiscountEnabled,
+    repeatCustomerVisitThreshold: restaurantInfo.repeatCustomerVisitThreshold,
+    repeatCustomerDiscountPercent: restaurantInfo.repeatCustomerDiscountPercent,
     billFooterNote: restaurantInfo.billFooterNote,
     takeoutBillNote: restaurantInfo.takeoutBillNote,
     invoicePrefix: restaurantInfo.invoicePrefix
@@ -37,11 +40,14 @@ export default function StaffSettingsBillingPage() {
       packagingFeeEnabled: restaurantInfo.packagingFeeEnabled,
       packagingFeeAmount: restaurantInfo.packagingFeeAmount,
       packagingFeeLabel: restaurantInfo.packagingFeeLabel,
+      repeatCustomerDiscountEnabled: restaurantInfo.repeatCustomerDiscountEnabled,
+      repeatCustomerVisitThreshold: restaurantInfo.repeatCustomerVisitThreshold,
+      repeatCustomerDiscountPercent: restaurantInfo.repeatCustomerDiscountPercent,
       billFooterNote: restaurantInfo.billFooterNote,
       takeoutBillNote: restaurantInfo.takeoutBillNote,
       invoicePrefix: restaurantInfo.invoicePrefix
     });
-  }, [restaurantInfo.cgstRate, restaurantInfo.sgstRate, restaurantInfo.pricesIncludeGst, restaurantInfo.serviceChargeEnabled, restaurantInfo.serviceChargePercent, restaurantInfo.serviceChargeTaxable, restaurantInfo.packagingFeeEnabled, restaurantInfo.packagingFeeAmount, restaurantInfo.packagingFeeLabel, restaurantInfo.billFooterNote, restaurantInfo.takeoutBillNote, restaurantInfo.invoicePrefix]);
+  }, [restaurantInfo.cgstRate, restaurantInfo.sgstRate, restaurantInfo.pricesIncludeGst, restaurantInfo.serviceChargeEnabled, restaurantInfo.serviceChargePercent, restaurantInfo.serviceChargeTaxable, restaurantInfo.packagingFeeEnabled, restaurantInfo.packagingFeeAmount, restaurantInfo.packagingFeeLabel, restaurantInfo.repeatCustomerDiscountEnabled, restaurantInfo.repeatCustomerVisitThreshold, restaurantInfo.repeatCustomerDiscountPercent, restaurantInfo.billFooterNote, restaurantInfo.takeoutBillNote, restaurantInfo.invoicePrefix]);
 
   const updateField = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
