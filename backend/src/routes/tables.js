@@ -24,9 +24,11 @@ router.post("/:id/free", staffAuth, freeTable)      // free table after payment
 router.patch("/:id/reserve", staffAuth, reserveTable)
 router.patch("/:id/status", staffAuth, updateTableStatus)
 
-// Waiting list
-router.get("/waiting", getWaitingList)
-router.post("/waiting", addToWaitingList)                          // anyone can add themselves
+// Waiting list — walk-ins only, host-entered. Was briefly public
+// ("anyone can add themselves") but nothing customer-facing ever called
+// it; locked to staff since it's a host action, not a guest one.
+router.get("/waiting", staffAuth, getWaitingList)
+router.post("/waiting", staffAuth, addToWaitingList)
 router.delete("/waiting/:id", staffAuth, removeFromWaitingList)   // staff removes
 
 export default router

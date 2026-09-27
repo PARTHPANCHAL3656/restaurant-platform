@@ -32,6 +32,15 @@ const customerSchema = new mongoose.Schema({
   isBlacklisted: {
     type: Boolean,
     default: false
+  },
+  // Incremented automatically when a Manager/Owner marks a reservation as
+  // a no-show (see reservationController.js). This is a count only — it
+  // never flips isBlacklisted or blocks anything on its own. A Manager
+  // decides what to do about a repeat no-show by hand; there's no
+  // automatic reservation blacklist.
+  noShowStrikes: {
+    type: Number,
+    default: 0
   }
 }, { timestamps: true })
 

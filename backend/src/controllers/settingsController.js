@@ -27,10 +27,19 @@ export const getSettings = async (req, res) => {
 // compliance risk if they get it wrong.
 export const updateSettings = async (req, res) => {
   try {
-    const { openingHours, legal, contact, billing, links } = req.body
+    const { openingHours, legal, contact, billing, links, reservations } = req.body
 
     if ((legal || contact || billing) && req.staff.role !== "OWNER") {
       return res.status(403).json({ error: "Only the Owner can edit business/legal, contact, or billing details." })
+    }
+
+    if (reservations) {
+      const numericFields = ["resMinLeadTimeHours", "resMaxAdvanceDays", "resHoldGraceMinutes", "resRequireManagerLargeParties"]
+      for (const field of numericFields) {
+        if (reservations[field] !== undefined && (typeof reservations[field] !== "number" || reservations[field] < 0)) {
+          return res.status(400).json({ error: `${field} must be a non-negative number.` })
+        }
+      }
     }
 
     if (openingHours && !Array.isArray(openingHours)) {
@@ -85,6 +94,10 @@ export const updateSettings = async (req, res) => {
     if (links) {
       recordChange("links", describeFieldChanges(before.links, links))
       settings.links = { ...settings.links.toObject(), ...links }
+    }
+    if (reservations) {
+      recordChange("reservations", describeFieldChanges(before.reservations, reservations))
+      settings.reservations = { ...settings.reservations.toObject(), ...reservations }
     }
 
     settings.auditLog.push(...auditEntries)

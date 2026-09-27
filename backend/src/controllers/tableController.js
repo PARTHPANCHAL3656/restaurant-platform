@@ -58,7 +58,7 @@ export const assignTable = async (req, res) => {
       return res.status(400).json({ error: "Table is already occupied." })
     }
 
-    const { reservationId } = req.body
+    const { reservationId, waitlistId } = req.body
     let guestName = `Table ${table.tableNumber} Guest`
     let guestPhone = ""
     let guestCount = 2
@@ -70,6 +70,7 @@ export const assignTable = async (req, res) => {
       if (reservation) {
         reservation.status = "seated"
         reservation.arrivalTime = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })
+        reservation.table = "T-" + String(table.tableNumber).padStart(2, '0')
         await reservation.save()
 
         guestName = reservation.name
@@ -77,6 +78,18 @@ export const assignTable = async (req, res) => {
         guestCount = reservation.guests
         notes = reservation.notes || ""
         resId = reservation._id
+      }
+    } else if (waitlistId) {
+      // Seating a walk-in straight from the waitlist — no Reservation
+      // document involved at all, so table.reservationId stays null.
+      const waitlistEntry = await WaitingList.findById(waitlistId)
+      if (waitlistEntry) {
+        guestName = waitlistEntry.name
+        guestPhone = waitlistEntry.phone || ""
+        guestCount = waitlistEntry.partySize
+        notes = waitlistEntry.notes || ""
+        await WaitingList.findByIdAndDelete(waitlistId)
+        io.emit("waitingList:updated")
       }
     }
 
@@ -177,14 +190,44 @@ export const freeTable = async (req, res) => {
 }
 
 // PATCH /api/tables/:id/reserve
-// Staff marks a table as reserved (from a reservation booking)
+// Staff holds a specific table for a confirmed reservation ahead of the
+// guest's arrival — flips the floor map tile to "reserved" (yellow) and
+// links the two records both ways, so a later no-show can find and
+// release this exact table (see updateReservationStatus).
 export const reserveTable = async (req, res) => {
   try {
-    const table = await Table.findByIdAndUpdate(
-      req.params.id,
-      { status: "reserved" },
-      { new: true }
-    )
+    const { reservationId } = req.body
+    const table = await Table.findById(req.params.id)
+    if (!table) return res.status(404).json({ error: "Table not found." })
+    if (table.status !== "available") {
+      return res.status(400).json({ error: "Only an available table can be held for a reservation." })
+    }
+
+    let reservation = null
+    if (reservationId) {
+      reservation = await Reservation.findById(reservationId)
+      if (!reservation) return res.status(404).json({ error: "Reservation not found." })
+      if (reservation.status !== "confirmed") {
+        return res.status(400).json({ error: "Only a confirmed reservation can have a table held." })
+      }
+      if (reservation.guests > table.capacity) {
+        return res.status(400).json({ error: `Table ${table.tableNumber} seats ${table.capacity} — too small for a party of ${reservation.guests}.` })
+      }
+    }
+
+    table.status = "reserved"
+    if (reservation) {
+      table.reservationId = reservation._id
+      table.guestName = reservation.name
+      table.guestCount = reservation.guests
+      table.notes = reservation.notes || ""
+      table.arrivalTime = reservation.time
+
+      reservation.table = "T-" + String(table.tableNumber).padStart(2, '0')
+      await reservation.save()
+    }
+    await table.save()
+
     io.emit("table:updated", { tableId: table._id, status: "reserved", tableNumber: table.tableNumber })
     res.json(table)
   } catch (err) {
@@ -193,16 +236,17 @@ export const reserveTable = async (req, res) => {
 }
 
 // GET /api/tables/waiting
+// Walk-in waitlist ONLY — people physically standing in the lobby.
+// Online/phone reservations never appear here, full stop. (This used to
+// query the shared Reservation collection for pending + today's confirmed
+// bookings alongside real walk-ins — that's exactly why an online
+// reservation could show up on the host's Guest Queue screen with a
+// Confirm/Reject button, right next to actual walk-ins, and get
+// misclicked into the wrong flow. Reservations now live exclusively under
+// Tables & Reservations — see reservationController.js.)
 export const getWaitingList = async (req, res) => {
   try {
-    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
-    const list = await Reservation.find({
-      $or: [
-        { status: "Waiting" },
-        { status: "pending" }, // Pending reservations for any date (needs staff confirmation)
-        { status: "confirmed", date: todayStr } // Today's confirmed reservations (needs seating)
-      ]
-    }).sort({ date: 1, time: 1 })
+    const list = await WaitingList.find({ status: "waiting" }).sort({ vip: -1, createdAt: 1 })
     res.json(list)
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -210,21 +254,22 @@ export const getWaitingList = async (req, res) => {
 }
 
 // POST /api/tables/waiting
+// Staff-entered only — a host adds a party physically standing in the
+// lobby. Not guest-facing (route now requires staffAuth — see routes/tables.js).
 export const addToWaitingList = async (req, res) => {
   try {
-    const { name, phone, partySize, notes } = req.body
-    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
-    const timeStr = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })
+    const { name, phone, partySize, notes, vip } = req.body
 
-    const entry = await Reservation.create({
+    if (!name || !partySize) {
+      return res.status(400).json({ error: "Guest name and party size are required." })
+    }
+
+    const entry = await WaitingList.create({
       name,
-      phone,
-      guests: partySize,
-      date: todayStr,
-      time: timeStr,
+      phone: phone || "",
+      partySize,
       notes: notes || "",
-      source: "Walk-in",
-      status: "Waiting"
+      vip: !!vip
     })
     io.emit("waitingList:updated")
     res.status(201).json(entry)
@@ -234,17 +279,12 @@ export const addToWaitingList = async (req, res) => {
 }
 
 // DELETE /api/tables/waiting/:id
+// Staff removes a party from the walk-in waitlist — either because they
+// just got seated (assignTable deletes the entry itself in that case) or
+// because they left before a table opened up.
 export const removeFromWaitingList = async (req, res) => {
   try {
-    const resDoc = await Reservation.findById(req.params.id)
-    if (resDoc) {
-      if (resDoc.source === 'Walk-in') {
-        await Reservation.findByIdAndDelete(req.params.id)
-      } else {
-        resDoc.status = 'seated'
-        await resDoc.save()
-      }
-    }
+    await WaitingList.findByIdAndDelete(req.params.id)
     io.emit("waitingList:updated")
     res.json({ message: "Removed from waiting list." })
   } catch (err) {

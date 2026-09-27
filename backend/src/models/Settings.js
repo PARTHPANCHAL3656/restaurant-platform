@@ -82,6 +82,30 @@ const settingsSchema = new mongoose.Schema({
     repeatCustomerDiscountPercent: { type: Number, default: 5 }
   },
 
+  // Reservation-booking rules an Owner/Manager configures from Settings →
+  // Operations. These automate the boundaries so the host doesn't have to
+  // eyeball the clock — enforced in reservationController.js via
+  // utils/reservationRules.js. Owner or Manager may edit (same access as
+  // openingHours/links) — no compliance risk if they get it wrong.
+  reservations: {
+    // Stops a guest booking a table minutes before they want to sit down
+    // (e.g. from the parking lot).
+    resMinLeadTimeHours: { type: Number, default: 2 },
+    // Stops guests booking months out and forgetting.
+    resMaxAdvanceDays: { type: Number, default: 14 },
+    // No-show grace period — how long a confirmed reservation holds its
+    // table before staff can flag it late and, if the guest still hasn't
+    // shown, mark it a no-show to free the table. Never auto-cancels — a
+    // Manager always makes that call, every time (reservationController.js).
+    resHoldGraceMinutes: { type: Number, default: 15 },
+    // Party size at or above which confirming the request requires a
+    // Manager or Owner rather than any staff member.
+    resRequireManagerLargeParties: { type: Number, default: 8 },
+    // If true, a new booking request for a slot with no remaining table
+    // capacity is declined immediately instead of sitting in Pending.
+    resAutoRejectIfFull: { type: Boolean, default: true }
+  },
+
   // Last 50 settings changes — who changed which section, when, and
   // exactly what changed (e.g. `["cgstRate changed from \"3.75\" to
   // \"2.5\""]`). Capped by slicing in the controller after every save,
