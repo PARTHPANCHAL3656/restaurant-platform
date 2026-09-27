@@ -125,28 +125,24 @@ export function CartProvider({ children }) {
     }
   }, [tableToken]);
 
-  // Socket updates for session end
+  // Session ends ONLY when staff releases the table — not when the bill
+  // is paid, not when food is served. The customer needs their session
+  // to survive both of those so they have time to actually pull up and
+  // download their bill (proof of payment at the counter, especially
+  // during a rush) before access is cut off.
   useEffect(() => {
-    const handleInvoicePaid = (data) => {
-      if (data && data.sessionId && data.sessionId === tableSessionId) {
-        setSessionExpired(true);
-      }
-    };
-
     const handleTableReleased = (data) => {
       if (data && data.tableId && data.tableId === tableId) {
         setSessionExpired(true);
       }
     };
 
-    socket.on('invoice:paid', handleInvoicePaid);
     socket.on('table:released', handleTableReleased);
 
     return () => {
-      socket.off('invoice:paid', handleInvoicePaid);
       socket.off('table:released', handleTableReleased);
     };
-  }, [tableId, tableSessionId]);
+  }, [tableId]);
 
   const [activeOrder, setActiveOrder] = useState(null);
 

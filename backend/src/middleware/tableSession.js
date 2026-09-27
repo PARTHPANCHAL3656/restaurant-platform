@@ -18,12 +18,16 @@ const tableSession = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     const { sessionId, orderType } = decoded
 
-    // Takeout sessions have no table — the Order document itself, still
-    // open (not Served/Cancelled), IS the source of truth for validity.
+    // Takeout sessions have no table, and no equivalent of a dine-in
+    // "release" step — so a takeout session is never force-ended by order
+    // status. It used to end the instant an order was marked Served,
+    // which cut a customer off before they could even see their bill.
+    // Cancelled is the one real terminal state worth rejecting on; there's
+    // nothing left to view once an order was cancelled outright.
     if (orderType === "takeout") {
       const order = await Order.findOne({ sessionId, orderType: "takeout" })
 
-      if (!order || order.status === "Served" || order.status === "Cancelled") {
+      if (!order || order.status === "Cancelled") {
         return res.status(401).json({
           error: "Session expired. This takeout order is no longer active.",
           sessionEnded: true,

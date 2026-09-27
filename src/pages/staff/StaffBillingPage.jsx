@@ -234,25 +234,43 @@ export default function StaffBillingPage() {
           </div>
         )}
 
-        {/* Tally */}
+        {/* Tally — reads only the real stored fields now. A correctly-zero
+            serviceCharge (takeout) or discount (non-repeat customer) means
+            that line is hidden, not replaced with fabricated old-formula
+            math. cgstRate/sgstRate/serviceChargePercent are the actual
+            applied rates, snapshotted on the invoice — never re-derived. */}
         <div className="space-y-3">
           <h4 className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase font-bold">Tally Summary</h4>
           <div className="space-y-2 border-b border-muted-border pb-4">
             <div className="flex justify-between text-subtle-text">
               <span>Menu Subtotal</span>
-              <span>{formatINR((selectedInvoice.subtotal || selectedInvoice.amount / 1.175))}</span>
+              <span>{formatINR(selectedInvoice.subtotal || 0)}</span>
+            </div>
+            {selectedInvoice.discount > 0 && (
+              <div className="flex justify-between text-subtle-text">
+                <span>Repeat Customer Discount</span>
+                <span>-{formatINR(selectedInvoice.discount)}</span>
+              </div>
+            )}
+            {selectedInvoice.serviceCharge > 0 && (
+              <div className="flex justify-between text-subtle-text">
+                <span>Service Charge ({selectedInvoice.serviceChargePercent ?? 0}%)</span>
+                <span>{formatINR(selectedInvoice.serviceCharge)}</span>
+              </div>
+            )}
+            {selectedInvoice.packagingFee > 0 && (
+              <div className="flex justify-between text-subtle-text">
+                <span>Packaging Charges</span>
+                <span>{formatINR(selectedInvoice.packagingFee)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-subtle-text">
+              <span>CGST ({selectedInvoice.cgstRate !== undefined ? selectedInvoice.cgstRate : formatPercent((selectedInvoice.gst || 0) / 2, selectedInvoice.subtotal || 1)}%)</span>
+              <span>{formatINR(selectedInvoice.cgst !== undefined ? selectedInvoice.cgst : (selectedInvoice.gst || 0) / 2)}</span>
             </div>
             <div className="flex justify-between text-subtle-text">
-              <span>Service Charge ({formatPercent((selectedInvoice.serviceCharge || selectedInvoice.amount * 0.10 / 1.175), (selectedInvoice.subtotal || selectedInvoice.amount / 1.175))}%)</span>
-              <span>{formatINR((selectedInvoice.serviceCharge || selectedInvoice.amount * 0.10 / 1.175))}</span>
-            </div>
-            <div className="flex justify-between text-subtle-text">
-              <span>CGST ({formatPercent((selectedInvoice.gst || selectedInvoice.amount * 0.075 / 1.175) / 2, (selectedInvoice.subtotal || selectedInvoice.amount / 1.175))}%)</span>
-              <span>{formatINR((selectedInvoice.gst || selectedInvoice.amount * 0.075 / 1.175) / 2)}</span>
-            </div>
-            <div className="flex justify-between text-subtle-text">
-              <span>SGST ({formatPercent((selectedInvoice.gst || selectedInvoice.amount * 0.075 / 1.175) / 2, (selectedInvoice.subtotal || selectedInvoice.amount / 1.175))}%)</span>
-              <span>{formatINR((selectedInvoice.gst || selectedInvoice.amount * 0.075 / 1.175) / 2)}</span>
+              <span>SGST ({selectedInvoice.sgstRate !== undefined ? selectedInvoice.sgstRate : formatPercent((selectedInvoice.gst || 0) / 2, selectedInvoice.subtotal || 1)}%)</span>
+              <span>{formatINR(selectedInvoice.sgst !== undefined ? selectedInvoice.sgst : (selectedInvoice.gst || 0) / 2)}</span>
             </div>
           </div>
           <div className="flex justify-between items-end pt-2">
