@@ -23,6 +23,8 @@ async function getRepeatVisitThreshold() {
 // which is the same query, just reshaped for the "give a discount" UI.
 export const getRepeatCustomers = async (req, res) => {
   try {
+    const REPEAT_VISIT_THRESHOLD = await getRepeatVisitThreshold()
+
     const customers = await Customer.find({
       visitCount: { $gte: REPEAT_VISIT_THRESHOLD }
     })
@@ -46,6 +48,8 @@ export const getRepeatCustomers = async (req, res) => {
 // eligible ones are pre-marked rather than hidden.
 export const getDiscountEligible = async (req, res) => {
   try {
+    const REPEAT_VISIT_THRESHOLD = await getRepeatVisitThreshold()
+
     const customers = await Customer.find({})
       .sort({ visitCount: -1 })
       .select("phone name visitCount totalSpend lastVisit")
@@ -75,6 +79,8 @@ export const getDiscountEligible = async (req, res) => {
 // always mean the same customer segment across the whole app.
 export const getRetentionRate = async (req, res) => {
   try {
+    const REPEAT_VISIT_THRESHOLD = await getRepeatVisitThreshold()
+
     const totalCustomers = await Customer.countDocuments({})
     const repeatCustomers = await Customer.countDocuments({
       visitCount: { $gte: REPEAT_VISIT_THRESHOLD }
@@ -104,6 +110,8 @@ export const getRetentionRate = async (req, res) => {
 // metric — separate from the >= 3 discount-eligibility business rule.
 export const getCustomerOverview = async (req, res) => {
   try {
+    const REPEAT_VISIT_THRESHOLD = await getRepeatVisitThreshold()
+
     const customers = await Customer.find({})
       .sort({ lastVisit: -1 })
       .select("phone name visitCount totalSpend firstVisit lastVisit")
