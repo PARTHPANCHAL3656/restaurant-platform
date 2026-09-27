@@ -43,11 +43,35 @@ function parseClosingTime(hoursStr) {
   return closing;
 }
 
+function parseOpeningTime(hoursStr) {
+  const openingPart = hoursStr.split('-')[0]?.trim();
+  if (!openingPart) return null;
+  const match = openingPart.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return null;
+  let [, h, m, meridiem] = match;
+  h = parseInt(h, 10);
+  if (meridiem.toUpperCase() === 'PM' && h !== 12) h += 12;
+  if (meridiem.toUpperCase() === 'AM' && h === 12) h = 0;
+  const opening = new Date();
+  opening.setHours(h, parseInt(m, 10), 0, 0);
+  return opening;
+}
+
 function getTodaysClosingTime(openingHours) {
   const today = new Date().getDay();
   for (const entry of openingHours || []) {
     if (parseDayRange(entry.days).includes(today)) {
       return parseClosingTime(entry.hours);
+    }
+  }
+  return null;
+}
+
+function getTodaysOpeningTime(openingHours) {
+  const today = new Date().getDay();
+  for (const entry of openingHours || []) {
+    if (parseDayRange(entry.days).includes(today)) {
+      return parseOpeningTime(entry.hours);
     }
   }
   return null;
@@ -85,11 +109,33 @@ export default function TakeoutStartPage() {
     ? `${String(lastPickupTime.getHours()).padStart(2, '0')}:${String(lastPickupTime.getMinutes()).padStart(2, '0')}`
     : null;
 
+  const openingTime = useMemo(() => getTodaysOpeningTime(restaurantInfo?.openingHours), [restaurantInfo]);
+  const openingLabel = openingTime
+    ? openingTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : null;
+
+  // Applies to BOTH "ASAP" and "Later" — closed is closed, regardless of
+  // which pickup option is selected. This used to only be checked for
+  // "Later", which meant "ASAP" (the default) let someone place an order
+  // even when the kitchen wasn't open at all.
+  const isClosedForTakeout = !closingTime || !openingTime
+    || new Date() < openingTime
+    || (lastPickupTime && new Date() > lastPickupTime);
+
   const isPastClosing = pickupChoice === 'Later' && lastPickupTime && new Date() > lastPickupTime;
 
   const handleStart = async (e) => {
     e.preventDefault();
     if (!guestName.trim() || !guestPhone.trim()) return;
+
+    if (isClosedForTakeout) {
+      setError(
+        openingTime && closingTime
+          ? `We're closed for takeout right now. Today's pickup window is ${openingLabel} – ${lastPickupLabel}.`
+          : "We're closed for takeout right now. Please check back during our opening hours."
+      );
+      return;
+    }
 
     let finalPickupTime = 'ASAP';
     if (pickupChoice === 'Later') {
@@ -208,7 +254,7 @@ export default function TakeoutStartPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !resumePhone.trim()}
+                disabled={isSubmitting || !resumePhone.trim() || isClosedForTakeout}
                 className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[52px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmitting ? 'Looking up your order...' : 'Resume My Order'}

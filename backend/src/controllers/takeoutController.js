@@ -1,7 +1,9 @@
 import Order from "../models/Order.js"
 import Customer from "../models/Customer.js"
+import Settings from "../models/Settings.js"
 import { generateTakeoutToken, signTakeoutToken } from "../utils/generateTakeoutToken.js"
 import { nextBillNumber } from "../utils/nextBillNumber.js"
+import { isOpenForTakeout } from "../utils/checkTakeoutHours.js"
 
 // Normalizes a phone number to a bare 10-digit string, same convention
 // the CRM/analytics side already uses for matching customers.
@@ -32,6 +34,15 @@ export const startTakeoutSession = async (req, res) => {
       return res.status(403).json({
         error: "Online ordering is unavailable for this number. Please call the restaurant directly."
       })
+    }
+
+    // Applies to "ASAP" exactly the same as a specific pickup time — there
+    // was no server-side hours check at all before this, so someone could
+    // start (and the kitchen could receive) a takeout order while closed,
+    // regardless of what the frontend picker showed.
+    const settings = await Settings.getSingleton()
+    if (!isOpenForTakeout(settings.openingHours)) {
+      return res.status(403).json({ error: "We're closed for takeout right now. Please check our opening hours and try again later." })
     }
 
     const { sessionId, token, menuUrl } = generateTakeoutToken()
