@@ -99,6 +99,17 @@ export function StaffProvider({ children }) {
     repeatCustomerDiscountPercent: 5
   });
 
+  // Reservation booking rules (Settings -> Operations). Mirrors the backend
+  // defaults in models/Settings.js so the UI behaves sensibly before the
+  // real values load.
+  const [reservationRules, setReservationRules] = useState({
+    resMinLeadTimeHours: 2,
+    resMaxAdvanceDays: 14,
+    resHoldGraceMinutes: 15,
+    resRequireManagerLargeParties: 8,
+    resAutoRejectIfFull: true
+  });
+
   useEffect(() => {
     api.get('/api/settings')
       .then(res => {
@@ -116,6 +127,9 @@ export function StaffProvider({ children }) {
         }
         if (res.data?.billing) {
           setBilling(res.data.billing);
+        }
+        if (res.data?.reservations) {
+          setReservationRules(res.data.reservations);
         }
       })
       .catch(() => {
@@ -158,6 +172,13 @@ export function StaffProvider({ children }) {
     const res = await api.patch('/api/settings', { billing: newBilling });
     setBilling(res.data.billing);
     return res.data.billing;
+  };
+
+  // Owner OR Manager on the backend, same access as opening hours/links.
+  const updateReservationRules = async (newRules) => {
+    const res = await api.patch('/api/settings', { reservations: newRules });
+    setReservationRules(res.data.reservations);
+    return res.data.reservations;
   };
 
   // Restaurant Information — now sourced from the backend Settings
@@ -700,7 +721,8 @@ export function StaffProvider({ children }) {
       time: r.time,
       guest: r.name,
       partySize: r.guests,
-      table: '',
+      table: r.table || '',
+      referenceCode: r.referenceCode || '',
       vip: r.guests >= 5,
       phone: r.phone,
       status: r.status,
@@ -946,6 +968,7 @@ export function StaffProvider({ children }) {
           if (res.data?.contact) setContact(res.data.contact);
           if (res.data?.billing) setBilling(res.data.billing);
           if (res.data?.links) setLinks(res.data.links);
+          if (res.data?.reservations) setReservationRules(res.data.reservations);
         })
         .catch(() => {});
     };
@@ -1040,17 +1063,24 @@ export function StaffProvider({ children }) {
     }
   };
 
+  // Returns true on success, false on failure. The backend now enforces
+  // real rules here (only a Manager/Owner can confirm a large party or mark
+  // a no-show), so its error message is shown to the staff member instead
+  // of the click silently doing nothing.
   const updateReservationStatus = async (reservationId, status) => {
     const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
       setReservations(prev => prev.map(r => r.id === reservationId ? { ...r, status } : r));
-      return;
+      return true;
     }
     try {
       await api.patch(`/api/reservations/${reservationId}`, { status });
       await loadAllData();
+      return true;
     } catch (err) {
       console.error('Error updating reservation status:', err);
+      alert(err.response?.data?.error || 'Failed to update reservation.');
+      return false;
     }
   };
 
@@ -1219,7 +1249,10 @@ export function StaffProvider({ children }) {
 
     try {
       // Assign table session on backend and associate the reservation/walk-in guest
-      const res = await api.post(`/api/tables/${table._id}/assign`, { reservationId: assignId });
+      // Real reservations and walk-ins live in different collections now,
+      // so the backend needs to know which id it's been handed.
+      const assignPayload = isReservation ? { reservationId: assignId } : { waitlistId: assignId };
+      const res = await api.post(`/api/tables/${table._id}/assign`, assignPayload);
       const { qrDataUrl, token } = res.data;
       if (qrDataUrl && token) {
         const menuUrl = `${window.location.origin}/menu?token=${token}`;
@@ -1460,6 +1493,45 @@ export function StaffProvider({ children }) {
     }
   };
 
+  // Hold a specific table for a confirmed reservation ahead of arrival —
+  // the table tile turns "reserved" (yellow) and stays linked to the
+  // reservation until the guest is seated or a Manager marks a no-show.
+  const holdTableForReservation = async (reservationId, tableId) => {
+    const table = tables.find(t => t.id === tableId);
+    const reservation = reservations.find(r => r.id === reservationId);
+    if (!table || !reservation) return false;
+
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      setTables(prev => prev.map(t => t.id === tableId ? {
+        ...t,
+        status: 'reserved',
+        guestName: reservation.guest,
+        guestCount: reservation.partySize,
+        arrivalTime: reservation.time,
+        reservationId
+      } : t));
+      setReservations(prev => prev.map(r => r.id === reservationId ? { ...r, table: tableId } : r));
+      return true;
+    }
+
+    try {
+      await api.patch(`/api/tables/${table._id}/reserve`, { reservationId });
+      await loadAllData();
+      logActivity(
+        `Table ${tableId} held`,
+        `Held for ${reservation.guest} (party of ${reservation.partySize}) at ${reservation.time}`,
+        'event_seat',
+        '/staff/tables'
+      );
+      return true;
+    } catch (err) {
+      console.error('Error holding table:', err);
+      alert(err.response?.data?.error || 'Failed to hold table.');
+      return false;
+    }
+  };
+
   // Cancel Reservation
   const cancelReservation = async (tableId) => {
     const table = tables.find(t => t.id === tableId);
@@ -1609,7 +1681,8 @@ export function StaffProvider({ children }) {
         name: guestDetails.name,
         phone: guestDetails.phone || '',
         partySize: parseInt(guestDetails.partySize) || 2,
-        notes: guestDetails.notes || ''
+        notes: guestDetails.notes || '',
+        vip: !!guestDetails.vip
       });
       await loadAllData();
 
@@ -1850,6 +1923,9 @@ export function StaffProvider({ children }) {
       updateContactInfo,
       updateBillingInfo,
       updateLinksInfo,
+      reservationRules,
+      updateReservationRules,
+      holdTableForReservation,
       flagCustomerNoShow,
       finalizeTableBill,
       addGuestToQueue,

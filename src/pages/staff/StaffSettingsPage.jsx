@@ -30,7 +30,7 @@ const GROUPS = [
   {
     key: 'operations',
     title: 'Operations',
-    description: 'Opening hours and takeout rules.',
+    description: 'Opening hours, takeout rules, and reservation booking rules.',
     path: '/staff/settings/operations',
     ownerOnly: false,
     live: true
