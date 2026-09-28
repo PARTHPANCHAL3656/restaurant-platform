@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatINR } from '../../utils/currency';
+import ReservationCard from '../../components/staff/ReservationCard';
+import { getReservationTiming, compareReservations } from '../../utils/reservationTime';
 
 // Helper to resolve QR code image path
 const getQrImage = (tableId) => {
@@ -26,7 +28,9 @@ export default function StaffTablesPage() {
     markTableAvailable,
     reservations,
     finalizeTableBill,
-    updateReservationStatus
+    updateReservationStatus,
+    reservationRules,
+    holdTableForReservation
   } = useStaff();
 
   const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
@@ -40,19 +44,79 @@ export default function StaffTablesPage() {
   const [showPhoneCaptureModal, setShowPhoneCaptureModal] = useState(false);
   const [billingPhoneInput, setBillingPhoneInput] = useState('');
 
-  // Real upcoming reservations from backend
-  const upcomingReservations = reservations
-    .filter(r => r.status === 'pending' || r.status === 'confirmed')
-    .map(r => ({
-      id: r.id,
-      time: r.time,
-      guest: r.guest || 'Guest',
-      partySize: r.partySize || 2,
-      table: r.table || '',
-      vip: r.vip || false,
-      date: r.date,
-      status: r.status
-    }));
+  // Reservations sidebar: which tab is showing, and which list the "assign"
+  // form on an available table is drawing from (walk-ins and reservations
+  // are never mixed in one dropdown).
+  const [resTab, setResTab] = useState('pending');
+  const [assignMode, setAssignMode] = useState(null); // null | 'walkin' | 'reservation'
+
+  // Re-evaluate "late" every 30s without needing any other event to fire.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const staffRole = sessionStorage.getItem('staffRole');
+  const canManage = staffRole === 'OWNER' || staffRole === 'MANAGER';
+
+  const graceMinutes = reservationRules.resHoldGraceMinutes;
+  const largePartyThreshold = reservationRules.resRequireManagerLargeParties;
+
+  // Each reservation with where it sits relative to right now
+  // (today / late / past / future) — see utils/reservationTime.js.
+  const withTiming = (list) => list
+    .map(r => ({ r, ...getReservationTiming(r, graceMinutes, now) }))
+    .sort((a, b) => compareReservations(a.r, b.r));
+
+  // Tab A — online requests waiting for a yes/no
+  const pendingRequests = withTiming(reservations.filter(r => r.status === 'pending'));
+
+  // Tab B — accepted reservations, split by date so nothing disappears
+  const confirmedAll = withTiming(reservations.filter(r => r.status === 'confirmed'));
+  const todayConfirmed = confirmedAll.filter(x => x.timing === 'today' || x.timing === 'late');
+  const earlierConfirmed = confirmedAll.filter(x => x.timing === 'past');
+  const laterConfirmed = confirmedAll.filter(x => x.timing === 'future');
+  const lateReservations = todayConfirmed.filter(x => x.timing === 'late');
+  const lateReservationIds = new Set(lateReservations.map(x => x.r.id));
+
+  const availableTablesList = tables.filter(t => t.status === 'available');
+
+  const renderReservationCard = ({ r, timing, minutesLate }, view) => (
+    <ReservationCard
+      key={r.id}
+      reservation={r}
+      view={view}
+      timing={timing}
+      minutesLate={minutesLate}
+      canManage={canManage}
+      largePartyThreshold={largePartyThreshold}
+      availableTables={availableTablesList}
+      onConfirm={() => updateReservationStatus(r.id, 'confirmed')}
+      onReject={() => {
+        if (window.confirm(`Reject ${r.guest}'s request for ${r.time} on ${r.date}? They will see it as declined.`)) {
+          updateReservationStatus(r.id, 'rejected');
+        }
+      }}
+      onSeat={async (tableId) => {
+        // A held table means the guest is checking in to it; otherwise
+        // they're being seated at whichever free table was just picked.
+        if (r.table) await checkInGuest(r.table);
+        else await assignTable(r.id, tableId);
+      }}
+      onHold={(tableId) => holdTableForReservation(r.id, tableId)}
+      onNoShow={() => {
+        if (window.confirm(`Mark ${r.guest} as a no-show? This frees their table and adds a no-show strike to their phone number. Only do this after trying to call them.`)) {
+          updateReservationStatus(r.id, 'no-show');
+        }
+      }}
+      onGuestCancelled={() => {
+        if (window.confirm(`Cancel ${r.guest}'s reservation because they called to cancel? No no-show strike is recorded.`)) {
+          updateReservationStatus(r.id, 'cancelled');
+        }
+      }}
+    />
+  );
 
   const getEstimatedFinish = (arrivalTimeStr) => {
     if (!arrivalTimeStr) return '—';
@@ -81,7 +145,7 @@ export default function StaffTablesPage() {
       case 'occupied':
         return 'bg-ink-navy text-canvas-cream border border-ink-navy';
       case 'reserved':
-        return 'bg-surface-container-low border border-muted-border text-ink-navy/70';
+        return 'bg-amber-100 border border-amber-400 text-amber-900';
       case 'cleaning':
         return 'bg-saffron-gold/10 border border-dashed border-saffron-gold/50 text-subtle-text';
       default:
@@ -113,17 +177,24 @@ export default function StaffTablesPage() {
   // Estimated order subtotal & details lookup
   const currentTableOrder = orders.find(o => o.table === selectedTableId);
 
-  const assignableParties = [
-    ...queue.map(q => ({ id: q.id, name: q.name, partySize: q.partySize, type: 'Waitlist' })),
-    ...reservations
-      .filter(r => r.status === 'confirmed' && (!r.table || r.table === 'T-??' || r.table === ''))
-      .map(r => ({ id: r.id, name: r.guest, partySize: r.partySize, type: 'Reservation' }))
-  ];
+  // Walk-ins and reservations are kept as two separate lists on purpose.
+  const walkInParties = queue.map(q => ({ id: q.id, name: q.name, partySize: q.partySize }));
+  // Today's confirmed reservations that don't already have a table held
+  // (ones with a held table are checked in from their own table instead).
+  const seatableReservations = todayConfirmed
+    .filter(x => !x.r.table)
+    .map(x => ({ id: x.r.id, name: x.r.guest, partySize: x.r.partySize, time: x.r.time }));
 
   const handleSeatParty = (queueId) => {
     if (!selectedTableId) return;
     assignTable(queueId, selectedTableId);
     setShowAssignForm(false);
+  };
+
+  const handleHoldReservation = async (reservationId) => {
+    if (!selectedTableId) return;
+    const ok = await holdTableForReservation(reservationId, selectedTableId);
+    if (ok) setShowAssignForm(false);
   };
 
   const handleConfirmRelease = () => {
@@ -183,7 +254,7 @@ export default function StaffTablesPage() {
         leftDrawerOpen ? 'w-80 translate-x-0' : 'w-80 -translate-x-full md:-translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
       }`}>
         <div className="p-6 flex justify-between items-center border-b border-muted-border shrink-0">
-          <h3 className="font-serif text-md text-ink-navy font-semibold">Upcoming Reservations</h3>
+          <h3 className="font-serif text-md text-ink-navy font-semibold">Reservations</h3>
           <button 
             onClick={() => setLeftDrawerOpen(false)}
             className="text-subtle-text hover:text-saffron-gold focus:outline-none cursor-pointer"
@@ -192,55 +263,65 @@ export default function StaffTablesPage() {
           </button>
         </div>
 
-        {/* Reservations List */}
-        <div className="p-6 space-y-6 overflow-y-auto min-h-0 flex-grow hide-scrollbar" data-lenis-prevent>
-          <div className="space-y-4">
-            {upcomingReservations.length === 0 ? (
-              <div className="text-center py-12 text-subtle-text italic">
-                No upcoming reservations
-              </div>
-            ) : (
-              upcomingReservations.map((res, i) => (
-                <div 
-                  key={i}
-                  className="pb-4 border-b border-muted-border last:border-b-0 space-y-2 text-xs"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="font-serif font-bold text-ink-navy text-sm">{res.time}</span>
-                    {res.vip && (
-                      <span className="bg-saffron-gold/10 text-saffron-gold text-[8px] font-black tracking-widest px-2 py-0.5 uppercase">
-                        VIP Priority
-                      </span>
-                    )}
-                  </div>
-                  <h4 className="font-body-md font-semibold text-ink-navy">{res.guest}</h4>
-                  <div className="flex justify-between text-subtle-text text-[11px] font-label-caps">
-                    <span>Party of {res.partySize}</span>
-                    <span className="text-saffron-gold font-bold">
-                      {res.table !== 'T-??' && res.table !== '' ? `Table ${res.table}` : 'Unassigned'}
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-subtle-text italic mt-0.5">Date: {res.date}</div>
-                  {res.status === 'pending' && (
-                    <div className="flex gap-2 mt-2 pt-2 border-t border-muted-border">
-                      <button 
-                        onClick={() => updateReservationStatus(res.id, 'confirmed')}
-                        className="flex-1 py-1 bg-saffron-gold text-ink-navy font-bold text-[10px] uppercase tracking-widest hover:brightness-110 cursor-pointer"
-                      >
-                        Confirm
-                      </button>
-                      <button 
-                        onClick={() => updateReservationStatus(res.id, 'rejected')}
-                        className="flex-1 py-1 bg-red-900/10 text-red-700 font-bold text-[10px] uppercase tracking-widest hover:bg-red-900/20 cursor-pointer"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))
+        {/* Pending Requests / Today's Confirmed tabs */}
+        <div className="grid grid-cols-2 border-b border-muted-border shrink-0">
+          <button
+            onClick={() => setResTab('pending')}
+            className={`py-3 text-[10px] font-label-caps uppercase tracking-widest font-bold cursor-pointer transition-colors ${
+              resTab === 'pending' ? 'text-ink-navy border-b-2 border-saffron-gold' : 'text-subtle-text hover:text-ink-navy'
+            }`}
+          >
+            Pending Requests
+            {pendingRequests.length > 0 && (
+              <span className="ml-1.5 bg-saffron-gold text-ink-navy px-1.5 py-0.5 text-[9px] rounded-full">{pendingRequests.length}</span>
             )}
-          </div>
+          </button>
+          <button
+            onClick={() => setResTab('confirmed')}
+            className={`py-3 text-[10px] font-label-caps uppercase tracking-widest font-bold cursor-pointer transition-colors ${
+              resTab === 'confirmed' ? 'text-ink-navy border-b-2 border-saffron-gold' : 'text-subtle-text hover:text-ink-navy'
+            }`}
+          >
+            Today's Confirmed
+            {todayConfirmed.length > 0 && (
+              <span className={`ml-1.5 px-1.5 py-0.5 text-[9px] rounded-full text-white ${lateReservations.length > 0 ? 'bg-red-600 animate-pulse' : 'bg-ink-navy'}`}>
+                {lateReservations.length > 0 ? `${lateReservations.length} late` : todayConfirmed.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Reservations List */}
+        <div className="p-4 space-y-4 overflow-y-auto min-h-0 flex-grow hide-scrollbar" data-lenis-prevent>
+          {resTab === 'pending' ? (
+            pendingRequests.length === 0 ? (
+              <div className="text-center py-12 text-subtle-text italic text-xs">No requests waiting for a decision</div>
+            ) : (
+              pendingRequests.map(x => renderReservationCard(x, 'pending'))
+            )
+          ) : (
+            <>
+              {todayConfirmed.length === 0 ? (
+                <div className="text-center py-8 text-subtle-text italic text-xs">No confirmed reservations for today</div>
+              ) : (
+                todayConfirmed.map(x => renderReservationCard(x, 'confirmed'))
+              )}
+
+              {earlierConfirmed.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h5 className="font-label-caps text-[9px] uppercase tracking-widest font-bold text-red-600">Earlier days — still unresolved</h5>
+                  {earlierConfirmed.map(x => renderReservationCard(x, 'confirmed'))}
+                </div>
+              )}
+
+              {laterConfirmed.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h5 className="font-label-caps text-[9px] uppercase tracking-widest font-bold text-subtle-text">Later dates</h5>
+                  {laterConfirmed.map(x => renderReservationCard(x, 'confirmed'))}
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* View full queue button */}
@@ -249,7 +330,7 @@ export default function StaffTablesPage() {
             onClick={() => navigate('/staff/guest-queue')}
             className="w-full h-[56px] border border-ink-navy text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:bg-ink-navy hover:text-canvas-cream transition-all duration-300 cursor-pointer rounded-none text-center"
           >
-            View Full Guest Queue
+            View Walk-in Waitlist
           </button>
         </div>
       </div>
@@ -264,6 +345,9 @@ export default function StaffTablesPage() {
             className="absolute top-6 left-6 bg-white border border-muted-border p-3 shadow-md hover:text-saffron-gold transition-all focus:outline-none cursor-pointer"
           >
             <span className="material-symbols-outlined">last_page</span>
+            {(lateReservations.length > 0 || pendingRequests.length > 0) && (
+              <span className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${lateReservations.length > 0 ? 'bg-red-600 animate-pulse' : 'bg-saffron-gold'}`} />
+            )}
           </button>
         )}
 
@@ -274,7 +358,7 @@ export default function StaffTablesPage() {
             <span className="text-[10px] font-label-caps uppercase tracking-wider text-subtle-text">Available</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 bg-surface-container-low" />
+            <div className="w-2.5 h-2.5 bg-amber-100 border border-amber-400" />
             <span className="text-[10px] font-label-caps uppercase tracking-wider text-subtle-text">Reserved</span>
           </div>
           <div className="flex items-center gap-2">
@@ -302,6 +386,8 @@ export default function StaffTablesPage() {
                 onClick={() => setSelectedTableId(tbl.id)}
                 className={`w-40 h-40 flex flex-col items-center justify-center gap-3 transition-all duration-300 shadow-xs hover:shadow-lg hover:-translate-y-0.5 cursor-pointer relative ${getTableStatusClass(tbl.status)} ${
                   selectedTableId === tbl.id ? 'ring-4 ring-saffron-gold/30 scale-103' : ''
+                } ${
+                  tbl.status === 'reserved' && lateReservationIds.has(tbl.reservationId) ? 'ring-2 ring-red-500 animate-pulse' : ''
                 }`}
               >
                 {selectedTableId === tbl.id && (
@@ -321,8 +407,14 @@ export default function StaffTablesPage() {
                 {/* Status Text & Guest Name (only if occupied) */}
                 <div className="text-[9px] font-bold uppercase tracking-wider text-center px-2">
                   <p className="opacity-60">{tbl.status}</p>
-                  {tbl.status === 'occupied' && tbl.guestName && (
+                  {(tbl.status === 'occupied' || tbl.status === 'reserved') && tbl.guestName && (
                     <p className="mt-0.5 font-serif capitalize text-xs tracking-normal font-medium">{tbl.guestName}</p>
+                  )}
+                  {tbl.status === 'reserved' && tbl.arrivalTime && (
+                    <p className="mt-0.5 opacity-80">{tbl.arrivalTime}</p>
+                  )}
+                  {tbl.status === 'reserved' && lateReservationIds.has(tbl.reservationId) && (
+                    <p className="mt-0.5 text-red-600 font-black">LATE</p>
                   )}
                 </div>
               </button>
@@ -489,21 +581,21 @@ export default function StaffTablesPage() {
                         </div>
                       </div>
 
-                      {/* Assign waitlist party selector */}
-                      {showAssignForm ? (
+                      {/* Seat a walk-in OR a reservation — two separate lists, never mixed */}
+                      {showAssignForm && assignMode === 'walkin' ? (
                         <div className="p-4 border border-muted-border bg-canvas-cream space-y-4">
-                          <h4 className="font-serif text-sm font-semibold">Seat Party / Reservation</h4>
-                          {assignableParties.length === 0 ? (
-                            <p className="text-xs text-subtle-text italic">No parties currently in queue or confirmed reservations.</p>
+                          <h4 className="font-serif text-sm font-semibold">Seat a Walk-in</h4>
+                          {walkInParties.length === 0 ? (
+                            <p className="text-xs text-subtle-text italic">No walk-ins are waiting.</p>
                           ) : (
                             <div className="space-y-3">
                               <select 
                                 id="seat_party_select"
                                 className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none cursor-pointer"
                               >
-                                {assignableParties.map(guest => (
+                                {walkInParties.map(guest => (
                                   <option key={guest.id} value={guest.id}>
-                                    {guest.name} (Party of {guest.partySize}) - {guest.type}
+                                    {guest.name} (Party of {guest.partySize})
                                   </option>
                                 ))}
                               </select>
@@ -516,7 +608,57 @@ export default function StaffTablesPage() {
                                   }}
                                   className="py-2 px-4 bg-saffron-gold text-midnight-black font-label-caps text-[10px] uppercase font-bold tracking-wider hover:bg-[#B8962F] transition-all cursor-pointer"
                                 >
-                                  Assign Table
+                                  Seat Walk-in
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={() => setShowAssignForm(false)}
+                                  className="py-2 px-4 border border-ink-navy text-ink-navy font-label-caps text-[10px] uppercase tracking-wider hover:bg-ink-navy hover:text-white transition-all cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : showAssignForm && assignMode === 'reservation' ? (
+                        <div className="p-4 border border-muted-border bg-canvas-cream space-y-4">
+                          <h4 className="font-serif text-sm font-semibold">Assign a Reservation</h4>
+                          <p className="text-[10px] text-subtle-text">Today's confirmed reservations that don't have a table yet.</p>
+                          {seatableReservations.length === 0 ? (
+                            <p className="text-xs text-subtle-text italic">No confirmed reservations are waiting for a table.</p>
+                          ) : (
+                            <div className="space-y-3">
+                              <select 
+                                id="seat_reservation_select"
+                                className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none cursor-pointer"
+                              >
+                                {seatableReservations.map(r => (
+                                  <option key={r.id} value={r.id} disabled={r.partySize > currentTable.seats}>
+                                    {r.time} — {r.name} (Party of {r.partySize}){r.partySize > currentTable.seats ? ' — too big for this table' : ''}
+                                  </option>
+                                ))}
+                              </select>
+                              <div className="flex flex-wrap gap-2">
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const selectEl = document.getElementById('seat_reservation_select');
+                                    if (selectEl && selectEl.value) handleHoldReservation(selectEl.value);
+                                  }}
+                                  className="py-2 px-4 bg-amber-200 text-amber-900 font-label-caps text-[10px] uppercase font-bold tracking-wider hover:bg-amber-300 transition-all cursor-pointer"
+                                >
+                                  Hold Table
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const selectEl = document.getElementById('seat_reservation_select');
+                                    if (selectEl && selectEl.value) handleSeatParty(selectEl.value);
+                                  }}
+                                  className="py-2 px-4 bg-saffron-gold text-midnight-black font-label-caps text-[10px] uppercase font-bold tracking-wider hover:bg-[#B8962F] transition-all cursor-pointer"
+                                >
+                                  Seat Now
                                 </button>
                                 <button 
                                   type="button"
@@ -530,7 +672,7 @@ export default function StaffTablesPage() {
                           )}
                         </div>
                       ) : (
-                        <p className="text-xs text-subtle-text">This table is vacant. You can manually assign reservations or seat walk-ins.</p>
+                        <p className="text-xs text-subtle-text">This table is vacant. Seat a walk-in from the waitlist, or hold/seat a confirmed reservation.</p>
                       )}
 
                     </div>
@@ -637,12 +779,20 @@ export default function StaffTablesPage() {
 
                   {currentTable.status === 'available' && (
                     <>
-                      <button 
-                        onClick={() => setShowAssignForm(true)}
-                        className="w-full h-[56px] bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 cursor-pointer shadow-md rounded-none text-center font-bold"
-                      >
-                        Assign Reservation
-                      </button>
+                      <div className="grid grid-cols-2 gap-4">
+                        <button 
+                          onClick={() => { setAssignMode('walkin'); setShowAssignForm(true); }}
+                          className="h-[56px] bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 cursor-pointer shadow-md rounded-none text-center font-bold"
+                        >
+                          Seat Walk-in
+                        </button>
+                        <button 
+                          onClick={() => { setAssignMode('reservation'); setShowAssignForm(true); }}
+                          className="h-[56px] bg-amber-200 text-amber-900 font-cta-label text-cta-label uppercase tracking-widest hover:bg-amber-300 active:scale-98 transition-all duration-300 cursor-pointer shadow-md rounded-none text-center font-bold"
+                        >
+                          Reservation
+                        </button>
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <button 
                           onClick={() => setShowQrModal(true)}

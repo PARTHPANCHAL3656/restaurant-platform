@@ -736,9 +736,11 @@ export function StaffProvider({ children }) {
   const mapBackendQueueItem = useCallback((q) => {
     const diffMs = new Date() - new Date(q.createdAt);
     const diffMins = Math.max(0, Math.floor(diffMs / 60000));
-    const waitTimeStr = q.source === 'Walk-in' 
-      ? (diffMins === 0 ? 'Just now' : `${diffMins} Mins`) 
-      : `${q.date} at ${q.time}`;
+    // The queue only ever holds walk-ins now (reservations live in their own
+    // list), so the wait is always "minutes since they were added". This used
+    // to branch on q.source, which waitlist entries don't carry — that's what
+    // produced "undefined at undefined" on the Guest Queue screen.
+    const waitTimeStr = diffMins === 0 ? 'Just now' : `${diffMins} Mins`;
 
     const size = q.partySize || q.guests || 2;
 
@@ -1698,6 +1700,32 @@ export function StaffProvider({ children }) {
     }
   };
 
+  // Walk-in left before a table opened up — takes them off the waitlist.
+  const removeFromQueue = async (queueId) => {
+    const guest = queue.find(q => q.id === queueId);
+    if (!guest) return;
+
+    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
+    if (isMock) {
+      setQueue(prev => prev.filter(q => q.id !== queueId));
+      return;
+    }
+
+    try {
+      await api.delete(`/api/tables/waiting/${queueId}`);
+      await loadAllData();
+      logActivity(
+        `Guest ${guest.name} left the waitlist`,
+        `Party of ${guest.partySize} removed from the walk-in waitlist`,
+        'hourglass_disabled',
+        '/staff/guest-queue'
+      );
+    } catch (err) {
+      console.error('Error removing guest from waitlist:', err);
+      alert(err.response?.data?.error || 'Failed to remove guest from waitlist.');
+    }
+  };
+
   // Menu Updates
   const addMenuItem = async (item) => {
     const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
@@ -1929,6 +1957,7 @@ export function StaffProvider({ children }) {
       flagCustomerNoShow,
       finalizeTableBill,
       addGuestToQueue,
+      removeFromQueue,
       addMenuItem,
       reseedDemoMenu,
       updateMenuItem,

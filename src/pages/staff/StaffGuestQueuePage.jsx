@@ -1,9 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStaff } from '../../context/StaffContext';
 
+// Walk-in Waitlist — ONLY people physically standing in the lobby. Online
+// reservations never appear here; they live under Tables & Reservations.
 export default function StaffGuestQueuePage() {
-  const { queue, assignTable, addGuestToQueue, tables, updateReservationStatus } = useStaff();
+  const { queue, assignTable, addGuestToQueue, removeFromQueue, tables } = useStaff();
   const [selectedGuestId, setSelectedGuestId] = useState(null);
+
+  // Re-render every 30s so the wait times keep counting up on their own.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const minutesWaiting = (guest) => {
+    const diffMs = new Date() - new Date(guest.createdAt || new Date());
+    return Math.max(0, Math.floor(diffMs / 60000));
+  };
+  const formatWait = (guest) => {
+    const mins = minutesWaiting(guest);
+    return mins === 0 ? 'Just now' : `${mins} Mins`;
+  };
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [newGuestData, setNewGuestData] = useState({
@@ -16,6 +34,12 @@ export default function StaffGuestQueuePage() {
 
   const handleSeatGuest = (guestId, tableId) => {
     assignTable(guestId, tableId);
+    setSelectedGuestId(null);
+  };
+
+  const handleGuestLeft = (guest) => {
+    if (!window.confirm(`Remove ${guest.name} from the waitlist? Use this only if they've left without being seated.`)) return;
+    removeFromQueue(guest.id);
     setSelectedGuestId(null);
   };
 
@@ -34,10 +58,7 @@ export default function StaffGuestQueuePage() {
   const availableTables = tables.filter(t => t.status === 'available');
 
   // Dynamic wait times calculations based on actual createdAt timestamps
-  const waitTimes = queue.map(guest => {
-    const diffMs = new Date() - new Date(guest.createdAt || new Date());
-    return Math.max(0, Math.floor(diffMs / 60000));
-  });
+  const waitTimes = queue.map(guest => minutesWaiting(guest));
   const longestWait = queue.length > 0 ? `${Math.max(...waitTimes)} Mins` : '—';
   const averageWait = queue.length > 0 ? `${Math.round(waitTimes.reduce((sum, t) => sum + t, 0) / queue.length)} Mins` : '—';
 
@@ -67,7 +88,7 @@ export default function StaffGuestQueuePage() {
           {/* Cards List */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="font-serif text-lg text-ink-navy border-l-2 border-saffron-gold pl-4">Queue Directory</h3>
+              <h3 className="font-serif text-lg text-ink-navy border-l-2 border-saffron-gold pl-4">Walk-in Waitlist</h3>
               <button 
                 onClick={() => setShowAddForm(!showAddForm)}
                 className="py-3 px-6 bg-ink-navy text-canvas-cream font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 rounded-none cursor-pointer text-center"
@@ -146,7 +167,8 @@ export default function StaffGuestQueuePage() {
             {queue.length === 0 ? (
               <div className="bg-white p-12 text-center border border-muted-border text-subtle-text">
                 <span className="material-symbols-outlined text-4xl mb-2">hourglass_disabled</span>
-                <p className="font-serif text-md">Queue is currently clear</p>
+                <p className="font-serif text-md">No walk-ins waiting</p>
+                <p className="text-xs mt-1">Online reservations are managed under Tables &amp; Reservations.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -174,7 +196,7 @@ export default function StaffGuestQueuePage() {
                       <div className="h-6 w-px bg-muted-border" />
                       <div>
                         <span className="font-semibold block text-ink-navy">Time elapsed</span>
-                        <span className="text-saffron-gold font-bold">{guest.waitTime}</span>
+                        <span className="text-saffron-gold font-bold">{formatWait(guest)}</span>
                       </div>
                     </div>
                   </div>
@@ -219,16 +241,8 @@ export default function StaffGuestQueuePage() {
             <div className="flex-grow min-h-0 p-6 space-y-6 overflow-y-auto hide-scrollbar text-xs" data-lenis-prevent>
               <div className="space-y-3.5 border-b border-muted-border pb-6">
                 <div className="flex justify-between">
-                  <span className="text-subtle-text">Reservation ID:</span>
+                  <span className="text-subtle-text">Waitlist ID:</span>
                   <span className="font-mono font-bold text-ink-navy">{selectedGuest.id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-subtle-text">Source:</span>
-                  <span className="font-bold text-ink-navy">{selectedGuest.source}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-subtle-text">Status:</span>
-                  <span className="font-bold text-saffron-gold">{selectedGuest.status}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-subtle-text">Party Size:</span>
@@ -238,34 +252,16 @@ export default function StaffGuestQueuePage() {
                   <span className="text-subtle-text">Contact Phone:</span>
                   <span className="text-ink-navy">{selectedGuest.phone || '—'}</span>
                 </div>
-                {selectedGuest.date && (
-                  <div className="flex justify-between">
-                    <span className="text-subtle-text">Booking Date:</span>
-                    <span className="text-ink-navy">{selectedGuest.date}</span>
-                  </div>
-                )}
-                {selectedGuest.time && (
-                  <div className="flex justify-between">
-                    <span className="text-subtle-text">Booking Time:</span>
-                    <span className="text-ink-navy">{selectedGuest.time}</span>
-                  </div>
-                )}
                 <div className="flex justify-between">
-                  <span className="text-subtle-text">Wait/Time:</span>
-                  <span className="text-saffron-gold font-bold">{selectedGuest.waitTime}</span>
+                  <span className="text-subtle-text">Waiting:</span>
+                  <span className="text-saffron-gold font-bold">{formatWait(selectedGuest)}</span>
                 </div>
-                {selectedGuest.arrivalTime && (
-                  <div className="flex justify-between">
-                    <span className="text-subtle-text">Arrival Time:</span>
-                    <span className="text-ink-navy">{selectedGuest.arrivalTime}</span>
-                  </div>
-                )}
               </div>
 
               {/* Notes */}
               {selectedGuest.notes && (
                 <div className="p-4 bg-yellow-50 border border-yellow-200 text-xs italic text-ink-navy rounded-xs">
-                  <p className="font-semibold text-yellow-800 font-label-caps text-[9px] uppercase tracking-wider mb-1">Queue Preferences</p>
+                  <p className="font-semibold text-yellow-800 font-label-caps text-[9px] uppercase tracking-wider mb-1">Seating Notes</p>
                   <p>"{selectedGuest.notes}"</p>
                 </div>
               )}
@@ -291,28 +287,7 @@ export default function StaffGuestQueuePage() {
 
             {/* Actions */}
             <div className="p-6 border-t border-muted-border bg-canvas-cream shrink-0">
-              {selectedGuest.status === 'pending' ? (
-                <div className="flex gap-4">
-                  <button 
-                    onClick={() => {
-                      updateReservationStatus(selectedGuest.id, 'confirmed');
-                      setSelectedGuestId(null);
-                    }}
-                    className="flex-1 bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer text-center font-bold"
-                  >
-                    Confirm
-                  </button>
-                  <button 
-                    onClick={() => {
-                      updateReservationStatus(selectedGuest.id, 'rejected');
-                      setSelectedGuestId(null);
-                    }}
-                    className="flex-1 bg-red-900/10 text-red-700 font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:bg-red-900/20 active:scale-98 transition-all duration-300 rounded-none cursor-pointer text-center font-bold"
-                  >
-                    Reject
-                  </button>
-                </div>
-              ) : (
+              <div className="space-y-3">
                 <button 
                   onClick={() => {
                     const selectEl = document.getElementById('table_assign_select');
@@ -327,7 +302,13 @@ export default function StaffGuestQueuePage() {
                 >
                   Seat Party & Settle
                 </button>
-              )}
+                <button 
+                  onClick={() => handleGuestLeft(selectedGuest)}
+                  className="w-full h-[44px] border border-red-300 text-red-700 font-cta-label text-cta-label uppercase tracking-widest hover:bg-red-50 transition-all duration-300 rounded-none cursor-pointer text-center"
+                >
+                  Guest Left
+                </button>
+              </div>
             </div>
 
           </div>

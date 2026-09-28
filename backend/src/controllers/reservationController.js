@@ -27,6 +27,24 @@ async function getSlotAvailability(date, time, excludeReservationId = null) {
   }
 }
 
+// Frees whichever table is being held ("reserved") for this reservation,
+// if any, and clears the reservation's own table link. Used by both
+// no-show and guest-cancelled so a yellow table can never be left stranded.
+async function releaseHeldTable(reservation) {
+  const heldTable = await Table.findOne({ reservationId: reservation._id })
+  if (heldTable && heldTable.status === "reserved") {
+    heldTable.status = "available"
+    heldTable.reservationId = null
+    heldTable.guestName = ""
+    heldTable.guestCount = 0
+    heldTable.notes = ""
+    heldTable.arrivalTime = ""
+    await heldTable.save()
+    io.emit("table:updated", { tableId: heldTable._id, status: "available", tableNumber: heldTable.tableNumber })
+  }
+  reservation.table = ""
+}
+
 // POST /api/reservations
 // Public — customer books a table from the website
 export const createReservation = async (req, res) => {
@@ -130,20 +148,10 @@ export const updateReservationStatus = async (req, res) => {
       }
 
       // Free whichever table was being held for this reservation, if any.
-      // This is the ONLY automatic side effect of a no-show — there is no
-      // auto-cancel timer and this never runs on its own; it only fires
-      // from the Manager's explicit click.
-      const heldTable = await Table.findOne({ reservationId: reservation._id })
-      if (heldTable && heldTable.status === "reserved") {
-        heldTable.status = "available"
-        heldTable.reservationId = null
-        heldTable.guestName = ""
-        heldTable.guestCount = 0
-        heldTable.notes = ""
-        heldTable.arrivalTime = ""
-        await heldTable.save()
-        io.emit("table:updated", { tableId: heldTable._id, status: "available", tableNumber: heldTable.tableNumber })
-      }
+      // Besides the strike below, this is the ONLY automatic side effect of
+      // a no-show — there is no auto-cancel timer and this never runs on
+      // its own; it only fires from the Manager's explicit click.
+      await releaseHeldTable(reservation)
 
       // A strike, not a blacklist. The existing takeout no-show flow has
       // its own isBlacklisted flag (Customer.js) — this deliberately never
@@ -157,7 +165,12 @@ export const updateReservationStatus = async (req, res) => {
         )
       }
 
-      reservation.table = ""
+    }
+
+    // A guest who phones to cancel must not leave their table stranded as
+    // "reserved", and — unlike a no-show — earns no strike.
+    if (status === "cancelled") {
+      await releaseHeldTable(reservation)
     }
 
     reservation.status = status

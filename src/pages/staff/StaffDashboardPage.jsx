@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
 import { formatINR } from '../../utils/currency';
+import { getTodayIST } from '../../utils/reservationTime';
 
 export default function StaffDashboardPage() {
   const navigate = useNavigate();
@@ -14,8 +15,10 @@ export default function StaffDashboardPage() {
   const occupancyRate = totalTables > 0 ? Math.round((occupiedTables / totalTables) * 100) : 0;
 
   const reservedTables = tables.filter(t => t.status === 'reserved').length;
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayReservationsCount = reservations.filter(r => r.status === 'pending' || r.status === 'confirmed').length;
+  // Only reservations actually dated today — this used to count every pending
+  // or confirmed booking regardless of date, so stale or future ones inflated it.
+  const todayStr = getTodayIST();
+  const todayReservationsCount = reservations.filter(r => r.date === todayStr && (r.status === 'pending' || r.status === 'confirmed')).length;
 
   const activeOrdersCount = orders.length;
   const avgKitchenPrep = orders.length > 0 
@@ -114,7 +117,7 @@ export default function StaffDashboardPage() {
               
               {/* Bookings */}
               <div 
-                onClick={() => navigate('/staff/guest-queue')}
+                onClick={() => navigate('/staff/tables')}
                 className="bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex justify-between items-center cursor-pointer"
               >
                 <div>
