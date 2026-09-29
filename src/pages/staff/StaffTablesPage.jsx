@@ -4,7 +4,7 @@ import { useStaff } from '../../context/StaffContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatINR } from '../../utils/currency';
 import ReservationCard from '../../components/staff/ReservationCard';
-import { getReservationTiming, compareReservations } from '../../utils/reservationTime';
+import { getReservationTiming, compareReservations, getMinutesUntilSlot } from '../../utils/reservationTime';
 
 // Helper to resolve QR code image path
 const getQrImage = (tableId) => {
@@ -82,6 +82,23 @@ export default function StaffTablesPage() {
 
   const availableTablesList = tables.filter(t => t.status === 'available');
 
+  // A reservation can be seated well before its booked time (holding the
+  // table ahead of arrival is fine — actually checking them in isn't, past a
+  // point, since the kitchen/floor may not be ready for whatever the booking
+  // needs, e.g. a birthday cake). 30 minutes early is close enough to let
+  // through silently; anything more asks for a confirm so a misclick or an
+  // over-eager guest doesn't jump the queue by accident.
+  const confirmEarlySeating = (reservation) => {
+    const minutesUntil = getMinutesUntilSlot(reservation, now);
+    if (minutesUntil === null || minutesUntil <= 30) return true;
+    const hrs = Math.floor(minutesUntil / 60);
+    const mins = minutesUntil % 60;
+    const early = hrs > 0 ? `${hrs}h ${mins}m` : `${mins} min`;
+    return window.confirm(
+      `${reservation.guest}'s reservation is for ${reservation.time} — that's ${early} from now. Seat them early anyway? Their table won't have had time to prep any special requests.`
+    );
+  };
+
   const renderReservationCard = ({ r, timing, minutesLate }, view) => (
     <ReservationCard
       key={r.id}
@@ -99,6 +116,7 @@ export default function StaffTablesPage() {
         }
       }}
       onSeat={async (tableId) => {
+        if (!confirmEarlySeating(r)) return;
         // A held table means the guest is checking in to it; otherwise
         // they're being seated at whichever free table was just picked.
         if (r.table) await checkInGuest(r.table);
@@ -187,6 +205,10 @@ export default function StaffTablesPage() {
 
   const handleSeatParty = (queueId) => {
     if (!selectedTableId) return;
+    // This id might be a walk-in (never "early" — they're already here) or
+    // a reservation seated straight from an available table's drawer.
+    const matchedReservation = reservations.find(r => r.id === queueId);
+    if (matchedReservation && !confirmEarlySeating(matchedReservation)) return;
     assignTable(queueId, selectedTableId);
     setShowAssignForm(false);
   };

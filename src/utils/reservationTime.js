@@ -22,7 +22,7 @@ export function slotToMinutes(slot) {
   return hours * 60 + minutes;
 }
 
-function nowMinutesIST(now) {
+export function nowMinutesIST(now) {
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false
   }).formatToParts(now);
@@ -48,6 +48,17 @@ export function getReservationTiming(reservation, graceMinutes, now = new Date()
   const minutesPast = nowMinutesIST(now) - slot;
   if (minutesPast > graceMinutes) return { timing: 'late', minutesLate: minutesPast };
   return { timing: 'today', minutesLate: 0 };
+}
+
+// Minutes between right now and a reservation's booked slot, TODAY only:
+// positive = the slot is still ahead (how early it would be to seat them),
+// negative = already past it. Returns null for any other date (yesterday,
+// tomorrow, etc.) since "early/late" only means something on the day itself.
+export function getMinutesUntilSlot(reservation, now = new Date()) {
+  if (reservation.date !== getTodayIST(now)) return null;
+  const slot = slotToMinutes(reservation.time);
+  if (slot === null) return null;
+  return slot - nowMinutesIST(now);
 }
 
 // Sort key: date first, then booked time of day.
