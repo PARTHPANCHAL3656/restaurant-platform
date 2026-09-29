@@ -63,15 +63,13 @@ export default function ReservationCard({
     <div className={`border p-3 space-y-2 text-xs ${cardTone}`}>
       {/* Time + badges */}
       <div className="flex justify-between items-start gap-2">
-        <div>
-          <span className="font-serif font-bold text-ink-navy text-sm block">{res.time}</span>
-          {(view === 'pending' || isPast || isFuture) && (
-            <span className={`text-[10px] font-semibold ${isPast ? 'text-red-600' : 'text-subtle-text'}`}>
-              {res.date}{isPast ? ' — date has passed' : ''}
-            </span>
-          )}
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <span className="font-serif font-bold text-ink-navy text-xl leading-none">{res.time}</span>
+          <span className={`font-serif text-base leading-none ${isPast ? 'text-red-600 font-semibold' : 'text-ink-navy/70'}`}>
+            {res.date}{isPast ? ' — passed' : ''}
+          </span>
         </div>
-        <div className="flex flex-col items-end gap-1">
+        <div className="flex flex-col items-end gap-1 shrink-0">
           {isLate && (
             <span className="bg-red-600 text-white text-[8px] font-black tracking-widest px-2 py-0.5 uppercase animate-pulse">
               Late · {minutesLate} min
@@ -175,6 +173,18 @@ export default function ReservationCard({
                 </>
               )}
             </div>
+          )}
+
+          {/* A later-dated reservation can still be held ahead of time — a
+              Manager may want to lock in a table for a big booking days out.
+              It can't be "seated" yet since the guest isn't due. */}
+          {isFuture && !hasHeldTable && panel === null && (
+            <button
+              onClick={() => openPanel('hold')}
+              className="w-full py-1.5 border border-ink-navy text-ink-navy font-bold text-[10px] uppercase tracking-widest hover:bg-ink-navy hover:text-canvas-cream cursor-pointer"
+            >
+              Hold Table In Advance
+            </button>
           )}
 
           {panel !== null && (

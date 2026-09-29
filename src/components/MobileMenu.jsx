@@ -122,6 +122,19 @@ export default function MobileMenu({ isOpen, onClose }) {
             </motion.div>
             <motion.div variants={linkVariants}>
               <NavLink 
+                to="/check-reservation" 
+                onClick={onClose}
+                className={({ isActive }) => 
+                  `font-display-lg text-4xl block hover:text-saffron-gold transition-colors ${
+                    isActive ? 'text-saffron-gold' : 'text-canvas-cream/70'
+                  }`
+                }
+              >
+                Check Reservation
+              </NavLink>
+            </motion.div>
+            <motion.div variants={linkVariants}>
+              <NavLink 
                 to="/order-status" 
                 onClick={onClose}
                 className={({ isActive }) => 

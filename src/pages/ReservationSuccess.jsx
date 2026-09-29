@@ -42,6 +42,13 @@ export default function ReservationSuccess() {
             </p>
           </div>
 
+          {reservation?.referenceCode && (
+            <div className="bg-saffron-gold/10 border border-saffron-gold/30 py-4">
+              <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-1">Your reference</p>
+              <p className="font-serif text-2xl text-ink-navy tracking-wider">{reservation.referenceCode}</p>
+            </div>
+          )}
+
           {/* Details Table */}
           {reservation ? (
             <div className="border-t border-b border-muted-border py-6 my-6 text-left space-y-4 font-body-md text-sm">
@@ -78,6 +85,12 @@ export default function ReservationSuccess() {
             >
               Scan Table QR / View Menu
             </button>
+            <Link
+              to="/check-reservation"
+              className="w-full block text-center border border-ink-navy text-ink-navy py-4 font-cta-label text-cta-label tracking-widest uppercase hover:bg-ink-navy hover:text-canvas-cream transition-all duration-300"
+            >
+              Check Reservation Status
+            </Link>
             <Link 
               to="/"
               className="text-xs font-label-caps tracking-widest uppercase text-subtle-text hover:text-ink-navy transition-colors py-2 block"

@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Footer from '../components/Footer';
 import api from '../utils/api';
 
 import { getImage } from '../utils/assetHelper';
+
+const LUNCH_SLOTS = ['12:00 PM', '1:00 PM', '2:00 PM'];
+const DINNER_SLOTS = ['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'];
+const ALL_SLOTS = [...LUNCH_SLOTS, ...DINNER_SLOTS];
 
 export default function ReservationPage() {
   const navigate = useNavigate();
@@ -23,6 +27,45 @@ export default function ReservationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
+  // Booking-window rules from Settings -> Operations, so this form reflects
+  // whatever the Owner/Manager configured rather than hardcoded numbers.
+  const [rules, setRules] = useState({ resMaxAdvanceDays: 14, resRequireManagerLargeParties: 8 });
+  useEffect(() => {
+    api.get('/api/settings')
+      .then(res => { if (res.data?.reservations) setRules(res.data.reservations); })
+      .catch(() => {}); // form still works with the sane defaults above
+  }, []);
+
+  const maxDateStr = new Date(Date.now() + rules.resMaxAdvanceDays * 86400000)
+    .toISOString().split('T')[0];
+
+  // Per-slot availability for the chosen date + party size — greys out a
+  // slot before the guest wastes time filling in the rest of the form.
+  // { [slot]: { checked, available, reason } }
+  const [slotAvailability, setSlotAvailability] = useState({});
+  const [checkingSlots, setCheckingSlots] = useState(false);
+
+  const refreshSlotAvailability = useCallback(async (date, guests) => {
+    if (!date) { setSlotAvailability({}); return; }
+    setCheckingSlots(true);
+    try {
+      const results = await Promise.all(ALL_SLOTS.map(slot =>
+        api.get('/api/reservations/availability', { params: { date, time: slot, guests } })
+          .then(res => [slot, { checked: true, ...res.data }])
+          .catch(() => [slot, { checked: true, available: true, reason: null }]) // fail open — don't block on a network hiccup
+      ));
+      setSlotAvailability(Object.fromEntries(results));
+    } finally {
+      setCheckingSlots(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshSlotAvailability(formData.date, formData.guests);
+    // Re-checking may invalidate the currently chosen slot.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.date, formData.guests, refreshSlotAvailability]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -35,6 +78,7 @@ export default function ReservationPage() {
   };
 
   const handleTimeSelect = (slot) => {
+    if (slotAvailability[slot]?.checked && slotAvailability[slot].available === false) return;
     setFormData(prev => ({
       ...prev,
       timeSlot: slot
@@ -76,12 +120,15 @@ export default function ReservationPage() {
           state: { 
             reservation: {
               ...formData,
-              id: response.data._id
+              referenceCode: response.data.reservation?.referenceCode
             } 
           } 
         });
       } catch (err) {
-        setSubmitError(err.message || 'Failed to submit reservation. Please try again.');
+        // The backend's message (lead-time, advance-window, fully-booked) is
+        // what the guest actually needs to see — a generic axios message
+        // like "Request failed with status code 409" tells them nothing.
+        setSubmitError(err.response?.data?.error || 'Failed to submit reservation. Please try again.');
       } finally {
         setSubmitting(false);
       }
@@ -109,6 +156,9 @@ export default function ReservationPage() {
           
           {/* Reservation Form Column */}
           <form onSubmit={handleSubmit} className="lg:col-span-7 space-y-12 bg-white/50 p-6 md:p-10 border border-muted-border shadow-sm">
+            <p className="text-[11px] text-subtle-text -mt-6">
+              Bookings open up to {rules.resMaxAdvanceDays} days ahead. Parties of {rules.resRequireManagerLargeParties}+ may take a little longer to confirm.
+            </p>
             {/* Step 1: Details */}
             <section className="space-y-6">
               <div className="flex items-center space-x-4 mb-4">
@@ -156,6 +206,7 @@ export default function ReservationPage() {
                     type="date"
                     name="date"
                     min={todayStr}
+                    max={maxDateStr}
                     value={formData.date}
                     onChange={handleInputChange}
                     className="w-full bg-transparent border-b border-ink-navy py-3 focus:outline-none focus:border-saffron-gold transition-colors font-body-md outline-none cursor-pointer"
@@ -189,45 +240,68 @@ export default function ReservationPage() {
               </div>
               {errors.timeSlot && <p className="text-red-600 text-xs mt-1 font-sans">{errors.timeSlot}</p>}
               
+              {!formData.date && (
+                <p className="text-xs text-subtle-text italic">Pick a date above to see which times are open.</p>
+              )}
+
               <div>
                 <p className="font-label-caps text-label-caps text-subtle-text uppercase mb-3">Lunch slots</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {['12:00 PM', '1:00 PM', '2:00 PM'].map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => handleTimeSelect(slot)}
-                      className={`py-3 text-center border font-body-md transition-all uppercase tracking-wider text-xs focus:outline-none ${
-                        formData.timeSlot === slot 
-                          ? 'bg-ink-navy text-canvas-cream border-ink-navy' 
-                          : 'border-muted-border hover:border-ink-navy text-ink-navy'
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  ))}
+                  {LUNCH_SLOTS.map((slot) => {
+                    const status = slotAvailability[slot];
+                    const isFull = formData.date && status?.checked && status.available === false;
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        disabled={isFull}
+                        title={isFull ? status.reason : undefined}
+                        onClick={() => handleTimeSelect(slot)}
+                        className={`py-3 text-center border font-body-md transition-all uppercase tracking-wider text-xs focus:outline-none ${
+                          formData.timeSlot === slot 
+                            ? 'bg-ink-navy text-canvas-cream border-ink-navy' 
+                            : isFull
+                              ? 'border-muted-border text-subtle-text/50 line-through cursor-not-allowed'
+                              : 'border-muted-border hover:border-ink-navy text-ink-navy'
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="pt-4">
                 <p className="font-label-caps text-label-caps text-subtle-text uppercase mb-3">Dinner slots</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {['6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'].map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => handleTimeSelect(slot)}
-                      className={`py-3 text-center border font-body-md transition-all uppercase tracking-wider text-xs focus:outline-none ${
-                        formData.timeSlot === slot 
-                          ? 'bg-ink-navy text-canvas-cream border-ink-navy' 
-                          : 'border-muted-border hover:border-ink-navy text-ink-navy'
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  ))}
+                  {DINNER_SLOTS.map((slot) => {
+                    const status = slotAvailability[slot];
+                    const isFull = formData.date && status?.checked && status.available === false;
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        disabled={isFull}
+                        title={isFull ? status.reason : undefined}
+                        onClick={() => handleTimeSelect(slot)}
+                        className={`py-3 text-center border font-body-md transition-all uppercase tracking-wider text-xs focus:outline-none ${
+                          formData.timeSlot === slot 
+                            ? 'bg-ink-navy text-canvas-cream border-ink-navy' 
+                            : isFull
+                              ? 'border-muted-border text-subtle-text/50 line-through cursor-not-allowed'
+                              : 'border-muted-border hover:border-ink-navy text-ink-navy'
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+              {checkingSlots && (
+                <p className="text-[10px] text-subtle-text italic">Checking availability…</p>
+              )}
             </section>
 
             {/* Step 4: Special Requests */}
@@ -313,7 +387,7 @@ export default function ReservationPage() {
 
               <div className="pt-4 border-t border-muted-border">
                 <p className="font-label-caps text-[10px] text-subtle-text leading-relaxed uppercase tracking-wider">
-                  * Note: This is a reservation request. Our team will contact you within 2 hours to confirm your booking. For parties larger than 8, please contact us directly.
+                  * Note: This is a reservation request. Our team will contact you within 2 hours to confirm your booking. For parties larger than {rules.resRequireManagerLargeParties}, please contact us directly.
                 </p>
               </div>
             </div>

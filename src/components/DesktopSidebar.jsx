@@ -70,6 +70,16 @@ export default function DesktopSidebar() {
             Reservation
           </NavLink>
           <NavLink 
+            to="/check-reservation" 
+            className={({ isActive }) => 
+              `font-label-caps text-label-caps tracking-widest uppercase hover:text-saffron-gold transition-colors ${
+                isActive ? 'text-saffron-gold' : 'text-canvas-cream/70'
+              }`
+            }
+          >
+            Check Reservation
+          </NavLink>
+          <NavLink 
             to="/order-status" 
             className={({ isActive }) => 
               `font-label-caps text-label-caps tracking-widest uppercase hover:text-saffron-gold transition-colors ${

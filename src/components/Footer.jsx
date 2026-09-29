@@ -87,6 +87,7 @@ export default function Footer() {
             <a href="#experience" onClick={handleExperienceClick} className="hover:text-saffron-gold transition-colors">Experience</a>
             <Link to="/menu" className="hover:text-saffron-gold transition-colors">Menu</Link>
             <Link to="/reservation" className="hover:text-saffron-gold transition-colors">Reservation</Link>
+            <Link to="/check-reservation" className="hover:text-saffron-gold transition-colors">Check Reservation</Link>
             <Link to="/order-status" className="hover:text-saffron-gold transition-colors">Track Order</Link>
             <Link to="/gallery" className="hover:text-saffron-gold transition-colors">Gallery</Link>
             <Link to="/contact" className="hover:text-saffron-gold transition-colors">Contact</Link>
