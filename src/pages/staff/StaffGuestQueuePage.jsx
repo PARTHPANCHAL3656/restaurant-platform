@@ -46,16 +46,26 @@ export default function StaffGuestQueuePage() {
   const handleAddSubmit = (e) => {
     e.preventDefault();
     if (!newGuestData.name.trim()) return;
-    
-    addGuestToQueue(newGuestData);
+
+    const partySize = parseInt(newGuestData.partySize, 10);
+    if (!Number.isInteger(partySize) || partySize < 1 || partySize > 10) {
+      alert('Party size must be between 1 and 10 guests.');
+      return;
+    }
+
+    addGuestToQueue({ ...newGuestData, partySize });
     setNewGuestData({ name: '', partySize: '2', phone: '', vip: false, notes: '' });
     setShowAddForm(false);
   };
 
   const selectedGuest = queue.find(g => g.id === selectedGuestId);
 
-  // Filter available tables for assignment select dropdown
-  const availableTables = tables.filter(t => t.status === 'available');
+  // Filter available tables for assignment select dropdown — must also fit
+  // the selected guest's party size, or staff could seat an 8-top party at
+  // a 2-seat table with no warning at all.
+  const availableTables = tables.filter(t =>
+    t.status === 'available' && (!selectedGuest || t.seats >= selectedGuest.partySize)
+  );
 
   // Dynamic wait times calculations based on actual createdAt timestamps
   const waitTimes = queue.map(guest => minutesWaiting(guest));
@@ -118,6 +128,8 @@ export default function StaffGuestQueuePage() {
                     <label className="font-label-caps text-[9px] text-subtle-text uppercase block">Party Size</label>
                     <input 
                       type="number" 
+                      min="1"
+                      max="10"
                       value={newGuestData.partySize} 
                       onChange={e => setNewGuestData({ ...newGuestData, partySize: e.target.value })}
                       className="w-full bg-surface-container-low border border-muted-border p-2.5 text-xs outline-none focus:border-ink-navy" 
@@ -270,7 +282,11 @@ export default function StaffGuestQueuePage() {
               <div className="space-y-3">
                 <label className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest font-bold block">Assign Table</label>
                 {availableTables.length === 0 ? (
-                  <p className="text-xs text-red-500 font-semibold italic">No vacant tables on the floor map. Clear occupied tables first.</p>
+                  <p className="text-xs text-red-500 font-semibold italic">
+                    {tables.some(t => t.status === 'available')
+                      ? `No vacant table seats a party of ${selectedGuest.partySize}. Combine tables or wait for a larger one to free up.`
+                      : 'No vacant tables on the floor map. Clear occupied tables first.'}
+                  </p>
                 ) : (
                   <select 
                     id="table_assign_select"

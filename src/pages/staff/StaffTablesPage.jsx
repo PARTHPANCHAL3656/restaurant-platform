@@ -616,8 +616,8 @@ export default function StaffTablesPage() {
                                 className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none cursor-pointer"
                               >
                                 {walkInParties.map(guest => (
-                                  <option key={guest.id} value={guest.id}>
-                                    {guest.name} (Party of {guest.partySize})
+                                  <option key={guest.id} value={guest.id} disabled={guest.partySize > currentTable.seats}>
+                                    {guest.name} (Party of {guest.partySize}){guest.partySize > currentTable.seats ? ' — too big for this table' : ''}
                                   </option>
                                 ))}
                               </select>

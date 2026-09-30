@@ -67,8 +67,8 @@ export const createReservation = async (req, res) => {
     }
 
     const guestCount = parseInt(guests, 10)
-    if (!guestCount || guestCount < 1) {
-      return res.status(400).json({ error: "Party size must be at least 1 guest." })
+    if (!guestCount || guestCount < 1 || guestCount > 10) {
+      return res.status(400).json({ error: "Party size must be between 1 and 10 guests." })
     }
 
     const settings = await Settings.getSingleton()

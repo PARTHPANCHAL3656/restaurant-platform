@@ -69,6 +69,15 @@ export const assignTable = async (req, res) => {
     if (reservationId) {
       const reservation = await Reservation.findById(reservationId)
       if (reservation) {
+        // reserveTable() (holding a table ahead of arrival) already checks
+        // party size against capacity — this is the same check for the
+        // other way a reservation reaches a table: seating it directly.
+        // Without it here too, a party could be seated at a table too
+        // small for them with no validation at all.
+        if (reservation.guests > table.capacity) {
+          return res.status(400).json({ error: `Table ${table.tableNumber} seats ${table.capacity} — too small for a party of ${reservation.guests}.` })
+        }
+
         // If this reservation's hold currently lives on a DIFFERENT table
         // (e.g. staff used "Assign Table" to seat it somewhere other than
         // the tile it was originally held on), free that old tile now.
@@ -94,6 +103,10 @@ export const assignTable = async (req, res) => {
       // document involved at all, so table.reservationId stays null.
       const waitlistEntry = await WaitingList.findById(waitlistId)
       if (waitlistEntry) {
+        if (waitlistEntry.partySize > table.capacity) {
+          return res.status(400).json({ error: `Table ${table.tableNumber} seats ${table.capacity} — too small for a party of ${waitlistEntry.partySize}.` })
+        }
+
         guestName = waitlistEntry.name
         guestPhone = waitlistEntry.phone || ""
         guestCount = waitlistEntry.partySize
@@ -280,10 +293,15 @@ export const addToWaitingList = async (req, res) => {
       return res.status(400).json({ error: "Guest name and party size are required." })
     }
 
+    const partySizeNum = parseInt(partySize, 10)
+    if (!Number.isInteger(partySizeNum) || partySizeNum < 1 || partySizeNum > 10) {
+      return res.status(400).json({ error: "Party size must be between 1 and 10 guests." })
+    }
+
     const entry = await WaitingList.create({
       name,
       phone: phone || "",
-      partySize,
+      partySize: partySizeNum,
       notes: notes || "",
       vip: !!vip
     })

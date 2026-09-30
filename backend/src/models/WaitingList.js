@@ -3,7 +3,7 @@ import mongoose from "mongoose"
 const waitingListSchema = new mongoose.Schema({
   name:       { type: String, required: true },
   phone:      { type: String, default: "" },
-  partySize:  { type: Number, required: true },
+  partySize:  { type: Number, required: true, min: 1, max: 10 },
   notified:   { type: Boolean, default: false },
   vip:        { type: Boolean, default: false },
   notes:      { type: String, default: "" },
