@@ -73,6 +73,7 @@ export default function StaffMenuPage() {
 
   // Free-text entry for allergens not in the default list
   const [customAllergenInput, setCustomAllergenInput] = useState('');
+  const [formError, setFormError] = useState('');
 
   // Manage Categories drawer state
   const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
@@ -205,6 +206,7 @@ export default function StaffMenuPage() {
 
   // Handle opening drawers
   const handleOpenAdd = () => {
+    setFormError('');
     setFormState({
       name: '',
       category: staffCategories[0]?.name || '',
@@ -223,6 +225,7 @@ export default function StaffMenuPage() {
   };
 
   const handleOpenEdit = (item) => {
+    setFormError('');
     setFormState({
       ...item,
       price: item.price.toString()
@@ -265,9 +268,10 @@ export default function StaffMenuPage() {
     e.preventDefault();
     if (!formState.name || !formState.price) return;
     if (!formState.category) {
-      alert('Add a category first (see "Manage Categories"), then pick it here.');
+      setFormError('Add a category first (see "Manage Categories"), then pick it here.');
       return;
     }
+    setFormError('');
 
     const dishPayload = {
       ...formState,
@@ -726,7 +730,10 @@ export default function StaffMenuPage() {
                       <label className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest font-bold block">Category</label>
                       <select 
                         value={formState.category}
-                        onChange={(e) => setFormState({ ...formState, category: e.target.value })}
+                        onChange={(e) => {
+                          setFormError('');
+                          setFormState({ ...formState, category: e.target.value });
+                        }}
                         className="w-full bg-surface-container-low border border-muted-border p-3 text-xs focus:outline-none focus:border-ink-navy cursor-pointer"
                       >
                         {staffCategories.length === 0 && (
@@ -938,6 +945,12 @@ export default function StaffMenuPage() {
                     </div>
 
                   </div>
+
+                  {formError && (
+                    <div className="mx-6 mt-3 mb-3 p-3 bg-red-50 border border-red-200 text-[11px] text-red-700 shrink-0" role="alert">
+                      {formError}
+                    </div>
+                  )}
 
                   {/* Form Actions */}
                   <div className="p-6 border-t border-muted-border bg-canvas-cream shrink-0 flex gap-4">

@@ -114,7 +114,7 @@ export default function MenuPage({ onCartToggle }) {
             autoComplete="off"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search dishes or ingredients..."
+            placeholder="Search dishes or allergens..."
             className="flex-1 min-w-0 bg-transparent outline-none font-sans text-base text-ink-navy placeholder:text-subtle-text/70"
           />
           {query && (

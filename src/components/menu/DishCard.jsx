@@ -54,18 +54,14 @@ export default function DishCard({ item, qty = 0, previewMode = false, query = '
                     : 'bg-surface-container-low border border-muted-border text-subtle-text'
                 }`}
               >
-                {secondBadge}
+                {item.special ? "Chef's Special" : <Highlight text={item.tag} query={query} />}
               </span>
             )}
           </div>
 
-          <p className="font-sans text-sm text-subtle-text leading-snug line-clamp-2">
-            <Highlight text={item.description} query={query} />
-          </p>
-
           {item.allergens && item.allergens.length > 0 && (
             <p className="font-label-caps text-[9px] text-subtle-text uppercase tracking-wide">
-              Contains: {item.allergens.join(', ')}
+              Contains: <Highlight text={item.allergens.join(', ')} query={query} />
             </p>
           )}
         </div>
