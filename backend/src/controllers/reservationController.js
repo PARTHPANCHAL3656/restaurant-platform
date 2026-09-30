@@ -28,11 +28,22 @@ async function getSlotAvailability(date, time, excludeReservationId = null) {
 }
 
 // Frees whichever table is being held ("reserved") for this reservation,
-// if any, and clears the reservation's own table link. Used by both
-// no-show and guest-cancelled so a yellow table can never be left stranded.
-async function releaseHeldTable(reservation) {
+// if any, and clears the reservation's own table link. Used by no-show,
+// guest-cancelled, AND by a reassignment to a different table (see
+// assignTable / reserveTable in tableController.js) so a yellow table can
+// never be left stranded — including the case where a reservation's hold
+// was moved to a different table and the original was never freed.
+//
+// keepTableId: pass the table currently being assigned/held so, if that
+// happens to be the same table already holding this reservation, we don't
+// bounce it available-then-occupied in the same request.
+export async function releaseHeldTable(reservation, keepTableId = null) {
   const heldTable = await Table.findOne({ reservationId: reservation._id })
-  if (heldTable && heldTable.status === "reserved") {
+  if (
+    heldTable &&
+    heldTable.status === "reserved" &&
+    String(heldTable._id) !== String(keepTableId || "")
+  ) {
     heldTable.status = "available"
     heldTable.reservationId = null
     heldTable.guestName = ""

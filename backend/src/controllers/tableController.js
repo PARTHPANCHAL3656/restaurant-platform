@@ -5,6 +5,7 @@ import WaitingList from "../models/WaitingList.js"
 import Reservation from "../models/Reservation.js"
 import { generateTableToken } from "../utils/generateTableToken.js"
 import { nextBillNumber } from "../utils/nextBillNumber.js"
+import { releaseHeldTable } from "./reservationController.js"
 import { io } from "../index.js"
 
 // GET /api/tables
@@ -68,6 +69,15 @@ export const assignTable = async (req, res) => {
     if (reservationId) {
       const reservation = await Reservation.findById(reservationId)
       if (reservation) {
+        // If this reservation's hold currently lives on a DIFFERENT table
+        // (e.g. staff used "Assign Table" to seat it somewhere other than
+        // the tile it was originally held on), free that old tile now.
+        // Without this, the old table keeps reservationId pointing at a
+        // reservation that has already moved on — so a later cancel/no-show
+        // release (which only looks up the table by reservationId) can find
+        // the wrong table, or none, and leave the original stuck "reserved".
+        await releaseHeldTable(reservation, table._id)
+
         reservation.status = "seated"
         reservation.arrivalTime = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' })
         reservation.table = "T-" + String(table.tableNumber).padStart(2, '0')
@@ -217,6 +227,12 @@ export const reserveTable = async (req, res) => {
 
     table.status = "reserved"
     if (reservation) {
+      // Same reassignment guard as assignTable: if this reservation was
+      // already holding a different table, free that one first so it
+      // doesn't sit "reserved" forever, orphaned from the reservation that
+      // moved on.
+      await releaseHeldTable(reservation, table._id)
+
       table.reservationId = reservation._id
       table.guestName = reservation.name
       table.guestCount = reservation.guests
