@@ -225,6 +225,17 @@ export const updateOrderStatus = async (req, res) => {
       }
     }
 
+    // A takeout order has no table to release, so it had no equivalent to
+    // "table:released" — the only event that ends a customer's browser
+    // session (see CartContext.jsx). That meant a picked-up takeout order
+    // tracked as "Served" forever: the token in localStorage never got
+    // cleared, and the tracking page kept polling an order that was long
+    // done. Emit the same kind of session-ending event here, once, right
+    // when staff confirms pickup.
+    if (status === "Served" && order.orderType === "takeout") {
+      io.emit("takeout:sessionEnded", { sessionId: order.sessionId, orderId: order._id })
+    }
+
     // Notify customer — their status page updates live
     io.emit("order:statusChanged", {
       orderId: order._id,

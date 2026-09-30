@@ -144,6 +144,25 @@ export function CartProvider({ children }) {
     };
   }, [tableId]);
 
+  // Takeout has no table to release, so it had no equivalent close event —
+  // a picked-up takeout order kept tracking as "Served" forever, since
+  // nothing ever cleared the token. Mirrors the table:released handler
+  // above, keyed by sessionId (decoded from tableToken) since there's no
+  // tableId for a takeout session.
+  useEffect(() => {
+    const handleTakeoutSessionEnded = (data) => {
+      if (data && data.sessionId && data.sessionId === tableSessionId) {
+        setSessionExpired(true);
+      }
+    };
+
+    socket.on('takeout:sessionEnded', handleTakeoutSessionEnded);
+
+    return () => {
+      socket.off('takeout:sessionEnded', handleTakeoutSessionEnded);
+    };
+  }, [tableSessionId]);
+
   const [activeOrder, setActiveOrder] = useState(null);
 
   // Session reset
