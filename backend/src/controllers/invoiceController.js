@@ -233,6 +233,17 @@ export const updateInvoiceStatus = async (req, res) => {
         )
       }
       io.emit("invoice:paid", invoice)
+
+      // A takeout order has no table to release, so it had no equivalent to
+      // "table:released" — the only event that ends a customer's browser
+      // session (see CartContext.jsx). The session must survive pickup
+      // (status "Served") so the customer can still reach this page and
+      // pull their bill — it only ends once the bill is actually marked
+      // paid, mirroring how dine-in stays open through serving and only
+      // closes on the staff's own explicit "end this" action.
+      if (invoice.orderType === "takeout" && invoice.sessionId) {
+        io.emit("takeout:sessionEnded", { sessionId: invoice.sessionId, invoiceId: invoice._id })
+      }
     } else {
       io.emit("invoice:updated", invoice)
     }
