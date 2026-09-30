@@ -18,6 +18,7 @@ export default function BillSummaryPage() {
     activeOrderItems, 
     activeOrderTotal, 
     tableNumber,
+    isTakeout,
     activeOrderTime,
     activeOrderBillNumber
   } = useCart();
@@ -69,7 +70,18 @@ export default function BillSummaryPage() {
   // Fallback mock items matching the exact Stitch design (Step 40) if no order has been placed yet
   const hasActiveOrder = activeOrderItems && activeOrderItems.length > 0;
 
-  const displayTable = hasActiveOrder ? tableNumber : 'Garden Terrace 14';
+  // Takeout bills have no table: they're identified by the pickup order
+  // number on the invoice (e.g. TA-1010). Dine-in bills read the table from
+  // the invoice itself, so they never fall back to the demo table once the
+  // order has been closed out of the cart.
+  const isTakeoutBill = isTakeout || (hasInvoice && invoice.orderType === 'takeout');
+  const invoiceTable = hasInvoice && invoice.tableNumber != null
+    ? `T-${String(invoice.tableNumber).padStart(2, '0')}`
+    : null;
+  const displayTable = isTakeoutBill
+    ? ((hasInvoice && invoice.orderNumber) || 'Takeout')
+    // "Table T-01" -> "T-01": the label above/before it already says "Table"
+    : invoiceTable || (hasActiveOrder ? String(tableNumber).replace(/^table\s+/i, '') : 'Garden Terrace 14');
   const displayTime = hasInvoice
     ? new Date(invoice.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).replace(',', ' —')
     : hasActiveOrder ? `${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} — ${activeOrderTime}` : 'October 24, 2023 — 8:42 PM';
@@ -205,7 +217,7 @@ export default function BillSummaryPage() {
 
             <div className="grid grid-cols-2 gap-4 text-left text-xs font-label-caps text-subtle-text">
               <div>
-                <p className="tracking-wider uppercase mb-1">TABLE NUMBER</p>
+                <p className="tracking-wider uppercase mb-1">{isTakeoutBill ? 'PICKUP ORDER' : 'TABLE NUMBER'}</p>
                 <p className="font-serif text-base text-ink-navy font-semibold">{displayTable}</p>
               </div>
               <div className="text-right">
@@ -323,6 +335,7 @@ export default function BillSummaryPage() {
               invoice={{
                 number: displayOrderId,
                 table: displayTable,
+                tableLabel: isTakeoutBill ? 'Order' : 'Table',
                 date: displayDateOnly,
                 time: hasInvoice
                   ? new Date(invoice.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })

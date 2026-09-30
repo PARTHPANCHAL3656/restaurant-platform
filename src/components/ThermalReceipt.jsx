@@ -55,7 +55,7 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
           the row. */}
       <dl className="thermal-meta">
         <div><dt>INV No:</dt><dd>{value(invoice.number)}</dd></div>
-        <div><dt>Table:</dt><dd>{value(invoice.table)}{orderSourceSuffix}</dd></div>
+        <div><dt>{invoice.tableLabel || 'Table'}:</dt><dd>{value(invoice.table)}{orderSourceSuffix}</dd></div>
         <div><dt>Date:</dt><dd>{value(invoice.date)}</dd></div>
         <div><dt>Time:</dt><dd>{value(invoice.time)}</dd></div>
         {invoice.cashier && (
