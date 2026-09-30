@@ -5,6 +5,11 @@
 // hitting the API directly.
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+// The opening hours in Settings are written in the restaurant's local time.
+// The server (Render) runs in UTC, so "now" must be read in the restaurant's
+// timezone - never from the server's own clock.
+const RESTAURANT_TZ = process.env.RESTAURANT_TIMEZONE || "Asia/Kolkata"
+
 function parseDayRange(daysStr) {
   const parts = daysStr.split("-").map(s => s.trim())
   if (parts.length === 1) {
@@ -24,37 +29,52 @@ function parseDayRange(daysStr) {
   return result
 }
 
-function parseTimeToday(timeStr) {
+// "10:30 PM" -> minutes since midnight (1350), or null if it doesn't parse.
+function parseMinutes(timeStr) {
   const match = timeStr && timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
   if (!match) return null
   let [, h, m, meridiem] = match
   h = parseInt(h, 10)
   if (meridiem.toUpperCase() === "PM" && h !== 12) h += 12
   if (meridiem.toUpperCase() === "AM" && h === 12) h = 0
-  const d = new Date()
-  d.setHours(h, parseInt(m, 10), 0, 0)
-  return d
+  return h * 60 + parseInt(m, 10)
 }
 
-function getTodaysHours(openingHours) {
-  const today = new Date().getDay()
+// Weekday (0 = Sunday) and minutes since midnight, as the restaurant sees them.
+function nowInRestaurantTime(date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: RESTAURANT_TZ,
+    weekday: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(date)
+  const get = (type) => parts.find(p => p.type === type).value
+  return {
+    day: DAY_NAMES.indexOf(get("weekday")),
+    minutes: (parseInt(get("hour"), 10) % 24) * 60 + parseInt(get("minute"), 10)
+  }
+}
+
+function getTodaysHours(openingHours, day) {
   for (const entry of openingHours || []) {
-    if (parseDayRange(entry.days).includes(today)) {
+    if (parseDayRange(entry.days).includes(day)) {
       const [openPart, closePart] = entry.hours.split("-").map(s => s.trim())
-      return { open: parseTimeToday(openPart), close: parseTimeToday(closePart) }
+      return { open: parseMinutes(openPart), close: parseMinutes(closePart) }
     }
   }
   return null
 }
 
-// Last pickup slot is 30 minutes before actual closing — same cutoff the
+// Last pickup slot is 30 minutes before actual closing - same cutoff the
 // frontend picker enforces, kept here so the two can't drift apart.
-export function isOpenForTakeout(openingHours) {
-  const todaysHours = getTodaysHours(openingHours)
-  if (!todaysHours || !todaysHours.open || !todaysHours.close) return false
+// `now` is only a parameter so this can be tested at a fixed moment.
+export function isOpenForTakeout(openingHours, now = new Date()) {
+  const { day, minutes } = nowInRestaurantTime(now)
+  const todaysHours = getTodaysHours(openingHours, day)
+  if (!todaysHours || todaysHours.open === null || todaysHours.close === null) return false
 
-  const now = new Date()
-  const lastPickup = new Date(todaysHours.close.getTime() - 30 * 60000)
+  const lastPickup = todaysHours.close - 30
 
-  return now >= todaysHours.open && now <= lastPickup
+  return minutes >= todaysHours.open && minutes <= lastPickup
 }

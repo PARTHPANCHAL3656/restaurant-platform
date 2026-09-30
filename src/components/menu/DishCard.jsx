@@ -59,6 +59,12 @@ export default function DishCard({ item, qty = 0, previewMode = false, query = '
             )}
           </div>
 
+          {item.description && (
+            <p className="font-sans text-xs text-subtle-text leading-snug line-clamp-2">
+              <Highlight text={item.description} query={query} />
+            </p>
+          )}
+
           {item.allergens && item.allergens.length > 0 && (
             <p className="font-label-caps text-[9px] text-subtle-text uppercase tracking-wide">
               Contains: <Highlight text={item.allergens.join(', ')} query={query} />

@@ -29,7 +29,7 @@ export const normalizeQuery = (q) => String(q || '').trim().toLowerCase();
 export const matchesQuery = (item, query) => {
   const q = normalizeQuery(query);
   if (!q) return true;
-  return [item.name, item.tag, item.category, (item.allergens || []).join(' ')].some((field) =>
+  return [item.name, item.description, item.tag, item.category, (item.allergens || []).join(' ')].some((field) =>
     String(field || '').toLowerCase().includes(q)
   );
 };
