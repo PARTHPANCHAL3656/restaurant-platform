@@ -151,15 +151,22 @@ export const getMyBillPreview = async (req, res) => {
       return res.status(200).json(existingInvoice)
     }
 
+    // Dine-in orders hang off the table. Takeout has no table at all, so its
+    // order is found directly by the session id in the customer's token.
     const table = await Table.findOne({ currentSessionId: sessionId })
-    if (!table || !table.currentOrderId) {
+    let order = null
+    if (table) {
+      order = table.currentOrderId ? await Order.findById(table.currentOrderId) : null
+    } else {
+      order = await Order.findOne({ sessionId, orderType: "takeout", status: { $ne: "Cancelled" } })
+    }
+    if (!order) {
       return res.status(404).json({ error: "No active order for this session." })
     }
-
-    const order = await Order.findById(table.currentOrderId)
-    if (!order || order.items.length === 0) {
+    if (order.items.length === 0) {
       return res.status(404).json({ error: "No items to estimate yet." })
     }
+    const isTakeout = order.orderType === "takeout"
 
     const settings = await Settings.getSingleton()
     const normalizedPhone = normalizePhone(order.guestPhone)
@@ -170,14 +177,23 @@ export const getMyBillPreview = async (req, res) => {
 
     const bill = calculateBill({
       items: order.items,
-      orderType: "dine-in",
+      orderType: isTakeout ? "takeout" : "dine-in",
       billing: settings.billing,
       isRepeatCustomer
     })
 
+    // Same identity fields the real invoice will carry, so the customer's
+    // bill summary already shows their name, table / pickup number and
+    // order source instead of placeholders.
     res.json({
       items: order.items.map(i => ({ name: i.name, price: i.price, qty: i.qty })),
-      ...bill
+      ...bill,
+      orderType: isTakeout ? "takeout" : "dine-in",
+      orderNumber: isTakeout ? order.orderNumber : undefined,
+      tableNumber: isTakeout ? undefined : table.tableNumber,
+      guestName: (isTakeout ? order.guestName : table.guestName) || "Guest",
+      orderSource: isTakeout ? "Takeout" : await resolveOrderSource(table),
+      createdAt: order.createdAt
     })
   } catch (err) {
     res.status(500).json({ error: err.message })

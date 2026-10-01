@@ -74,21 +74,21 @@ export default function BillSummaryPage() {
   // number on the invoice (e.g. TA-1010). Dine-in bills read the table from
   // the invoice itself, so they never fall back to the demo table once the
   // order has been closed out of the cart.
-  const isTakeoutBill = isTakeout || (hasInvoice && invoice.orderType === 'takeout');
-  const invoiceTable = hasInvoice && invoice.tableNumber != null
+  const isTakeoutBill = isTakeout || (invoice && invoice.orderType === 'takeout');
+  const invoiceTable = invoice && invoice.tableNumber != null
     ? `T-${String(invoice.tableNumber).padStart(2, '0')}`
     : null;
   const displayTable = isTakeoutBill
-    ? ((hasInvoice && invoice.orderNumber) || 'Takeout')
+    ? ((invoice && invoice.orderNumber) || 'Takeout')
     // "Table T-01" -> "T-01": the label above/before it already says "Table"
     : invoiceTable || (hasActiveOrder ? String(tableNumber).replace(/^table\s+/i, '') : 'Garden Terrace 14');
-  const displayTime = hasInvoice
+  const displayTime = invoice && invoice.createdAt
     ? new Date(invoice.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).replace(',', ' —')
     : hasActiveOrder ? `${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} — ${activeOrderTime}` : 'October 24, 2023 — 8:42 PM';
   // Date-only, for the receipt's separate Date cell — displayTime above
   // already bakes date+time together and stays used as-is for the
   // on-screen summary a few lines down.
-  const displayDateOnly = hasInvoice
+  const displayDateOnly = invoice && invoice.createdAt
     ? new Date(invoice.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
@@ -103,6 +103,17 @@ export default function BillSummaryPage() {
   const serviceCharge = invoice ? (invoice.serviceCharge || 0) : 0;
   const gst = invoice ? (invoice.gst || 0) : 0;
   const discount = invoice ? (invoice.discount || 0) : 0;
+  const packagingFee = invoice ? (invoice.packagingFee || 0) : 0;
+  // Rates come from the bill itself (Settings -> Billing), never hardcoded.
+  // Older invoices without the CGST/SGST split fall back to an even split.
+  const percentOfSubtotal = (amount) => (subtotal > 0 ? Math.round((amount / subtotal) * 10000) / 100 : 0);
+  const cgstAmount = invoice && invoice.cgst !== undefined ? invoice.cgst : gst / 2;
+  const sgstAmount = invoice && invoice.sgst !== undefined ? invoice.sgst : gst / 2;
+  const cgstRate = invoice && invoice.cgstRate !== undefined ? invoice.cgstRate : percentOfSubtotal(cgstAmount);
+  const sgstRate = invoice && invoice.sgstRate !== undefined ? invoice.sgstRate : percentOfSubtotal(sgstAmount);
+  const serviceChargePercent = invoice && invoice.serviceChargePercent !== undefined
+    ? invoice.serviceChargePercent
+    : percentOfSubtotal(serviceCharge);
   const grandTotal = hasInvoice ? invoice.total : hasActiveOrder ? activeOrderTotal : 0;
 
   // The ID shown to the guest: the invoice number once an Invoice exists,
@@ -271,14 +282,36 @@ export default function BillSummaryPage() {
               <span>Subtotal</span>
               <span className="text-ink-navy">{formatINR(subtotal)}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Service Charge (10%)</span>
-              <span className="text-ink-navy">{formatINR(serviceCharge)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>GST (7.5%)</span>
-              <span className="text-ink-navy">{formatINR(gst)}</span>
-            </div>
+            {discount > 0 && (
+              <div className="flex justify-between">
+                <span>Repeat Customer Discount</span>
+                <span className="text-ink-navy">-{formatINR(discount)}</span>
+              </div>
+            )}
+            {serviceCharge > 0 && (
+              <div className="flex justify-between">
+                <span>Service Charge ({serviceChargePercent}%)</span>
+                <span className="text-ink-navy">{formatINR(serviceCharge)}</span>
+              </div>
+            )}
+            {packagingFee > 0 && (
+              <div className="flex justify-between">
+                <span>{restaurantInfo.packagingFeeLabel || 'Packaging Charges'}</span>
+                <span className="text-ink-navy">{formatINR(packagingFee)}</span>
+              </div>
+            )}
+            {gst > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <span>CGST ({cgstRate}%)</span>
+                  <span className="text-ink-navy">{formatINR(cgstAmount)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>SGST ({sgstRate}%)</span>
+                  <span className="text-ink-navy">{formatINR(sgstAmount)}</span>
+                </div>
+              </>
+            )}
 
             {/* Dashed Line */}
             <div className="h-px w-full border-t border-dashed border-muted-border my-4" />
@@ -337,7 +370,10 @@ export default function BillSummaryPage() {
                 table: displayTable,
                 tableLabel: isTakeoutBill ? 'Order' : 'Table',
                 date: displayDateOnly,
-                time: hasInvoice
+                // Before the invoice exists, the bill estimate carries the
+                // order's own creation time, so both bills read the same
+                // 12-hour format instead of a raw 24-hour clock.
+                time: invoice && invoice.createdAt
                   ? new Date(invoice.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
                   : (activeOrderTime || '—'),
                 items: items.map(item => ({ ...item, qty: item.quantity })),
@@ -357,7 +393,8 @@ export default function BillSummaryPage() {
                 // because staff hasn't clicked "generate invoice" yet.
                 // Cashier genuinely doesn't exist until that happens, so
                 // it stays gated.
-                guest: hasInvoice ? (invoice.guestName || 'Guest') : 'Guest',
+                guest: (invoice && invoice.guestName) || 'Guest',
+                orderSource: invoice ? invoice.orderSource : undefined,
                 ...(hasInvoice && {
                   cashier: invoice.generatedBy || 'Floor Manager',
                   paymentMethod: invoice.paymentMethod && invoice.paymentMethod !== '—' ? invoice.paymentMethod : 'Pay at Counter',
