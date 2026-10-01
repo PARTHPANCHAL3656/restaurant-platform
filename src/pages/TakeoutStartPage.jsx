@@ -101,10 +101,6 @@ export default function TakeoutStartPage() {
   const lastPickupLabel = lastPickupTime
     ? lastPickupTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
     : null;
-  const minTimeStr = useMemo(() => {
-    const min = new Date(Date.now() + 20 * 60000); // can't schedule sooner than ASAP would take anyway
-    return `${String(min.getHours()).padStart(2, '0')}:${String(min.getMinutes()).padStart(2, '0')}`;
-  }, []);
   const maxTimeStr = lastPickupTime
     ? `${String(lastPickupTime.getHours()).padStart(2, '0')}:${String(lastPickupTime.getMinutes()).padStart(2, '0')}`
     : null;
@@ -114,10 +110,17 @@ export default function TakeoutStartPage() {
     ? openingTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
     : null;
 
-  // Applies to BOTH "ASAP" and "Later" — closed is closed, regardless of
-  // which pickup option is selected. This used to only be checked for
-  // "Later", which meant "ASAP" (the default) let someone place an order
-  // even when the kitchen wasn't open at all.
+  // Earliest pickup you can pre-order: 20 minutes from now, but never before
+  // we open. Ordering ahead while we're closed is fine - the pickup time just
+  // has to land inside today's pickup window.
+  const minTimeStr = useMemo(() => {
+    const soonest = new Date(Date.now() + 20 * 60000);
+    const min = openingTime && openingTime > soonest ? openingTime : soonest;
+    return `${String(min.getHours()).padStart(2, '0')}:${String(min.getMinutes()).padStart(2, '0')}`;
+  }, [openingTime]);
+
+  // "Open right now" only gates ASAP. A specific pickup time later today can
+  // be ordered ahead at any hour, as long as it lands inside the window.
   const isClosedForTakeout = !closingTime || !openingTime
     || new Date() < openingTime
     || (lastPickupTime && new Date() > lastPickupTime);
@@ -128,11 +131,15 @@ export default function TakeoutStartPage() {
     e.preventDefault();
     if (!guestName.trim() || !guestPhone.trim()) return;
 
-    if (isClosedForTakeout) {
+    if (pickupChoice === 'ASAP' && isClosedForTakeout) {
+      if (!openingTime || !closingTime) {
+        setError("We're closed for takeout right now. Please check back during our opening hours.");
+        return;
+      }
       setError(
-        openingTime && closingTime
-          ? `We're closed for takeout right now. Today's pickup window is ${openingLabel} – ${lastPickupLabel}.`
-          : "We're closed for takeout right now. Please check back during our opening hours."
+        new Date() > lastPickupTime
+          ? `We've stopped taking pickup orders for today. Pickup hours are ${openingLabel} – ${lastPickupLabel}.`
+          : `We're not open yet. Choose a specific pickup time between ${openingLabel} and ${lastPickupLabel} to order ahead.`
       );
       return;
     }
@@ -150,11 +157,17 @@ export default function TakeoutStartPage() {
         setError(`We're only taking pickup orders until ${lastPickupLabel} today. Please choose an earlier time or call us directly for anything later.`);
         return;
       }
+      if (openingTime && chosen < openingTime) {
+        setError(`We open at ${openingLabel}. Please choose a pickup time from ${openingLabel} onwards.`);
+        return;
+      }
       if (chosen < new Date()) {
         setError('That time has already passed today. Please choose a later time.');
         return;
       }
-      finalPickupTime = chosen.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      // Fixed "h:mm AM/PM" format (not the browser's locale) so the server
+      // and the kitchen screen always read it the same way.
+      finalPickupTime = `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
     }
 
     setError('');
@@ -254,7 +267,7 @@ export default function TakeoutStartPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !resumePhone.trim() || isClosedForTakeout}
+                disabled={isSubmitting || !resumePhone.trim()}
                 className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[52px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmitting ? 'Looking up your order...' : 'Resume My Order'}
