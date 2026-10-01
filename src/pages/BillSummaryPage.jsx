@@ -363,7 +363,7 @@ export default function BillSummaryPage() {
         <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: 0 }}>
           <div ref={receiptRef}>
             <ThermalReceipt
-              restaurantInfo={restaurantInfo}
+              restaurantInfo={invoice && invoice.legalSnapshot ? { ...restaurantInfo, ...invoice.legalSnapshot } : restaurantInfo}
               heading={hasInvoice ? 'TAX INVOICE' : 'BILL SUMMARY'}
               invoice={{
                 number: displayOrderId,

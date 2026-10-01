@@ -5,6 +5,7 @@ import Settings from "../models/Settings.js"
 import Customer from "../models/Customer.js"
 import { calculateBill } from "../utils/calculateBill.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
+import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
 
 // POST /api/orders/add-items
 // Customer places first order OR adds more items (same endpoint for both)
@@ -205,6 +206,7 @@ export const updateOrderStatus = async (req, res) => {
           guestName: order.guestName || "Guest",
           guestPhone: order.guestPhone || "",
           orderSource: "Takeout",
+          legalSnapshot: legalSnapshotFrom(settings),
           items: order.items.map(i => ({ itemId: i.itemId, name: i.name, price: i.price, qty: i.qty })),
           subtotal,
           discount,

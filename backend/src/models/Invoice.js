@@ -89,6 +89,10 @@ const invoiceSchema = new mongoose.Schema({
   // bookkeeping), so "has a reservationId" was never a safe proxy for
   // "was actually booked in advance."
   orderSource: { type: String, enum: ["Reservation", "Walk-in", "Takeout"], default: "Walk-in" },
+  // GSTIN / FSSAI / SAC / address / contact exactly as they were when this
+  // invoice was issued (see utils/legalSnapshot.js). Older invoices don't
+  // have it and fall back to the live Settings.
+  legalSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
   total: { type: Number, required: true },
   status: {
     type: String,

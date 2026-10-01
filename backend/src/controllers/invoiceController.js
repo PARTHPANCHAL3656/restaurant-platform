@@ -6,6 +6,7 @@ import Customer from "../models/Customer.js"
 import Settings from "../models/Settings.js"
 import { calculateBill } from "../utils/calculateBill.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
+import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
 import { io } from "../index.js"
 
 // Reservation.source is "Customer" (a real advance booking) or "Walk-in"
@@ -84,6 +85,7 @@ export const generateInvoiceForTable = async (req, res) => {
       guestPhone: order.guestPhone || "",
       partySize: table.guestCount || null,
       orderSource,
+      legalSnapshot: legalSnapshotFrom(settings),
       items: order.items.map(i => ({ itemId: i.itemId, name: i.name, price: i.price, qty: i.qty })),
       subtotal,
       discount,
@@ -193,7 +195,8 @@ export const getMyBillPreview = async (req, res) => {
       tableNumber: isTakeout ? undefined : table.tableNumber,
       guestName: (isTakeout ? order.guestName : table.guestName) || "Guest",
       orderSource: isTakeout ? "Takeout" : await resolveOrderSource(table),
-      createdAt: order.createdAt
+      createdAt: order.createdAt,
+      legalSnapshot: legalSnapshotFrom(settings)
     })
   } catch (err) {
     res.status(500).json({ error: err.message })
