@@ -3,7 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import StaffAvatar from './StaffAvatar';
 import { useStaff } from '../../context/StaffContext';
 
-export default function StaffHeader({ onMenuToggle }) {
+export default function StaffHeader({ onMenuToggle, badgeTotal = 0 }) {
   const { staffProfile, logoutStaff } = useStaff();
   const location = useLocation();
   const navigate = useNavigate();
@@ -72,12 +72,17 @@ export default function StaffHeader({ onMenuToggle }) {
       
       {/* Left side: Hamburger (mobile/tablet) + Page Title */}
       <div className="flex items-center gap-4">
-        <button 
+        <button
           onClick={onMenuToggle}
-          className="p-2 -ml-2 text-ink-navy hover:text-saffron-gold lg:hidden focus:outline-none"
+          className="relative p-2 -ml-2 text-ink-navy hover:text-saffron-gold lg:hidden focus:outline-none"
           aria-label="Toggle Navigation"
         >
           <span className="material-symbols-outlined text-2xl">menu</span>
+          {badgeTotal > 0 && (
+            <span className="absolute top-1 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-saffron-gold text-midnight-black text-[10px] leading-none font-bold tabular-nums flex items-center justify-center">
+              {badgeTotal > 99 ? '99+' : badgeTotal}
+            </span>
+          )}
         </button>
         <div className="hidden sm:block">
           <h2 className="font-serif text-headline-sm text-ink-navy leading-none">{getPageTitle()}</h2>

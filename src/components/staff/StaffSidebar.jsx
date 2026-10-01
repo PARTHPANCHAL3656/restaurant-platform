@@ -1,9 +1,10 @@
 import React from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import StaffLogo from './StaffLogo';
+import NotificationBadge from './NotificationBadge';
 import { useStaff } from '../../context/StaffContext';
 
-export default function StaffSidebar({ isOpen, onClose }) {
+export default function StaffSidebar({ isOpen, onClose, badges = {} }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { logoutStaff } = useStaff();
@@ -17,11 +18,11 @@ export default function StaffSidebar({ isOpen, onClose }) {
   const allMenuItems = [
     { name: 'Dashboard', path: '/staff/dashboard', icon: 'dashboard', roles: null },
     { name: 'Analytics', path: '/staff/analytics', icon: 'monitoring', roles: ['OWNER', 'MANAGER'] },
-    { name: 'Tables & Reservations', path: '/staff/tables', icon: 'event_seat', roles: null },
-    { name: 'Order Management', path: '/staff/orders', icon: 'receipt_long', roles: null },
-    { name: 'Takeaway Orders', path: '/staff/takeaway', icon: 'shopping_bag', roles: null },
-    { name: 'Billing & Invoices', path: '/staff/billing', icon: 'payments', roles: ['OWNER', 'MANAGER'] },
-    { name: 'Guest Queue', path: '/staff/guest-queue', icon: 'hourglass_empty', roles: null },
+    { name: 'Tables & Reservations', path: '/staff/tables', icon: 'event_seat', roles: null, badgeKey: 'reservations', badgeLabel: 'new reservations' },
+    { name: 'Order Management', path: '/staff/orders', icon: 'receipt_long', roles: null, badgeKey: 'orders', badgeLabel: 'new orders' },
+    { name: 'Takeaway Orders', path: '/staff/takeaway', icon: 'shopping_bag', roles: null, badgeKey: 'takeaway', badgeLabel: 'new takeaway orders' },
+    { name: 'Billing & Invoices', path: '/staff/billing', icon: 'payments', roles: ['OWNER', 'MANAGER'], badgeKey: 'billing', badgeLabel: 'new invoices' },
+    { name: 'Guest Queue', path: '/staff/guest-queue', icon: 'hourglass_empty', roles: null, badgeKey: 'queue', badgeLabel: 'parties waiting' },
     { name: 'Menu Management', path: '/staff/menu', icon: 'restaurant_menu', roles: ['OWNER', 'MANAGER'] },
     { name: 'Settings', path: '/staff/settings', icon: 'settings', roles: ['OWNER', 'MANAGER'] }
   ];
@@ -80,6 +81,9 @@ export default function StaffSidebar({ isOpen, onClose }) {
                   active ? 'text-saffron-gold' : 'text-canvas-cream/40 group-hover:text-saffron-gold'
                 }`}>{item.icon}</span>
                 <span className="font-label-caps text-label-caps uppercase tracking-widest">{item.name}</span>
+                {item.badgeKey && (
+                  <NotificationBadge count={badges[item.badgeKey]} label={item.badgeLabel} />
+                )}
               </Link>
             );
           })}

@@ -5,11 +5,19 @@ import StaffSidebar from './StaffSidebar';
 import StaffHeader from './StaffHeader';
 import ProtectedRoute from './ProtectedRoute';
 import { useStaff } from '../../context/StaffContext';
+import useSidebarBadges from '../../hooks/useSidebarBadges';
 
 export default function StaffLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isDataLoaded, isError } = useStaff();
+  const { isDataLoaded, isError, isAuthenticated, queue } = useStaff();
+
+  // Live counters for the sidebar (new orders, invoices, reservations, queue)
+  const { badges, total: badgeTotal } = useSidebarBadges({
+    enabled: isAuthenticated,
+    pathname: location.pathname,
+    queueCount: queue.length
+  });
 
   const pageVariants = {
     initial: { opacity: 0, y: 15 },
@@ -33,13 +41,13 @@ export default function StaffLayout() {
       <div className="bg-surface text-[#1a1c1c] font-sans min-h-screen flex overflow-x-hidden">
         
         {/* Responsive Drawer Sidebar */}
-        <StaffSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <StaffSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} badges={badges} />
 
         {/* Main Viewport Container */}
         <div className="flex-grow min-w-0 min-h-screen flex flex-col lg:pl-[300px] transition-all duration-300">
           
           {/* Sticky Header */}
-          <StaffHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+          <StaffHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} badgeTotal={badgeTotal} />
           
           {/* Dashboard/Feature Screen Contents */}
           <main className="flex-grow min-w-0 pt-16 md:pt-20">
