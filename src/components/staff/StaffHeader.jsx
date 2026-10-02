@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import StaffAvatar from './StaffAvatar';
 import NotificationBadge from './NotificationBadge';
@@ -39,6 +39,21 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [dropdownOpen, bellOpen]);
+
+  // Clicking anywhere outside an open panel closes it. A full-screen overlay
+  // can't do this here: the header uses backdrop-blur, which makes a
+  // "fixed inset-0" child cover only the header strip, not the page below.
+  const bellRef = useRef(null);
+  const profileRef = useRef(null);
+  useEffect(() => {
+    if (!bellOpen && !dropdownOpen) return undefined;
+    const handlePointerDown = (e) => {
+      if (bellOpen && bellRef.current && !bellRef.current.contains(e.target)) setBellOpen(false);
+      if (dropdownOpen && profileRef.current && !profileRef.current.contains(e.target)) setDropdownOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [bellOpen, dropdownOpen]);
 
   const bellAlerts = BELL_ALERTS.filter((a) => badges[a.key] > 0);
 
@@ -116,7 +131,7 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
         <div className="h-6 w-px bg-muted-border hidden md:block" />
 
         {/* Notifications Bell */}
-        <div className="relative">
+        <div className="relative" ref={bellRef}>
           <button
             onClick={() => { setBellOpen(!bellOpen); setDropdownOpen(false); }}
             aria-label={badgeTotal > 0 ? `Notifications, ${badgeTotal} new` : 'Notifications'}
@@ -133,8 +148,6 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
           </button>
 
           {bellOpen && (
-            <>
-              <div onClick={() => setBellOpen(false)} className="fixed inset-0 z-[9998]" />
               <div className="absolute right-0 top-full mt-4 w-[300px] max-w-[calc(100vw-2rem)] bg-canvas-cream rounded-sm shadow-xl border border-muted-border z-[9999] overflow-hidden animate-fadeIn">
                 <div className="px-4 py-3 border-b border-muted-border/60 flex items-center justify-between gap-3">
                   <p className="font-label-caps text-[11px] tracking-widest uppercase text-ink-navy font-semibold">Notifications</p>
@@ -168,12 +181,11 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
                   </ul>
                 )}
               </div>
-            </>
           )}
         </div>
 
         {/* User Profile Info & Dropdown */}
-        <div className="relative">
+        <div className="relative" ref={profileRef}>
           <button 
             onClick={() => { setDropdownOpen(!dropdownOpen); setBellOpen(false); }}
             className="flex items-center gap-3 hover:opacity-85 focus:outline-none text-left"
@@ -194,8 +206,6 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
 
           {/* Luxury Dropdown Menu */}
           {dropdownOpen && (
-            <>
-              <div onClick={() => setDropdownOpen(false)} className="fixed inset-0 z-[9998]" />
               <div className="absolute right-0 top-full mt-3 w-[240px] bg-canvas-cream rounded-sm shadow-xl border border-muted-border z-[9999] overflow-hidden py-1 animate-fadeIn">
                 <div className="px-4 py-2 border-b border-muted-border/60">
                   <p className="font-sans text-xs text-subtle-text">Shift Status</p>
@@ -221,7 +231,6 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
                   <span>Logout</span>
                 </button>
               </div>
-            </>
           )}
         </div>
 

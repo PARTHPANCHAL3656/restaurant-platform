@@ -42,6 +42,25 @@ export const generateInvoiceForTable = async (req, res) => {
       return res.status(400).json({ error: "No items to invoice for this table." })
     }
 
+    // The bill can only be presented once the food has actually been served.
+    // Generating it must never push an order through the kitchen workflow on
+    // staff's behalf - it used to jump a just-placed order straight to Served
+    // and skip Order Management entirely.
+    if (order.status !== "Served") {
+      const waitingOn = {
+        Received: "hasn't been started by the kitchen yet",
+        Preparing: "is still being prepared",
+        Ready: "is ready but hasn't been served to the guest yet"
+      }[order.status]
+      return res.status(409).json({
+        code: "ORDER_NOT_SERVED",
+        orderStatus: order.status,
+        error: waitingOn
+          ? `This order ${waitingOn}. Mark it as Served in Order Management before generating the invoice.`
+          : `This order is ${String(order.status).toLowerCase()}, so it can't be invoiced.`
+      })
+    }
+
     // Backup phone capture: if the guest skipped the optional phone field
     // on their own cart page, staff can supply it here right before billing.
     // Never overwrite a phone that's already on file — same rule orderController uses.
@@ -102,10 +121,8 @@ export const generateInvoiceForTable = async (req, res) => {
       generatedBy: req.staff.name
     })
 
-    // Presenting bill sets order status to Served
-    order.status = "Served"
-    await order.save()
-
+    // The order is already Served (checked above), so its status is not
+    // touched here - only the invoice is created.
     io.emit("invoice:generated", invoice)
     io.emit("order:updated", { orderId: order._id, tableNumber: order.tableNumber, status: order.status })
 

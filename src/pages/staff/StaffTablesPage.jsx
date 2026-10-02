@@ -195,6 +195,14 @@ export default function StaffTablesPage() {
   // Estimated order subtotal & details lookup
   const currentTableOrder = orders.find(o => o.table === selectedTableId);
 
+  // The invoice can only be generated once the food is served. Look the order
+  // up by the table's own current order (not just the table name) so an old
+  // served order from an earlier guest can never unlock the button.
+  const invoiceOrder = currentTable && currentTable.currentOrderId
+    ? orders.find(o => o.id === currentTable.currentOrderId)
+    : currentTableOrder;
+  const invoiceWaitingOn = invoiceOrder && invoiceOrder.status !== 'served' ? invoiceOrder.status : null;
+
   // Walk-ins and reservations are kept as two separate lists on purpose.
   const walkInParties = queue.map(q => ({ id: q.id, name: q.name, partySize: q.partySize }));
   // Today's confirmed reservations that don't already have a table held
@@ -743,10 +751,16 @@ export default function StaffTablesPage() {
                           View Order
                         </button>
                       </div>
+                      {invoiceWaitingOn && (
+                        <p className="text-[11px] leading-snug text-ink-navy bg-saffron-gold/10 border border-saffron-gold/40 p-3" role="status">
+                          This order is {invoiceWaitingOn === 'new' ? 'still waiting for the kitchen' : invoiceWaitingOn === 'preparing' ? 'still being prepared' : 'ready but not served yet'}. Mark it as Served in Order Management before generating the invoice.
+                        </p>
+                      )}
                       <div className="grid grid-cols-2 gap-4">
                         <button 
                           onClick={handleGenerateInvoice}
-                          className="h-[56px] bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 cursor-pointer shadow-md rounded-none text-center font-bold"
+                          disabled={Boolean(invoiceWaitingOn)}
+                          className="h-[56px] bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 cursor-pointer shadow-md rounded-none text-center font-bold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100"
                         >
                           Generate Invoice
                         </button>

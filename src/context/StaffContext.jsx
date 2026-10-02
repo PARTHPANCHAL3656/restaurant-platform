@@ -795,7 +795,10 @@ export function StaffProvider({ children }) {
         qty: item.qty
       })),
       sessionId: inv.sessionId,
-      orderId: inv.orderId
+      orderId: inv.orderId,
+      // GSTIN / FSSAI / SAC as printed when the invoice was issued, so the
+      // staff receipt matches what the customer downloaded.
+      legalSnapshot: inv.legalSnapshot || null
     };
   }, []);
 
