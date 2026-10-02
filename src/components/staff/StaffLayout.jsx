@@ -10,13 +10,17 @@ import useSidebarBadges from '../../hooks/useSidebarBadges';
 export default function StaffLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isDataLoaded, isError, isAuthenticated, queue } = useStaff();
+  const { isDataLoaded, isError, isAuthenticated, queue, reservations, orders, invoices } = useStaff();
 
-  // Live counters for the sidebar (new orders, invoices, reservations, queue)
-  const { badges, total: badgeTotal } = useSidebarBadges({
+  // Live counters (sidebar, bell, mobile menu button), worked out from the loaded data
+  const { badges, total: badgeTotal, markAllSeen } = useSidebarBadges({
     enabled: isAuthenticated,
+    ready: isDataLoaded,
     pathname: location.pathname,
-    queueCount: queue.length
+    queueCount: queue.length,
+    reservations,
+    orders,
+    invoices
   });
 
   const pageVariants = {
@@ -47,7 +51,12 @@ export default function StaffLayout() {
         <div className="flex-grow min-w-0 min-h-screen flex flex-col lg:pl-[300px] transition-all duration-300">
           
           {/* Sticky Header */}
-          <StaffHeader onMenuToggle={() => setSidebarOpen(!sidebarOpen)} badgeTotal={badgeTotal} />
+          <StaffHeader
+            onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+            badges={badges}
+            badgeTotal={badgeTotal}
+            onMarkAllSeen={markAllSeen}
+          />
           
           {/* Dashboard/Feature Screen Contents */}
           <main className="flex-grow min-w-0 pt-16 md:pt-20">

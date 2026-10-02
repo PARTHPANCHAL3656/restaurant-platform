@@ -1,132 +1,156 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import socket from '../utils/socket';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-// Which sidebar page "owns" which counter. Opening that page clears it.
-// (Guest Queue is not here on purpose - it shows a live count, see below.)
-const PAGE_TO_KEY = {
-  '/staff/orders': 'orders',          // new dine-in orders / "order more" rounds
-  '/staff/takeaway': 'takeaway',      // new takeout orders / rounds
-  '/staff/billing': 'billing',        // newly generated invoices
-  '/staff/tables': 'reservations',    // new customer reservation requests
+/**
+ * Sidebar / bell notification counters for the staff portal.
+ *
+ * A badge counts things that BOTH
+ *   (1) still need attention  - and -
+ *   (2) you have not looked at yet.
+ *
+ * It is worked out from the lists the staff app already loads (reservations,
+ * orders, invoices) instead of counting socket events, so it can never get
+ * out of step with what is really on screen:
+ *
+ *   Tables & Reservations -> customer reservation requests still "pending"
+ *   Order Management      -> dine-in orders (or new "order more" rounds) still "new"
+ *   Takeaway Orders       -> takeout orders (or new rounds) still "new"
+ *   Billing & Invoices    -> invoices still "unpaid"
+ *   Guest Queue           -> (live) parties currently waiting
+ *
+ * Confirming / starting / paying something removes it from the count, and
+ * opening a page (in a visible tab) marks everything on it as seen.
+ */
+
+// Which sidebar page "owns" which counter.
+const PAGE_TO_GROUP = {
+  '/staff/orders': 'orders',
+  '/staff/takeaway': 'takeaway',
+  '/staff/billing': 'billing',
+  '/staff/tables': 'reservations',
 };
-
-const EMPTY = { orders: 0, takeaway: 0, billing: 0, reservations: 0 };
+const GROUPS = ['orders', 'takeaway', 'billing', 'reservations'];
 
 // sessionStorage (not localStorage) on purpose: the staff login lives in
 // sessionStorage too, so closing the tab = logout = counters start fresh.
-const STORAGE_KEY = 'staffSidebarBadges';
+const STORAGE_KEY = 'staffSidebarSeen';
+const MAX_REMEMBERED = 3000;
+const FRESH = { baselined: false, keys: {} };
 
-const readStored = (openPageKey) => {
+const readSeen = () => {
   try {
     const parsed = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null');
-    if (!parsed || typeof parsed !== 'object') return EMPTY;
-    const next = { ...EMPTY };
-    for (const key of Object.keys(EMPTY)) {
-      const n = Number(parsed[key]);
-      next[key] = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+    if (parsed && parsed.baselined === true && parsed.keys && typeof parsed.keys === 'object') {
+      return { baselined: true, keys: parsed.keys };
     }
-    // Refreshing while sitting on a page counts as having seen it.
-    if (openPageKey) next[openPageKey] = 0;
-    return next;
   } catch {
-    return EMPTY;
+    /* ignore - treat as first visit */
   }
+  return FRESH;
 };
 
-/**
- * Sidebar notification counters for the staff portal.
- *
- * @param {object}  opts
- * @param {boolean} opts.enabled    only listen while a staff member is logged in
- * @param {string}  opts.pathname   current route (from useLocation)
- * @param {number}  opts.queueCount parties currently waiting in the guest queue
- * @returns {{ badges: Record<string, number>, total: number }}
- *          badges: { orders, takeaway, billing, reservations, queue }
- */
-export default function useSidebarBadges({ enabled, pathname, queueCount = 0 }) {
-  const [counts, setCounts] = useState(() => readStored(PAGE_TO_KEY[pathname]));
-  const [lastPathname, setLastPathname] = useState(pathname);
+const withKeys = (keys, list) => {
+  const next = { ...keys };
+  for (const k of list) next[k] = true;
+  return next;
+};
+
+export default function useSidebarBadges({
+  enabled,
+  ready,
+  pathname,
+  queueCount = 0,
+  reservations = [],
+  orders = [],
+  invoices = [],
+}) {
+  const [seen, setSeen] = useState(readSeen);
   const [wasEnabled, setWasEnabled] = useState(enabled);
+  const [visible, setVisible] = useState(() => typeof document === 'undefined' || !document.hidden);
 
-  // Always holds the counter key of the page being viewed right now, so the
-  // socket handlers (which are created once) can see it without re-subscribing.
-  const activeKeyRef = useRef(PAGE_TO_KEY[pathname] || null);
+  // Know whether the tab is actually on screen.
   useEffect(() => {
-    activeKeyRef.current = PAGE_TO_KEY[pathname] || null;
-  }, [pathname]);
-
-  // Opening a page clears its counter. (React's "adjust state while rendering"
-  // pattern - cheaper and cleaner than doing it in an effect.)
-  if (lastPathname !== pathname) {
-    setLastPathname(pathname);
-    const key = PAGE_TO_KEY[pathname];
-    if (key) setCounts((prev) => (prev[key] ? { ...prev, [key]: 0 } : prev));
-  }
-
-  // Logging out wipes every counter.
-  if (wasEnabled !== enabled) {
-    setWasEnabled(enabled);
-    if (!enabled) setCounts(EMPTY);
-  }
-
-  // Coming back to a tab that was sitting on a page clears that page's counter
-  // (events that arrived while the tab was hidden still counted).
-  useEffect(() => {
-    const onVisible = () => {
-      const key = activeKeyRef.current;
-      if (!document.hidden && key) {
-        setCounts((prev) => (prev[key] ? { ...prev, [key]: 0 } : prev));
-      }
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
+    const onChange = () => setVisible(!document.hidden);
+    document.addEventListener('visibilitychange', onChange);
+    return () => document.removeEventListener('visibilitychange', onChange);
   }, []);
 
-  // Live socket events -> bump the right counter.
-  useEffect(() => {
-    if (!enabled) return undefined;
+  // Everything that currently needs attention, as "group|id" keys.
+  const pending = useMemo(() => {
+    const out = { orders: [], takeaway: [], billing: [], reservations: [] };
 
-    const bump = (key) => {
-      // Staff is looking at that exact page in a visible tab: they see the
-      // item arrive, no badge needed.
-      if (activeKeyRef.current === key && !document.hidden) return;
-      setCounts((prev) => ({ ...prev, [key]: prev[key] + 1 }));
-    };
+    for (const r of reservations) {
+      // Walk-ins are typed in by staff themselves - only customer requests count.
+      if (r.status === 'pending' && r.source !== 'Walk-in') out.reservations.push(`reservations|${r.id}`);
+    }
+    for (const o of orders) {
+      if (o.status !== 'new') continue; // already being prepared / ready = handled
+      // An "order more" round on the same order gets a new round number -> new key.
+      let round = 1;
+      for (const item of o.items || []) round = Math.max(round, Number(item.round) || 1);
+      if (o.orderType === 'takeout') out.takeaway.push(`takeaway|${o.id}:${round}`);
+      else out.orders.push(`orders|${o.id}:${round}`);
+    }
+    for (const inv of invoices) {
+      if (inv.status === 'unpaid') out.billing.push(`billing|${inv.id}`);
+    }
+    return out;
+  }, [reservations, orders, invoices]);
 
-    // Fires for the first order AND for every "order more" round.
-    const onOrderNew = (order) => bump(order?.orderType === 'takeout' ? 'takeaway' : 'orders');
-    const onInvoiceGenerated = () => bump('billing');
-    // Walk-in reservations are typed in by staff themselves - only count
-    // requests that customers made online.
-    const onReservationNew = (reservation) => {
-      if (reservation?.source === 'Walk-in') return;
-      bump('reservations');
-    };
+  const live = Boolean(enabled && ready);
 
-    socket.on('order:new', onOrderNew);
-    socket.on('invoice:generated', onInvoiceGenerated);
-    socket.on('reservation:new', onReservationNew);
-    return () => {
-      socket.off('order:new', onOrderNew);
-      socket.off('invoice:generated', onInvoiceGenerated);
-      socket.off('reservation:new', onReservationNew);
-    };
-  }, [enabled]);
+  // --- state adjustments that must happen while rendering (no effects needed) ---
+
+  // Logging out forgets everything.
+  if (wasEnabled !== enabled) {
+    setWasEnabled(enabled);
+    if (!enabled) setSeen(FRESH);
+  }
+
+  if (live) {
+    if (!seen.baselined) {
+      // First load of this session: whatever already exists is not "new".
+      setSeen({ baselined: true, keys: withKeys(seen.keys, GROUPS.flatMap((g) => pending[g])) });
+    } else {
+      // Looking at a page (tab visible) = everything on it is seen.
+      const group = PAGE_TO_GROUP[pathname];
+      if (group && visible) {
+        const unseen = pending[group].filter((k) => !seen.keys[k]);
+        if (unseen.length) setSeen({ baselined: true, keys: withKeys(seen.keys, unseen) });
+      }
+    }
+  }
 
   // Survive a page refresh (and forget everything on logout).
   useEffect(() => {
     try {
-      if (enabled) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(counts));
-      else sessionStorage.removeItem(STORAGE_KEY);
+      if (!enabled) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        return;
+      }
+      if (!seen.baselined) return;
+      let keys = seen.keys;
+      const all = Object.keys(keys);
+      if (all.length > MAX_REMEMBERED) {
+        keys = Object.fromEntries(all.slice(-MAX_REMEMBERED).map((k) => [k, true]));
+      }
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ baselined: true, keys }));
     } catch {
       /* storage blocked - badges just won't survive a refresh */
     }
-  }, [counts, enabled]);
+  }, [seen, enabled]);
+
+  // Bell -> "Mark all as seen".
+  const markAllSeen = useCallback(() => {
+    setSeen((prev) => ({ baselined: true, keys: withKeys(prev.keys, GROUPS.flatMap((g) => pending[g])) }));
+  }, [pending]);
 
   return useMemo(() => {
-    const live = enabled ? counts : EMPTY;
-    const badges = { ...live, queue: enabled ? Math.max(0, Number(queueCount) || 0) : 0 };
+    const badges = { orders: 0, takeaway: 0, billing: 0, reservations: 0, queue: 0 };
+    if (live && seen.baselined) {
+      for (const g of GROUPS) badges[g] = pending[g].filter((k) => !seen.keys[k]).length;
+    }
+    badges.queue = enabled ? Math.max(0, Number(queueCount) || 0) : 0;
     const total = badges.orders + badges.takeaway + badges.billing + badges.reservations;
-    return { badges, total };
-  }, [counts, enabled, queueCount]);
+    return { badges, total, markAllSeen };
+  }, [live, enabled, seen, pending, queueCount, markAllSeen]);
 }

@@ -1,11 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-// Small gold pill shown on the right of a sidebar row.
+// Small gold pill used for notification counters.
 //   1..99  ->  "+1" ... "+99"
 //   100+   ->  "99+"
 //   0      ->  nothing rendered
-export default function NotificationBadge({ count, label = 'new', className = '' }) {
+//
+// size="md" is the sidebar pill, size="sm" is the compact one used on the
+// header bell and the mobile menu button.
+const SIZES = {
+  md: 'min-w-[24px] h-5 px-1.5 text-[11px]',
+  sm: 'min-w-[18px] h-[18px] px-1 text-[10px]',
+};
+
+export default function NotificationBadge({ count, label = 'new', size = 'md', className = 'ml-auto' }) {
   const n = Number(count) || 0;
   if (n < 1) return null;
 
@@ -20,7 +28,7 @@ export default function NotificationBadge({ count, label = 'new', className = ''
       transition={{ type: 'spring', stiffness: 500, damping: 18 }}
       role="status"
       aria-label={`${n > 99 ? 'More than 99' : n} ${label}`}
-      className={`ml-auto shrink-0 min-w-[24px] h-5 px-1.5 rounded-full bg-saffron-gold text-midnight-black text-[11px] leading-none font-bold tabular-nums flex items-center justify-center shadow-[0_0_0_2px_rgba(212,175,55,0.18)] ${className}`}
+      className={`shrink-0 rounded-full bg-saffron-gold text-midnight-black leading-none font-bold tabular-nums flex items-center justify-center ${SIZES[size] || SIZES.md} ${className}`}
     >
       {text}
     </motion.span>

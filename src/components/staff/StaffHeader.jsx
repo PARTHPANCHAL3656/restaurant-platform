@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import StaffAvatar from './StaffAvatar';
+import NotificationBadge from './NotificationBadge';
 import { useStaff } from '../../context/StaffContext';
 
-export default function StaffHeader({ onMenuToggle, badgeTotal = 0 }) {
+// Rows shown in the bell panel (only the ones with something new are listed).
+const BELL_ALERTS = [
+  { key: 'reservations', label: 'New reservation requests', path: '/staff/tables', icon: 'event_seat' },
+  { key: 'orders', label: 'New orders', path: '/staff/orders', icon: 'receipt_long' },
+  { key: 'takeaway', label: 'New takeaway orders', path: '/staff/takeaway', icon: 'shopping_bag' },
+  { key: 'billing', label: 'New invoices', path: '/staff/billing', icon: 'payments' }
+];
+
+export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0, onMarkAllSeen }) {
   const { staffProfile, logoutStaff } = useStaff();
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -19,15 +29,18 @@ export default function StaffHeader({ onMenuToggle, badgeTotal = 0 }) {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setDropdownOpen(false);
+        setBellOpen(false);
       }
     };
-    if (dropdownOpen) {
+    if (dropdownOpen || bellOpen) {
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [dropdownOpen]);
+  }, [dropdownOpen, bellOpen]);
+
+  const bellAlerts = BELL_ALERTS.filter((a) => badges[a.key] > 0);
 
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -78,11 +91,12 @@ export default function StaffHeader({ onMenuToggle, badgeTotal = 0 }) {
           aria-label="Toggle Navigation"
         >
           <span className="material-symbols-outlined text-2xl">menu</span>
-          {badgeTotal > 0 && (
-            <span className="absolute top-1 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-saffron-gold text-midnight-black text-[10px] leading-none font-bold tabular-nums flex items-center justify-center">
-              {badgeTotal > 99 ? '99+' : badgeTotal}
-            </span>
-          )}
+          <NotificationBadge
+            count={badgeTotal}
+            label="new notifications"
+            size="sm"
+            className="absolute top-0.5 -right-1"
+          />
         </button>
         <div className="hidden sm:block">
           <h2 className="font-serif text-headline-sm text-ink-navy leading-none">{getPageTitle()}</h2>
@@ -101,16 +115,67 @@ export default function StaffHeader({ onMenuToggle, badgeTotal = 0 }) {
 
         <div className="h-6 w-px bg-muted-border hidden md:block" />
 
-        {/* Notifications Icon */}
-        <button className="relative text-ink-navy hover:text-saffron-gold transition-colors focus:outline-none">
-          <span className="material-symbols-outlined">notifications</span>
-          <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-saffron-gold rounded-full" />
-        </button>
+        {/* Notifications Bell */}
+        <div className="relative">
+          <button
+            onClick={() => { setBellOpen(!bellOpen); setDropdownOpen(false); }}
+            aria-label={badgeTotal > 0 ? `Notifications, ${badgeTotal} new` : 'Notifications'}
+            aria-expanded={bellOpen}
+            className="relative text-ink-navy hover:text-saffron-gold transition-colors focus:outline-none"
+          >
+            <span className="material-symbols-outlined">notifications</span>
+            <NotificationBadge
+              count={badgeTotal}
+              label="new notifications"
+              size="sm"
+              className="absolute -top-2 -right-3"
+            />
+          </button>
+
+          {bellOpen && (
+            <>
+              <div onClick={() => setBellOpen(false)} className="fixed inset-0 z-[9998]" />
+              <div className="absolute right-0 top-full mt-4 w-[300px] max-w-[calc(100vw-2rem)] bg-canvas-cream rounded-sm shadow-xl border border-muted-border z-[9999] overflow-hidden animate-fadeIn">
+                <div className="px-4 py-3 border-b border-muted-border/60 flex items-center justify-between gap-3">
+                  <p className="font-label-caps text-[11px] tracking-widest uppercase text-ink-navy font-semibold">Notifications</p>
+                  {bellAlerts.length > 0 && (
+                    <button
+                      onClick={() => onMarkAllSeen && onMarkAllSeen()}
+                      className="font-label-caps text-[10px] tracking-widest uppercase text-saffron-gold hover:underline focus:outline-none"
+                    >
+                      Mark all as seen
+                    </button>
+                  )}
+                </div>
+
+                {bellAlerts.length === 0 ? (
+                  <p className="px-4 py-6 text-center font-serif italic text-xs text-subtle-text">You&apos;re all caught up</p>
+                ) : (
+                  <ul className="py-1">
+                    {bellAlerts.map((alert) => (
+                      <li key={alert.key}>
+                        <Link
+                          to={alert.path}
+                          onClick={() => setBellOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-lg text-saffron-gold">{alert.icon}</span>
+                          <span className="flex-grow text-xs text-ink-navy">{alert.label}</span>
+                          <NotificationBadge count={badges[alert.key]} label={alert.label.toLowerCase()} size="sm" className="" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* User Profile Info & Dropdown */}
         <div className="relative">
           <button 
-            onClick={() => setDropdownOpen(!dropdownOpen)}
+            onClick={() => { setDropdownOpen(!dropdownOpen); setBellOpen(false); }}
             className="flex items-center gap-3 hover:opacity-85 focus:outline-none text-left"
           >
             <StaffAvatar className="w-9 h-9" />
