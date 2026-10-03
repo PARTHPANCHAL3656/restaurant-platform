@@ -211,6 +211,7 @@ export const getMyBillPreview = async (req, res) => {
       orderNumber: isTakeout ? order.orderNumber : undefined,
       tableNumber: isTakeout ? undefined : table.tableNumber,
       guestName: (isTakeout ? order.guestName : table.guestName) || "Guest",
+      partySize: isTakeout ? null : (table.guestCount || null),
       orderSource: isTakeout ? "Takeout" : await resolveOrderSource(table),
       createdAt: order.createdAt,
       legalSnapshot: legalSnapshotFrom(settings)

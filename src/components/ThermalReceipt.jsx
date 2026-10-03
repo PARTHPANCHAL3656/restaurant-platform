@@ -73,7 +73,10 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
         <div><dt>Date:</dt><dd>{value(invoice.date)}</dd></div>
         <div><dt>Time:</dt><dd>{value(invoice.time)}</dd></div>
         {invoice.guest && (
-          <div className="thermal-meta-wide"><dt>Customer:</dt><dd>{value(invoice.guest)}</dd></div>
+          <div className={invoice.pax > 0 ? undefined : 'thermal-meta-wide'}><dt>Customer:</dt><dd>{value(invoice.guest)}</dd></div>
+        )}
+        {invoice.guest && invoice.pax > 0 && (
+          <div><dt>PAX:</dt><dd>{invoice.pax}</dd></div>
         )}
       </dl>
 

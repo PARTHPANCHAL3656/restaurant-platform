@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import { useStaff } from '../../context/StaffContext';
 import { formatINR } from '../../utils/currency';
 import ThermalReceipt from '../../components/ThermalReceipt';
+import { resolveReceiptInfo } from '../../utils/receiptInfo';
 
 // Formats a charge/tax amount as a percentage of the subtotal, rounded to
 // at most 2 decimals with no trailing zeros (7.5 not 7.50). Used so the
@@ -433,8 +434,8 @@ export default function StaffBillingPage() {
         <div style={{ position: 'fixed', top: 0, left: 0, opacity: 0.01, pointerEvents: 'none', zIndex: -1 }}>
           <div ref={receiptRef}>
             <ThermalReceipt 
-            restaurantInfo={selectedInvoice.legalSnapshot ? { ...restaurantInfo, fssaiEnabled: true, ...selectedInvoice.legalSnapshot } : restaurantInfo} 
-            invoice={{ number: selectedInvoice.invoiceNumber || selectedInvoice.id, table: selectedInvoice.table, orderSource: selectedInvoice.orderSource, guest: selectedInvoice.guest, cashier: selectedInvoice.generatedBy, date: selectedInvoice.date, time: selectedInvoice.time || '---', paymentMethod: selectedInvoice.paymentMethod, status: selectedInvoice.status, items: selectedInvoice.items, subtotal: selectedInvoice.subtotal, discount: selectedInvoice.discount || 0, serviceCharge: selectedInvoice.serviceCharge, serviceChargePercent: selectedInvoice.serviceChargePercent, packagingFee: selectedInvoice.packagingFee || 0, cgst: selectedInvoice.cgst, sgst: selectedInvoice.sgst, cgstRate: selectedInvoice.cgstRate, sgstRate: selectedInvoice.sgstRate, gst: selectedInvoice.gst, total: selectedInvoice.amount }} />
+            restaurantInfo={resolveReceiptInfo(restaurantInfo, selectedInvoice.legalSnapshot)} 
+            invoice={{ number: selectedInvoice.invoiceNumber || selectedInvoice.id, table: selectedInvoice.table, orderSource: selectedInvoice.orderSource, guest: selectedInvoice.guest, pax: selectedInvoice.partySize, cashier: selectedInvoice.generatedBy, date: selectedInvoice.date, time: selectedInvoice.time || '---', paymentMethod: selectedInvoice.paymentMethod, status: selectedInvoice.status, items: selectedInvoice.items, subtotal: selectedInvoice.subtotal, discount: selectedInvoice.discount || 0, serviceCharge: selectedInvoice.serviceCharge, serviceChargePercent: selectedInvoice.serviceChargePercent, packagingFee: selectedInvoice.packagingFee || 0, cgst: selectedInvoice.cgst, sgst: selectedInvoice.sgst, cgstRate: selectedInvoice.cgstRate, sgstRate: selectedInvoice.sgstRate, gst: selectedInvoice.gst, total: selectedInvoice.amount }} />
           </div>
         </div>
       )}

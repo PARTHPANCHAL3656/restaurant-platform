@@ -8,6 +8,7 @@ import BrandLogo from '../components/BrandLogo';
 import Footer from '../components/Footer';
 import { formatINR } from '../utils/currency';
 import ThermalReceipt from '../components/ThermalReceipt';
+import { resolveReceiptInfo } from '../utils/receiptInfo';
 import api from '../utils/api';
 import socket from '../utils/socket';
 
@@ -243,10 +244,12 @@ export default function BillSummaryPage() {
                   <p className="tracking-wider uppercase mb-1">GUEST</p>
                   <p className="font-serif text-base text-ink-navy font-semibold">{invoice.guestName || 'Guest'}</p>
                 </div>
-                <div className="text-right">
-                  <p className="tracking-wider uppercase mb-1">CASHIER</p>
-                  <p className="font-serif text-base text-ink-navy font-semibold">{invoice.generatedBy || 'Floor Manager'}</p>
-                </div>
+                {invoice.partySize > 0 && (
+                  <div className="text-right">
+                    <p className="tracking-wider uppercase mb-1">PAX</p>
+                    <p className="font-serif text-base text-ink-navy font-semibold">{invoice.partySize}</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -363,7 +366,7 @@ export default function BillSummaryPage() {
         <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: 0 }}>
           <div ref={receiptRef}>
             <ThermalReceipt
-              restaurantInfo={invoice && invoice.legalSnapshot ? { ...restaurantInfo, fssaiEnabled: true, ...invoice.legalSnapshot } : restaurantInfo}
+              restaurantInfo={resolveReceiptInfo(restaurantInfo, invoice && invoice.legalSnapshot)}
               heading={hasInvoice ? 'TAX INVOICE' : 'BILL SUMMARY'}
               invoice={{
                 number: displayOrderId,
@@ -391,12 +394,12 @@ export default function BillSummaryPage() {
                 // Guest name shows even before a formal invoice exists —
                 // there's no reason to hide who the bill is for just
                 // because staff hasn't clicked "generate invoice" yet.
-                // Cashier genuinely doesn't exist until that happens, so
-                // it stays gated.
+                // The customer's bill never shows a cashier - the payment
+                // section already says "Pay at Counter" until it's paid.
                 guest: (invoice && invoice.guestName) || 'Guest',
+                pax: invoice ? invoice.partySize : undefined,
                 orderSource: invoice ? invoice.orderSource : undefined,
                 ...(hasInvoice && {
-                  cashier: invoice.generatedBy || 'Floor Manager',
                   paymentMethod: invoice.paymentMethod && invoice.paymentMethod !== '—' ? invoice.paymentMethod : 'Pay at Counter',
                   status: invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)
                 })

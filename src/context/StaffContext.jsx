@@ -773,6 +773,7 @@ export function StaffProvider({ children }) {
       invoiceNumber: inv.invoiceNumber,
       table: tableStr,
       guest: inv.guestName || 'Guest',
+      partySize: inv.partySize || null,
       amount: inv.total,
       date: dateStr,
       time: timeStr,
