@@ -33,6 +33,7 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
   const orderSourceSuffix =
     invoice.orderSource === 'Reservation' ? ' (Reserved)' :
     invoice.orderSource === 'Walk-in' ? ' (Walk-in)' :
+    invoice.orderSource === 'Takeout' ? ' (Take-out)' :
     '';
   // GSTIN / FSSAI / SAC-HSN line. FSSAI is optional: plenty of restaurants
   // hold no licence, so the owner can switch it off in Settings. Anything

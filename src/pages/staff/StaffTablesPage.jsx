@@ -482,7 +482,7 @@ export default function StaffTablesPage() {
                   <div>
                     <h3 className="font-serif text-2xl">Table {selectedTableId}</h3>
                     <p className="text-saffron-gold font-label-caps text-[9px] tracking-widest mt-1 uppercase font-bold">
-                      {currentTable.status} • {selectedTableId === 'T-14' ? 'Garden Terrace' : 'Dining Room'}
+                      {currentTable.status} • Dining Room
                     </p>
                   </div>
                   <button 
@@ -504,7 +504,7 @@ export default function StaffTablesPage() {
                       <div className="space-y-3.5 border-b border-muted-border pb-6">
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Section:</span>
-                          <span className="font-bold">{selectedTableId === 'T-14' ? 'Garden Terrace' : 'Dining Room'}</span>
+                          <span className="font-bold">Dining Room</span>
                         </div>
                           <div className="flex justify-between">
                           <span className="text-subtle-text">Capacity:</span>
@@ -599,7 +599,7 @@ export default function StaffTablesPage() {
                       <div className="space-y-3.5 border-b border-muted-border pb-6">
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Section:</span>
-                          <span className="font-bold">{selectedTableId === 'T-14' ? 'Garden Terrace' : 'Dining Room'}</span>
+                          <span className="font-bold">Dining Room</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Capacity:</span>
@@ -715,7 +715,7 @@ export default function StaffTablesPage() {
                       <div className="space-y-3.5 border-b border-muted-border pb-6">
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Section:</span>
-                          <span className="font-bold">{selectedTableId === 'T-14' ? 'Garden Terrace' : 'Dining Room'}</span>
+                          <span className="font-bold">Dining Room</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-subtle-text">Capacity:</span>

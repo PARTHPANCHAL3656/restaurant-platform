@@ -238,7 +238,7 @@ export default function BillSummaryPage() {
               </div>
             </div>
 
-            {hasInvoice && (
+            {invoice && invoice.guestName && (
               <div className="grid grid-cols-2 gap-4 text-left text-xs font-label-caps text-subtle-text mt-4">
                 <div>
                   <p className="tracking-wider uppercase mb-1">GUEST</p>

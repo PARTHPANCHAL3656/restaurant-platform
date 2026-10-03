@@ -77,6 +77,16 @@ function getTodaysOpeningTime(openingHours) {
   return null;
 }
 
+// Keeps only the digits of whatever was typed or pasted. Indian mobile numbers
+// never start with 0, so leading zeros ("09876...", "0091 98765...") are
+// dropped, and a pasted "+91 98765 43210" loses its country code.
+// Capped at 10 digits.
+function cleanPhone(raw) {
+  let digits = String(raw || '').replace(/\D/g, '').replace(/^0+/, '');
+  if (digits.length === 12 && digits.startsWith('91')) digits = digits.slice(2);
+  return digits.slice(0, 10);
+}
+
 export default function TakeoutStartPage() {
   const navigate = useNavigate();
   const { setTableToken } = useCart();
@@ -129,7 +139,7 @@ export default function TakeoutStartPage() {
 
   const handleStart = async (e) => {
     e.preventDefault();
-    if (!guestName.trim() || !guestPhone.trim()) return;
+    if (!guestName.trim() || guestPhone.length !== 10) return;
 
     if (pickupChoice === 'ASAP' && isClosedForTakeout) {
       if (!openingTime || !closingTime) {
@@ -193,7 +203,7 @@ export default function TakeoutStartPage() {
 
   const handleResume = async (e) => {
     e.preventDefault();
-    if (!resumePhone.trim()) return;
+    if (resumePhone.length !== 10) return;
     setError('');
     setIsSubmitting(true);
 
@@ -254,7 +264,9 @@ export default function TakeoutStartPage() {
                 <input
                   type="tel"
                   value={resumePhone}
-                  onChange={(e) => setResumePhone(e.target.value)}
+                  onChange={(e) => setResumePhone(cleanPhone(e.target.value))}
+                  inputMode="numeric"
+                  autoComplete="tel-national"
                   required
                   className="w-full mt-1 border border-muted-border px-3 h-11 text-sm focus:outline-none focus:border-saffron-gold"
                   placeholder="10-digit mobile number"
@@ -267,7 +279,7 @@ export default function TakeoutStartPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting || !resumePhone.trim()}
+                disabled={isSubmitting || resumePhone.length !== 10}
                 className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[52px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmitting ? 'Looking up your order...' : 'Resume My Order'}
@@ -296,13 +308,17 @@ export default function TakeoutStartPage() {
               <input
                 type="tel"
                 value={guestPhone}
-                onChange={(e) => setGuestPhone(e.target.value)}
+                onChange={(e) => setGuestPhone(cleanPhone(e.target.value))}
+                inputMode="numeric"
+                autoComplete="tel-national"
                 required
                 className="w-full mt-1 border border-muted-border px-3 h-11 text-sm focus:outline-none focus:border-saffron-gold"
                 placeholder="10-digit mobile number"
               />
               <p className="text-[10px] text-subtle-text/70 mt-1">
-                We'll only use this to confirm your order and let you know when it's ready.
+                {guestPhone.length > 0 && guestPhone.length < 10
+                  ? `Enter all 10 digits (${guestPhone.length} of 10).`
+                  : "We'll only use this to confirm your order and let you know when it's ready."}
               </p>
             </div>
 
@@ -352,7 +368,7 @@ export default function TakeoutStartPage() {
 
             <button
               type="submit"
-              disabled={isSubmitting || !guestName.trim() || !guestPhone.trim() || isPastClosing}
+              disabled={isSubmitting || !guestName.trim() || guestPhone.length !== 10 || isPastClosing}
               className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[52px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? 'Starting your order...' : 'Start Order — Browse Menu'}

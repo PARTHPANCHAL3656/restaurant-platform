@@ -6,11 +6,12 @@ import React from 'react';
 export default function TableRow({ previewMode, isTakeout, tableNumber, orderId }) {
   if (previewMode) return null;
 
-  // "Garden Terrace 14" -> section "Garden Terrace", table "14"
+  // "Table T-09" -> table "T-09". A longer name such as "Patio 4" keeps
+  // its first part as a section label; nothing is ever invented.
   const parts = String(tableNumber || '').split(' ');
-  const tableNum = parts.pop() || '14';
-  const sectionName = parts.join(' ') || 'Garden Terrace';
-  const showSection = sectionName.trim().toLowerCase() !== 'table';
+  const tableNum = parts.pop() || '';
+  const sectionName = parts.join(' ');
+  const showSection = sectionName.trim() !== '' && sectionName.trim().toLowerCase() !== 'table';
 
   return (
     <div className="flex items-stretch justify-between gap-3">

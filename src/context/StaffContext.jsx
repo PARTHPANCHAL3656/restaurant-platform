@@ -650,7 +650,9 @@ export function StaffProvider({ children }) {
     return {
       id: o._id,
       table: tableStr,
-      section: isTakeout ? 'Takeout' : (o.tableNumber <= 5 ? 'Dining Room' : 'Garden Terrace'),
+      // Tables have no section in the data, so there is only one dining area.
+      // (This used to guess "Garden Terrace" for every table above T-05.)
+      section: isTakeout ? 'Takeout' : 'Dining Room',
       orderType: o.orderType || 'dine-in',
       orderNumber: o.orderNumber || '',
       pickupTime: o.pickupTime || '',

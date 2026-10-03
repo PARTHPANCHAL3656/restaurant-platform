@@ -4,10 +4,7 @@ import Settings from "../models/Settings.js"
 import { generateTakeoutToken, signTakeoutToken } from "../utils/generateTakeoutToken.js"
 import { nextBillNumber } from "../utils/nextBillNumber.js"
 import { checkPickupTime } from "../utils/checkTakeoutHours.js"
-
-// Normalizes a phone number to a bare 10-digit string, same convention
-// the CRM/analytics side already uses for matching customers.
-const normalizePhone = (phone) => (phone || "").replace(/\D/g, "").slice(-10)
+import { normalizePhone } from "../utils/normalizePhone.js"
 
 // POST /api/takeout/start
 // Public — no login required. A customer taps "Start Takeout Order" on the
