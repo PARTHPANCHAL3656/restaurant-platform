@@ -26,6 +26,9 @@ const settingsSchema = new mongoose.Schema({
     address: { type: String, default: "12 Alkapuri Boulevard, Vadodara, Gujarat 390007" },
     gstin: { type: String, default: "24AABCS1429B1Z8", trim: true },
     fssai: { type: String, default: "21423011000123", trim: true },
+    // Many restaurants hold no FSSAI licence. When this is off the number is
+    // left off every new bill and invoice (the saved number is kept).
+    fssaiEnabled: { type: Boolean, default: true },
     sacCode: { type: String, default: "996331", trim: true }
   },
 

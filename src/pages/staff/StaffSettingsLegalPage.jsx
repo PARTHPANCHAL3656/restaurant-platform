@@ -14,6 +14,7 @@ export default function StaffSettingsLegalPage() {
     address: restaurantInfo.address,
     gstin: restaurantInfo.gstin,
     fssai: restaurantInfo.fssai,
+    fssaiEnabled: restaurantInfo.fssaiEnabled !== false,
     sacCode: restaurantInfo.sacCode
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -27,9 +28,10 @@ export default function StaffSettingsLegalPage() {
       address: restaurantInfo.address,
       gstin: restaurantInfo.gstin,
       fssai: restaurantInfo.fssai,
+      fssaiEnabled: restaurantInfo.fssaiEnabled !== false,
       sacCode: restaurantInfo.sacCode
     });
-  }, [restaurantInfo.legalBusinessName, restaurantInfo.tagline, restaurantInfo.address, restaurantInfo.gstin, restaurantInfo.fssai, restaurantInfo.sacCode]);
+  }, [restaurantInfo.legalBusinessName, restaurantInfo.tagline, restaurantInfo.address, restaurantInfo.gstin, restaurantInfo.fssai, restaurantInfo.fssaiEnabled, restaurantInfo.sacCode]);
 
   const updateField = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -37,7 +39,7 @@ export default function StaffSettingsLegalPage() {
 
   const handleSave = async () => {
     setError('');
-    const requiredKeys = ['legalBusinessName', 'tagline', 'address', 'gstin', 'fssai', 'sacCode'];
+    const requiredKeys = ['legalBusinessName', 'tagline', 'address', 'gstin', 'sacCode', ...(form.fssaiEnabled ? ['fssai'] : [])];
     const safeForm = fillEmptyFields(form, restaurantInfo, requiredKeys);
     setForm(safeForm);
     setIsSaving(true);
@@ -102,14 +104,29 @@ export default function StaffSettingsLegalPage() {
               value={form.fssai}
               onChange={(e) => updateField('fssai', e.target.value)}
               placeholder="FSSAI number"
-              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              disabled={!form.fssaiEnabled}
+              className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold disabled:bg-gray-100 disabled:text-subtle-text disabled:cursor-not-allowed"
             />
           </div>
+          <label className="flex items-start gap-3 text-xs text-ink-navy cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={form.fssaiEnabled}
+              onChange={(e) => updateField('fssaiEnabled', e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-saffron-gold"
+            />
+            <span>
+              <span className="font-semibold">My restaurant has an FSSAI licence.</span>
+              <span className="block text-subtle-text">
+                Turn this off if you don&apos;t have one — FSSAI is then left off every new bill and invoice.
+              </span>
+            </span>
+          </label>
           <input
             type="text"
             value={form.sacCode}
             onChange={(e) => updateField('sacCode', e.target.value)}
-            placeholder="SAC code (e.g. 996331)"
+            placeholder="SAC / HSN code (e.g. 996331)"
             className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
           />
         </div>

@@ -6,7 +6,7 @@ const GROUPS = [
   {
     key: 'legal',
     title: 'Business & Legal',
-    description: 'Legal name, GSTIN, FSSAI, SAC code — printed on every tax invoice.',
+    description: 'Legal name, GSTIN, FSSAI (optional), SAC/HSN code — printed on every tax invoice.',
     path: '/staff/settings/legal',
     ownerOnly: true,
     live: true

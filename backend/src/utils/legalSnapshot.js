@@ -6,12 +6,14 @@
 export function legalSnapshotFrom(settings) {
   const legal = (settings && settings.legal) || {}
   const contact = (settings && settings.contact) || {}
+  const fssaiEnabled = legal.fssaiEnabled !== false
   const snapshot = {
     legalBusinessName: legal.legalBusinessName,
     tagline: legal.tagline,
     address: legal.address,
     gstin: legal.gstin,
-    fssai: legal.fssai,
+    fssai: fssaiEnabled ? legal.fssai : undefined,
+    fssaiEnabled,
     sacCode: legal.sacCode,
     primaryPhone: contact.primaryPhone,
     email: contact.email

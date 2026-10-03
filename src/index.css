@@ -130,8 +130,15 @@ html.lenis {
   line-height: 1.4;
 }
 .thermal-licences {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 8px;
   margin: 6px 0 0;
-  font-size: 8px;
+  font-size: 10px;
+}
+.thermal-licences span {
+  white-space: nowrap;
 }
 
 .thermal-title {
@@ -155,13 +162,17 @@ html.lenis {
   display: flex;
   gap: 5px;
   padding: 5px 8px;
-  border-bottom: 1px dashed #999;
+  border-top: 1px dashed #999;
+}
+.thermal-meta div:nth-child(-n+2) {
+  border-top: none;
 }
 .thermal-meta div:nth-child(odd) {
   border-right: 1px dashed #999;
 }
-.thermal-meta div:nth-last-child(-n+2) {
-  border-bottom: none;
+.thermal-meta div.thermal-meta-wide {
+  grid-column: 1 / -1;
+  border-right: none;
 }
 .thermal-meta dt {
   flex: 0 0 auto;

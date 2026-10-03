@@ -34,6 +34,16 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
     invoice.orderSource === 'Reservation' ? ' (Reserved)' :
     invoice.orderSource === 'Walk-in' ? ' (Walk-in)' :
     '';
+  // GSTIN / FSSAI / SAC-HSN line. FSSAI is optional: plenty of restaurants
+  // hold no licence, so the owner can switch it off in Settings. Anything
+  // saved before that switch existed has no flag at all - treat that as ON
+  // so older bills keep printing exactly what they always did.
+  const showFssai = restaurantInfo.fssaiEnabled !== false && Boolean(restaurantInfo.fssai);
+  const licences = [
+    restaurantInfo.gstin && { label: 'GSTIN', value: restaurantInfo.gstin },
+    showFssai && { label: 'FSSAI', value: restaurantInfo.fssai },
+    restaurantInfo.sacCode && { label: 'SAC/HSN', value: restaurantInfo.sacCode }
+  ].filter(Boolean);
 
   return (
     <section className="thermal-receipt">
@@ -42,9 +52,13 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
         <h2>{restaurantInfo.legalBusinessName.toUpperCase()}</h2>
         <p className="thermal-tagline">{restaurantInfo.tagline}</p>
         <p className="thermal-address">{restaurantInfo.address}</p>
-        <p className="thermal-licences">
-          GSTIN: {restaurantInfo.gstin} &nbsp;|&nbsp; FSSAI: {restaurantInfo.fssai} &nbsp;|&nbsp; SAC: {restaurantInfo.sacCode}
-        </p>
+        {licences.length > 0 && (
+          <p className="thermal-licences">
+            {licences.map((item) => (
+              <span key={item.label}>{item.label} - {item.value}</span>
+            ))}
+          </p>
+        )}
       </header>
 
       <p className="thermal-title">{heading}</p>
@@ -58,11 +72,8 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
         <div><dt>{invoice.tableLabel || 'Table'}:</dt><dd>{value(invoice.table)}{orderSourceSuffix}</dd></div>
         <div><dt>Date:</dt><dd>{value(invoice.date)}</dd></div>
         <div><dt>Time:</dt><dd>{value(invoice.time)}</dd></div>
-        {invoice.cashier && (
-          <div><dt>Cashier:</dt><dd>{value(invoice.cashier)}</dd></div>
-        )}
         {invoice.guest && (
-          <div><dt>Customer:</dt><dd>{value(invoice.guest)}</dd></div>
+          <div className="thermal-meta-wide"><dt>Customer:</dt><dd>{value(invoice.guest)}</dd></div>
         )}
       </dl>
 
@@ -142,6 +153,12 @@ export default function ThermalReceipt({ restaurantInfo, invoice, heading = 'TAX
             <span>Status:</span>
             <strong>{value(invoice.status)}</strong>
           </div>
+          {invoice.cashier && (
+            <div className="thermal-row">
+              <span>Cashier:</span>
+              <strong>{value(invoice.cashier)}</strong>
+            </div>
+          )}
         </section>
       )}
 

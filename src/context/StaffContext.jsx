@@ -60,6 +60,7 @@ export function StaffProvider({ children }) {
     address: "12 Alkapuri Boulevard, Vadodara, Gujarat 390007",
     gstin: "24AABCS1429B1Z8",
     fssai: "21423011000123",
+    fssaiEnabled: true,
     sacCode: "996331"
   });
 
