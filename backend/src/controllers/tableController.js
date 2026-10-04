@@ -5,6 +5,7 @@ import WaitingList from "../models/WaitingList.js"
 import Reservation from "../models/Reservation.js"
 import { generateTableToken } from "../utils/generateTableToken.js"
 import { nextBillNumber } from "../utils/nextBillNumber.js"
+import { normalizePhone } from "../utils/normalizePhone.js"
 import { releaseHeldTable } from "./reservationController.js"
 import { io } from "../index.js"
 
@@ -298,9 +299,17 @@ export const addToWaitingList = async (req, res) => {
       return res.status(400).json({ error: "Party size must be between 1 and 10 guests." })
     }
 
+    // Same rule as takeout: a phone number is exactly 10 digits. A half-typed
+    // number breaks repeat-customer matching and callbacks, so it is rejected
+    // here even if the staff screen is bypassed. Leaving it empty is allowed.
+    const cleanedPhone = phone ? normalizePhone(phone) : ""
+    if (phone && !cleanedPhone) {
+      return res.status(400).json({ error: "Phone number must be exactly 10 digits." })
+    }
+
     const entry = await WaitingList.create({
       name,
-      phone: phone || "",
+      phone: cleanedPhone,
       partySize: partySizeNum,
       notes: notes || "",
       vip: !!vip

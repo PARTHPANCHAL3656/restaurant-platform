@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStaff } from '../../context/StaffContext';
+import { cleanPhone } from '../../utils/phone';
 
 // Walk-in Waitlist — ONLY people physically standing in the lobby. Online
 // reservations never appear here; they live under Tables & Reservations.
@@ -45,7 +46,7 @@ export default function StaffGuestQueuePage() {
 
   const handleAddSubmit = (e) => {
     e.preventDefault();
-    if (!newGuestData.name.trim()) return;
+    if (!newGuestData.name.trim() || newGuestData.phone.length !== 10) return;
 
     const partySize = parseInt(newGuestData.partySize, 10);
     if (!Number.isInteger(partySize) || partySize < 1 || partySize > 10) {
@@ -140,11 +141,17 @@ export default function StaffGuestQueuePage() {
                     <label className="font-label-caps text-[9px] text-subtle-text uppercase block">Phone</label>
                     <input 
                       type="tel" 
-                      value={newGuestData.phone} 
-                      onChange={e => setNewGuestData({ ...newGuestData, phone: e.target.value })}
-                      className="w-full bg-surface-container-low border border-muted-border p-2.5 text-xs outline-none" 
+                      inputMode="numeric"
+                      autoComplete="off"
+                      placeholder="10-digit mobile number"
+                      value={newGuestData.phone}
+                      onChange={e => setNewGuestData({ ...newGuestData, phone: cleanPhone(e.target.value) })}
+                      className="w-full bg-surface-container-low border border-muted-border p-2.5 text-xs outline-none"
                       required
                     />
+                    {newGuestData.phone.length > 0 && newGuestData.phone.length < 10 && (
+                      <p className="text-[10px] text-subtle-text/70">Enter all 10 digits ({newGuestData.phone.length} of 10).</p>
+                    )}
                   </div>
                 </div>
 
@@ -169,7 +176,8 @@ export default function StaffGuestQueuePage() {
 
                 <button 
                   type="submit"
-                  className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer"
+                  disabled={newGuestData.phone.length !== 10}
+                  className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Confirm Waitlist Placement
                 </button>

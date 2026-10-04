@@ -1,7 +1,15 @@
 import axios from 'axios';
 
+// No hardcoded fallback address on purpose: a build that forgot VITE_API_URL
+// must fail loudly, not silently send orders, phone numbers and staff logins
+// to somebody else's server.
+const API_URL = import.meta.env.VITE_API_URL || '';
+if (!API_URL && typeof window !== 'undefined') {
+  console.error('VITE_API_URL is not set - this build cannot reach its backend. Set it in the host\'s environment variables and redeploy.');
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://spice-garden-tau.vercel.app',
+  baseURL: API_URL,
   timeout: 10000,
 });
 

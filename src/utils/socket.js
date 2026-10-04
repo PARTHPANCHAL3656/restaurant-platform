@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'https://spice-garden-tau.vercel.app';
+// No hardcoded fallback - see api.js. (Empty = same-origin, which fails visibly.)
+const SOCKET_URL = import.meta.env.VITE_API_URL || '';
 
 // Guard against SSR/build-time execution (Node has no `window`). Without this,
 // importing this module during the prerender script opens a real, persistent

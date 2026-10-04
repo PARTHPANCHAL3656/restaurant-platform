@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatINR } from '../../utils/currency';
+import { cleanPhone } from '../../utils/phone';
 import ReservationCard from '../../components/staff/ReservationCard';
 import { getReservationTiming, compareReservations, getMinutesUntilSlot } from '../../utils/reservationTime';
 
@@ -1027,6 +1028,68 @@ export default function StaffTablesPage() {
                 </button>
               </div>
 
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Center Modal: no phone on file - add one (10 digits) or skip, before the invoice */}
+      <AnimatePresence>
+        {showPhoneCaptureModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-ink-navy/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white border border-muted-border max-w-sm w-full p-8 shadow-2xl relative text-ink-navy text-center space-y-6"
+            >
+              <button
+                onClick={() => setShowPhoneCaptureModal(false)}
+                aria-label="Cancel"
+                className="absolute top-3 right-3 text-subtle-text hover:text-ink-navy cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+
+              <div className="space-y-3">
+                <span className="material-symbols-outlined text-saffron-gold text-4xl">call</span>
+                <h3 className="font-serif text-xl font-bold">Guest phone number</h3>
+                <p className="font-sans text-xs text-subtle-text leading-relaxed">
+                  No phone number is on file for this guest. Add it to link this visit to their customer record, or skip to continue without one.
+                </p>
+              </div>
+
+              <div className="space-y-1 text-left">
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  autoFocus
+                  placeholder="10-digit mobile number"
+                  value={billingPhoneInput}
+                  onChange={(e) => setBillingPhoneInput(cleanPhone(e.target.value))}
+                  className="w-full bg-surface-container-low border border-muted-border p-3 text-sm outline-none focus:border-saffron-gold"
+                />
+                {billingPhoneInput.length > 0 && billingPhoneInput.length < 10 && (
+                  <p className="text-[10px] text-subtle-text/70">Enter all 10 digits ({billingPhoneInput.length} of 10).</p>
+                )}
+              </div>
+
+              <div className="flex gap-4 pt-2">
+                <button
+                  onClick={() => handleConfirmGenerateInvoice()}
+                  className="flex-grow h-[56px] border border-ink-navy text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:bg-ink-navy hover:text-canvas-cream transition-all duration-300 cursor-pointer"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={() => handleConfirmGenerateInvoice(billingPhoneInput)}
+                  disabled={billingPhoneInput.length !== 10}
+                  className="flex-grow h-[56px] bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 transition-all duration-300 cursor-pointer font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Save & Generate
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

@@ -44,9 +44,21 @@ const httpServer = createServer(app)
 // If you get CORS errors after deploying, this is the first thing to check.
 // -------------------------------------------------------
 
+// Which websites may call this API (REST and live updates):
+//   FRONTEND_URL - the main frontend. ONE url, no comma. It is also used to
+//                  build the QR-code and takeout links, so it must stay a
+//                  single address.
+//   CORS_ORIGINS - optional extra frontends (e.g. the same app on Cloudflare),
+//                  comma separated: "https://spice-garden-5gd.pages.dev"
+// Trailing slashes and spaces are ignored. Both empty = nothing is allowed.
+const allowedOrigins = [process.env.FRONTEND_URL, ...(process.env.CORS_ORIGINS || "").split(",")]
+  .map((s) => (s || "").trim().replace(/\/+$/, ""))
+  .filter(Boolean)
+const corsOrigin = allowedOrigins.length ? allowedOrigins : undefined
+
 export const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL,
+    origin: corsOrigin,
     methods: ["GET", "POST", "PATCH", "DELETE"]
   }
 })
@@ -60,8 +72,8 @@ io.on("connection", (socket) => {
 
 setMenuIo(io)
 
-app.use(cors({ origin: process.env.FRONTEND_URL }))
-console.log('CORS configured for origin:', process.env.FRONTEND_URL)
+app.use(cors({ origin: corsOrigin }))
+console.log('CORS configured for origins:', allowedOrigins)
 app.use(helmet())
 app.use(express.json({ limit: "10mb" }))
 app.use(mongoSanitize())

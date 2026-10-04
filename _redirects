@@ -1,0 +1,26 @@
+# Cloudflare Pages only (Vercel ignores this file and uses vercel.json).
+#
+# For a path with no file behind it, Pages serves index.html - and here that
+# is the PRERENDERED HOME PAGE, so a deep link like /staff/login would flash
+# the home page and throw React hydration errors. These rules hand every real
+# app route the plain client shell (app-shell.html) instead.
+#
+# Routes are listed one by one on purpose. A catch-all "/*" rewrite also
+# swallows real files (JS bundles, robots.txt, favicon) on Pages, and the
+# destination has no ".html" because Pages strips it (it would loop).
+#
+# When you add a route in src/App.jsx, add it here too.
+/bill               /app-shell  200
+/cart               /app-shell  200
+/check-reservation  /app-shell  200
+/contact            /app-shell  200
+/gallery            /app-shell  200
+/menu               /app-shell  200
+/menu/*             /app-shell  200
+/order-status       /app-shell  200
+/reservation        /app-shell  200
+/reservation-success /app-shell 200
+/takeout            /app-shell  200
+/track-order        /app-shell  200
+/staff              /app-shell  200
+/staff/*            /app-shell  200

@@ -5,9 +5,12 @@ import App from './App.jsx'
 
 const container = document.getElementById('root')
 
-if (container.hasChildNodes()) {
-  // Prerendered HTML was served (currently only "/") — hydrate the
-  // existing markup instead of wiping it and rendering from scratch.
+// Only "/" is prerendered. Some hosts (Cloudflare Pages) hand the prerendered
+// home page to unknown paths as well, so the path is checked too - hydrating
+// the home markup into any other route throws hydration errors.
+if (container.hasChildNodes() && window.location.pathname === '/') {
+  // Prerendered HTML was served for "/" — hydrate the existing markup
+  // instead of wiping it and rendering from scratch.
   hydrateRoot(
     container,
     <StrictMode>
