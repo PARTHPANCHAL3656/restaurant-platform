@@ -35,6 +35,8 @@ async function resetPassword() {
   }
 
   staff.passwordHash = await bcrypt.hash(password, 10)
+  // Sign out every session this account already has open.
+  staff.tokenVersion = (staff.tokenVersion || 0) + 1
   await staff.save()
 
   console.log(`Password reset for ${staff.username} (${staff.role}).`)

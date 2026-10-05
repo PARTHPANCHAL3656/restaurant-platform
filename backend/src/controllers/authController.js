@@ -22,9 +22,9 @@ export const staffLogin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { staffId: staff._id, username: staff.username, name: staff.name, role: staff.role },
+      { staffId: staff._id, username: staff.username, name: staff.name, role: staff.role, tv: staff.tokenVersion || 0 },
       process.env.JWT_SECRET,
-      { expiresIn: "12h" }
+      { expiresIn: "12h", algorithm: "HS256" }
     )
 
     res.json({ token, name: staff.name, role: staff.role })

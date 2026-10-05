@@ -193,6 +193,9 @@ export const resetStaffPassword = async (req, res) => {
     if (!staff) return res.status(404).json({ error: "Staff account not found." })
 
     staff.passwordHash = await bcrypt.hash(password, 10)
+    // A reset usually means the old password was lost or compromised, so
+    // sign out every session this account already has open.
+    staff.tokenVersion = (staff.tokenVersion || 0) + 1
     await staff.save()
     // Logs that a reset happened — never the new password itself.
     await logStaffChange(req.staff, [`Password reset for ${staff.name}`])

@@ -30,6 +30,8 @@ export async function runEmergencyPasswordResetIfConfigured() {
     }
 
     staff.passwordHash = await bcrypt.hash(password, 10)
+    // Sign out every session this account already has open.
+    staff.tokenVersion = (staff.tokenVersion || 0) + 1
     await staff.save()
 
     console.log(`[emergency-reset] Password reset for "${staff.username}" (${staff.role}). Remove EMERGENCY_RESET_USERNAME/EMERGENCY_RESET_PASSWORD from Render's Environment tab now.`)
