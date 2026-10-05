@@ -70,6 +70,10 @@ api.interceptors.response.use(
           // 401 means the token itself is invalid/expired.
           if (status === 401) {
             window.dispatchEvent(new Event('auth-session-expired'));
+          } else if (status === 403) {
+            // A 403 on a staff route usually means this account's role
+            // changed after login. Ask the app to re-check who we are.
+            window.dispatchEvent(new Event('staff-permission-denied'));
           }
         } else {
           const isClosed = data?.status === 'closed' || data?.sessionEnded === true;

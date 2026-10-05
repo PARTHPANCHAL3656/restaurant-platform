@@ -5,35 +5,6 @@ import { formatINR } from '../utils/currency';
 
 const StaffContext = createContext();
 
-const MOCK_TABLES = [
-  { id: 'T-01', seats: 2, status: 'available', guestName: '', arrivalTime: '', billTotal: 0, notes: '', items: [], qrId: 'QR-01', qrImage: 'qr/table-01.png', qrRoute: '/menu?table=T01', waiter: 'Rahul Sharma', guestCount: 0 },
-  { id: 'T-02', seats: 4, status: 'occupied', guestName: 'Julian Alvarez', arrivalTime: '19:15', billTotal: 96.00, notes: 'No gluten. Prefers quiet corner table.', items: [{ name: 'Saffron Infused Scallops', qty: 2, price: 48.00 }], qrId: 'QR-02', qrImage: 'qr/table-02.png', qrRoute: '/menu?table=T02', waiter: 'Rahul Sharma', guestCount: 2 },
-  { id: 'T-03', seats: 2, status: 'reserved', guestName: 'Aria Stark', arrivalTime: '19:30', billTotal: 0, notes: 'Anniversary celebration. Requesting champagne.', items: [], qrId: 'QR-03', qrImage: 'qr/table-03.png', qrRoute: '/menu?table=T03', waiter: 'Rahul Sharma', guestCount: 2 },
-  { id: 'T-04', seats: 4, status: 'occupied', guestName: 'Elena Vance', arrivalTime: '20:00', billTotal: 611.00, notes: 'Frequent VIP diner. Walnuts allergy.', items: [{ name: 'Malai Truffle Paneer', qty: 2, price: 26.00 }, { name: 'Royal Makhani Murgh', qty: 1, price: 32.00 }], qrId: 'QR-04', qrImage: 'qr/table-04.png', qrRoute: '/menu?table=T04', waiter: 'Rahul Sharma', guestCount: 4 },
-  { id: 'T-05', seats: 4, status: 'cleaning', guestName: '', arrivalTime: '', billTotal: 0, notes: '', items: [], qrId: 'QR-05', qrImage: 'qr/table-05.png', qrRoute: '/menu?table=T05', waiter: 'Rahul Sharma', guestCount: 0 },
-  { id: 'T-06', seats: 6, status: 'available', guestName: '', arrivalTime: '', billTotal: 0, notes: '', items: [], qrId: 'QR-06', qrImage: 'qr/table-06.png', qrRoute: '/menu?table=T06', waiter: 'Rahul Sharma', guestCount: 0 },
-  { id: 'T-14', seats: 4, status: 'occupied', guestName: 'Garden Terrace Guest', arrivalTime: '20:30', billTotal: 0, notes: '', items: [], qrId: 'QR-14', qrImage: 'qr/table-14.png', qrRoute: '/menu?table=T14', waiter: 'Rahul Sharma', guestCount: 2 }
-];
-
-const MOCK_RESERVATIONS = [
-  { id: 'res-1', time: '6:30 PM', guest: 'Rahul Sharma', partySize: 4, table: 'T-03', vip: false, phone: '+91 98250 10901', status: 'confirmed' },
-  { id: 'res-2', time: '7:00 PM', guest: 'Priya Mehta', partySize: 2, table: 'T-06', vip: false, phone: '+91 98250 10902', status: 'confirmed' },
-  { id: 'res-3', time: '7:30 PM', guest: 'Aarav Kapoor', partySize: 3, table: 'T-08', vip: true, phone: '+91 98250 10903', status: 'confirmed' }
-];
-
-const MOCK_ORDERS = [
-  { id: 'ORD-402', table: 'T-03', section: 'Main Hall', orderType: 'dine-in', time: '4 mins ago', status: 'new', items: [{ name: 'Malai Truffle Paneer', qty: 2, price: 26.00 }, { name: 'Artisanal Garlic Naan', qty: 3, price: 6.00 }], notes: 'Walnut allergy warning. Make starters medium spicy.' },
-  { id: 'ORD-398', table: 'T-02', section: 'Main Hall', orderType: 'dine-in', time: '12 mins ago', status: 'preparing', items: [{ name: 'Royal Makhani Murgh', qty: 1, price: 32.00 }, { name: 'Nawabi Mutton Biryani', qty: 2, price: 38.00 }], notes: 'Serve extra raita with biryani.' },
-  { id: 'ORD-391', table: 'T-04', section: 'Window Alcove', orderType: 'dine-in', time: '22 mins ago', status: 'ready', items: [{ name: 'Saffron Infused Scallops', qty: 3, price: 24.00 }], notes: 'VIP customer. Serve immediately.' },
-  { id: 'ORD-TA1', table: 'TA-1041', section: 'Takeout', orderType: 'takeout', orderNumber: 'TA-1041', guestName: 'Rohan Mehta', guestPhone: '9825011223', pickupTime: 'ASAP', time: '6 mins ago', status: 'new', items: [{ name: 'Dal Makhani', qty: 1, price: 420 }, { name: 'Garlic Naan', qty: 2, price: 30 }], notes: 'Less spicy please.' }
-];
-
-const MOCK_QUEUE = [
-  { id: 'Q-01', name: 'Julianne Moore', partySize: 2, waitTime: '35 Mins', phone: '+1 (555) 019-2834', vip: true, notes: 'Prefers window alcove table.', status: 'Waiting' },
-  { id: 'Q-02', name: 'Marcus Aurelius', partySize: 6, waitTime: '15 Mins', phone: '+1 (555) 042-9988', vip: true, notes: 'Celebrating birthday. Requesting Chef\'s Table.', status: 'Waiting' },
-  { id: 'Q-03', name: 'Diana Prince', partySize: 4, waitTime: '8 Mins', phone: '+1 (555) 088-7711', vip: false, notes: 'Need high-chair for toddler.', status: 'Waiting' }
-];
-
 export function useStaff() {
   const context = useContext(StaffContext);
   if (!context) {
@@ -579,13 +550,8 @@ export function StaffProvider({ children }) {
   const isFetchingRef = useRef(false);
   const isFetchingPublicRef = useRef(false);
 
-  // Recent Activity Timeline state (Keep mock)
-  const [activities, setActivities] = useState([
-    { id: 'act-1', title: 'Table T-02 ordered', detail: 'Saffron Infused Scallops ordered by Julian Alvarez', time: '7 mins ago', icon: 'restaurant', link: '/staff/orders' },
-    { id: 'act-2', title: 'Invoice INV-042 generated', detail: 'Table T-04 final invoice issued for Elena Vance', time: '12 mins ago', icon: 'payments', link: '/staff/billing' },
-    { id: 'act-3', title: 'Guest checked into Garden Terrace', detail: 'Table T-04 marked active and occupied', time: '22 mins ago', icon: 'check_circle', link: '/staff/tables' },
-    { id: 'act-4', title: 'Nawabi Mutton Biryani updated', detail: 'Menu item price set to ₹780 by Rahul Sharma', time: '1 hour ago', icon: 'edit_note', link: '/staff/menu' }
-  ]);
+  // Recent Activity Timeline state — starts empty and fills from live events
+  const [activities, setActivities] = useState([]);
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -619,7 +585,7 @@ export function StaffProvider({ children }) {
     setIsAuthenticated(true);
   }, []);
 
-  useEffect(() => {
+    useEffect(() => {
     const handleSessionExpired = () => {
       logoutStaff();
       alert('Your session has expired. Please log in again.');
@@ -629,6 +595,47 @@ export function StaffProvider({ children }) {
       window.removeEventListener('auth-session-expired', handleSessionExpired);
     };
   }, [logoutStaff]);
+
+  // The role shown in the sidebar and used by every page's access checks is
+  // cached in sessionStorage at login. Ask the server who we are now — on
+  // load, when the tab regains focus, once a minute, and right after any 403
+  // — and if the role or name changed, update the cache and reload to the
+  // dashboard so every page re-renders with the new permissions.
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    let checking = false;
+    const refreshIdentity = async () => {
+      if (checking) return;
+      checking = true;
+      try {
+        const res = await api.get('/api/auth/me');
+        const { name, role } = res.data || {};
+        if (!role) return;
+        const roleChanged = sessionStorage.getItem('staffRole') !== role;
+        const nameChanged = sessionStorage.getItem('staffName') !== name;
+        if (roleChanged || nameChanged) {
+          sessionStorage.setItem('staffRole', role);
+          sessionStorage.setItem('staffName', name);
+          window.location.assign('/staff/dashboard');
+        }
+      } catch (err) {
+        // 401 is handled globally (it logs out). Anything else: try again later.
+      } finally {
+        checking = false;
+      }
+    };
+
+    refreshIdentity();
+    const interval = setInterval(refreshIdentity, 60000);
+    window.addEventListener('focus', refreshIdentity);
+    window.addEventListener('staff-permission-denied', refreshIdentity);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', refreshIdentity);
+      window.removeEventListener('staff-permission-denied', refreshIdentity);
+    };
+  }, [isAuthenticated]);
 
   // Data mapping helper functions
   const mapBackendOrder = useCallback((o) => {
@@ -877,17 +884,6 @@ export function StaffProvider({ children }) {
     isFetchingRef.current = true;
     setIsError(false);
 
-    const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
-    if (isMock) {
-      setTables(prev => prev.length ? prev : MOCK_TABLES);
-      setReservations(prev => prev.length ? prev : MOCK_RESERVATIONS);
-      setOrders(prev => prev.length ? prev : MOCK_ORDERS);
-      setQueue(prev => prev.length ? prev : MOCK_QUEUE);
-      setIsDataLoaded(true);
-      isFetchingRef.current = false;
-      return;
-    }
-
     try {
       const staffRole = sessionStorage.getItem('staffRole');
       const canViewInvoices = staffRole === 'OWNER' || staffRole === 'MANAGER';
@@ -897,7 +893,10 @@ export function StaffProvider({ children }) {
         fetchReservations(),
         fetchOrders(),
         fetchQueue(),
-        canViewInvoices ? fetchInvoices() : Promise.resolve([]),
+        // Invoices are the only owner/manager-gated source here. If this
+        // account was just demoted, a 403 on this one call must not take
+        // the whole dashboard down; the identity check will fix the role.
+        canViewInvoices ? fetchInvoices().catch(() => []) : Promise.resolve([]),
       ]);
 
       const mappedOrders = rawOrders.map(mapBackendOrder);
@@ -908,11 +907,9 @@ export function StaffProvider({ children }) {
       setInvoices(rawInvoices.map(mapBackendInvoice));
       setIsDataLoaded(true);
     } catch (err) {
-      console.warn('Backend server is offline or failed. Falling back to local mock data.', err);
-      setTables(prev => prev.length ? prev : MOCK_TABLES);
-      setReservations(prev => prev.length ? prev : MOCK_RESERVATIONS);
-      setOrders(prev => prev.length ? prev : MOCK_ORDERS);
-      setQueue(prev => prev.length ? prev : MOCK_QUEUE);
+      // Never substitute made-up data for real data. Keep whatever was last
+      // loaded (or nothing) and flag the error.
+      console.warn('Could not load staff data from the server.', err);
       setIsError(true);
     } finally {
       isFetchingRef.current = false;
