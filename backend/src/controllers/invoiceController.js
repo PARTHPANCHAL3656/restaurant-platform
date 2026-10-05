@@ -123,7 +123,8 @@ export const generateInvoiceForTable = async (req, res) => {
 
     // The order is already Served (checked above), so its status is not
     // touched here - only the invoice is created.
-    io.emit("invoice:generated", invoice)
+    // Signal only — the full invoice has customer details (see orderController).
+    io.emit("invoice:generated", { invoiceId: invoice._id })
     io.emit("order:updated", { orderId: order._id, tableNumber: order.tableNumber, status: order.status })
 
     res.status(201).json(invoice)
@@ -269,7 +270,7 @@ export const updateInvoiceStatus = async (req, res) => {
           { upsert: true, new: true }
         )
       }
-      io.emit("invoice:paid", invoice)
+      io.to("staff").emit("invoice:paid", invoice)
 
       // A takeout order has no table to release, so it had no equivalent to
       // "table:released" — the only event that ends a customer's browser
@@ -282,7 +283,7 @@ export const updateInvoiceStatus = async (req, res) => {
         io.emit("takeout:sessionEnded", { sessionId: invoice.sessionId, invoiceId: invoice._id })
       }
     } else {
-      io.emit("invoice:updated", invoice)
+      io.to("staff").emit("invoice:updated", invoice)
     }
 
     res.json(invoice)

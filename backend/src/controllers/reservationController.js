@@ -104,8 +104,9 @@ export const createReservation = async (req, res) => {
       status: "pending"
     })
 
-    // Notify staff dashboard of new reservation
-    io.emit("reservation:new", reservation)
+    // Notify staff dashboard of new reservation — staff room only, because
+    // this payload carries the guest's name and phone number.
+    io.to("staff").emit("reservation:new", reservation)
 
     res.status(201).json({
       message: `Request received — reference ${reservation.referenceCode}. We'll confirm within 2 hours.`,
@@ -187,7 +188,7 @@ export const updateReservationStatus = async (req, res) => {
     reservation.status = status
     await reservation.save()
 
-    io.emit("reservation:updated", reservation)
+    io.to("staff").emit("reservation:updated", reservation)
 
     res.json(reservation)
   } catch (err) {
@@ -202,7 +203,7 @@ export const deleteReservation = async (req, res) => {
   try {
     const reservation = await Reservation.findByIdAndDelete(req.params.id)
     if (reservation) {
-      io.emit("reservation:updated", { _id: req.params.id, deleted: true })
+      io.to("staff").emit("reservation:updated", { _id: req.params.id, deleted: true })
     }
     res.json({ message: "Reservation deleted." })
   } catch (err) {

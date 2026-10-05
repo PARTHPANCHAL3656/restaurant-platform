@@ -75,7 +75,8 @@ export const addItems = async (req, res) => {
       })
     }
 
-    io.emit("order:new", order)
+    // Full order (items, notes, takeout guest details) — staff room only.
+    io.to("staff").emit("order:new", order)
     io.emit("order:updated", {
       orderId: order._id,
       tableNumber: order.tableNumber,
@@ -223,7 +224,9 @@ export const updateOrderStatus = async (req, res) => {
           generatedBy: req.staff.name
         })
 
-        io.emit("invoice:generated", generatedInvoice)
+        // Customers' bill pages only use this as a "refetch now" signal, so
+        // send the id and nothing else — the full invoice has customer details.
+        io.emit("invoice:generated", { invoiceId: generatedInvoice._id })
       }
     }
 

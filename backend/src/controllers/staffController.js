@@ -27,6 +27,13 @@ async function logStaffChange(actor, changes) {
   io.emit("settings:updated")
 }
 
+// Live-update sockets stay in the "staff" room until they disconnect, so
+// removing access in the database isn't enough on its own — also pull the
+// account's open sockets out of the room so it stops receiving staff events.
+function revokeStaffSockets(staffId) {
+  io.in(`staff:${staffId}`).socketsLeave(["staff", `staff:${staffId}`])
+}
+
 // GET /api/staff
 // Owner-only. Never returns passwordHash.
 export const listStaff = async (req, res) => {
@@ -135,6 +142,9 @@ export const updateStaff = async (req, res) => {
     }
 
     await staff.save()
+    // Deactivating cuts the account off from live staff events immediately,
+    // not whenever its tab happens to close.
+    if (active === false) revokeStaffSockets(staff._id)
     await logStaffChange(req.staff, changes)
 
     const { passwordHash: _omit, ...safeStaff } = staff.toObject()
@@ -167,6 +177,7 @@ export const deleteStaff = async (req, res) => {
     }
 
     await Staff.deleteOne({ _id: req.params.id })
+    revokeStaffSockets(staff._id)
     await logStaffChange(req.staff, [`Deleted account "${staff.username}" — ${staff.name} (${staff.role})`])
 
     res.json({ message: "Account deleted." })
@@ -197,6 +208,7 @@ export const resetStaffPassword = async (req, res) => {
     // sign out every session this account already has open.
     staff.tokenVersion = (staff.tokenVersion || 0) + 1
     await staff.save()
+    revokeStaffSockets(staff._id)
     // Logs that a reset happened — never the new password itself.
     await logStaffChange(req.staff, [`Password reset for ${staff.name}`])
 

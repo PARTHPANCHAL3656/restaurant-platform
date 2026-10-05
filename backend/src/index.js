@@ -1,9 +1,11 @@
 import express from "express"
 import { createServer } from "http"
 import { Server } from "socket.io"
+import jwt from "jsonwebtoken"
 import cors from "cors"
 import dotenv from "dotenv"
 import connectDB from "./config/db.js"
+import Staff from "./models/Staff.js"
 import helmet from "helmet"
 import mongoSanitize from "express-mongo-sanitize"
 import rateLimit from "express-rate-limit"
@@ -65,6 +67,23 @@ export const io = new Server(httpServer, {
 
 io.on("connection", (socket) => {
   console.log(`Socket connected: ${socket.id}`)
+
+  // Every browser can connect, but only verified staff get into the "staff"
+  // room — the only audience for events that carry customer details. A
+  // dashboard proves who it is by sending its JWT after connecting; the
+  // checks mirror staffAuth (valid signature, account exists, still active,
+  // not signed out by a password reset).
+  socket.on("staff:join", async (token) => {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] })
+      const staff = await Staff.findById(decoded.staffId).select("active tokenVersion")
+      if (!staff || !staff.active || (decoded.tv ?? 0) !== (staff.tokenVersion ?? 0)) return
+      socket.join(["staff", `staff:${staff._id}`])
+    } catch (err) {
+      // Bad or expired token: stay out of the room, say nothing.
+    }
+  })
+
   socket.on("disconnect", () => {
     console.log(`Socket disconnected: ${socket.id}`)
   })

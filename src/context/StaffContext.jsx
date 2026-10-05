@@ -932,6 +932,25 @@ export function StaffProvider({ children }) {
   // Calls loadStaffData which has the race-condition guard built in.
   const loadAllData = useCallback(() => loadStaffData(), [loadStaffData]);
 
+  // Join the server's "staff" room so events that carry customer details
+  // reach this dashboard. Runs on login, and again on every reconnect (a
+  // reconnect is a brand-new socket with no room membership). Logging out
+  // already disconnects and reconnects the socket, which drops the room.
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    const joinStaffRoom = () => {
+      const token = sessionStorage.getItem('staffToken');
+      if (token) socket.emit('staff:join', token);
+    };
+
+    if (socket.connected) joinStaffRoom();
+    socket.on('connect', joinStaffRoom);
+    return () => {
+      socket.off('connect', joinStaffRoom);
+    };
+  }, [isAuthenticated]);
+
   // Live Socket Updates
   useEffect(() => {
     const handleTableUpdate = () => {
