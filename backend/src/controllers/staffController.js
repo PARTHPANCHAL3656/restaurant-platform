@@ -10,7 +10,7 @@ const MAX_AUDIT_LOG_ENTRIES = 50
 // there's one unified audit trail instead of a second one staff has to
 // know to look in a different place for. Never call this with the
 // actual password value — only ever the fact that a reset happened.
-async function logStaffChange(actor, changes) {
+export async function logStaffChange(actor, changes) {
   if (!changes.length) return
   const settings = await Settings.getSingleton()
   settings.auditLog.push({
@@ -30,7 +30,7 @@ async function logStaffChange(actor, changes) {
 // Live-update sockets stay in the "staff" room until they disconnect, so
 // removing access in the database isn't enough on its own — also pull the
 // account's open sockets out of the room so it stops receiving staff events.
-function revokeStaffSockets(staffId) {
+export function revokeStaffSockets(staffId) {
   io.in(`staff:${staffId}`).socketsLeave(["staff", `staff:${staffId}`])
 }
 

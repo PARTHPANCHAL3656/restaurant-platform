@@ -106,9 +106,9 @@ app.use(mongoSanitize())
 // -------------------------------------------------------
 
 // After
-// Staff login: only ~25 people ever hit this, so this stays tight —
-// it's brute-force protection, not a capacity limit.
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 })
+// Staff-auth rate limits live in routes/auth.js, applied per route. They
+// can't share one budget across the whole /api/auth prefix: every open
+// dashboard polls /api/auth/me, which would eat the login allowance.
 
 // Customer-facing intake (queue join, phone capture, reservation submit):
 // sized generously since a full restaurant on shared WiFi can look like
@@ -121,7 +121,7 @@ const publicIntakeLimiter = rateLimit({
   message: { error: "Too many requests, please try again in a few minutes." }
 })
 
-app.use("/api/auth", authLimiter, authRoutes)
+app.use("/api/auth", authRoutes)
 app.use("/api/tables", publicIntakeLimiter, tableRoutes)
 app.use("/api/orders", orderRoutes)
 app.use("/api/takeout", takeoutRoutes)
