@@ -16,7 +16,12 @@ const staffSchema = new mongoose.Schema({
   // Bumped whenever the password is reset. Every issued JWT carries the
   // version it was signed with, so a bump instantly invalidates all of
   // that account's existing sessions.
-  tokenVersion: { type: Number, default: 0 }
+  tokenVersion: { type: Number, default: 0 },
+  // Owner-only emergency access: SHA-256 hashes of one-time recovery codes
+  // (never the codes themselves). A used code is removed from the list.
+  // Hidden from every query unless asked for by name, so it can't leak
+  // through the staff list.
+  recoveryCodes: { type: [String], default: [], select: false }
 }, { timestamps: true })
 
 export default mongoose.model("Staff", staffSchema)

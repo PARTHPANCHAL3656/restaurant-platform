@@ -61,8 +61,13 @@ api.interceptors.response.use(
       
       message = data?.error || data?.message || `Error ${status}: ${error.response.statusText}`;
 
+      // A wrong password on the login or recovery form is a 401 too, but it
+      // isn't an expired session — let the form show its own error instead.
+      const requestUrl = error.config?.url || '';
+      const isAuthAttempt = requestUrl.includes('/api/auth/login') || requestUrl.includes('/api/auth/recover');
+
       // JWT Expired / Unauthorized - Notify application based on route context
-      if (status === 401 || status === 403) {
+      if ((status === 401 || status === 403) && !isAuthAttempt) {
         const isStaffRoute = window.location.pathname.startsWith('/staff');
         if (isStaffRoute) {
           // 403 means a valid token without permission for this one

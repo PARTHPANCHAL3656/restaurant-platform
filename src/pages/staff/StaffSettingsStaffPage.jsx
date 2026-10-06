@@ -50,6 +50,13 @@ export default function StaffSettingsStaffPage() {
   const [pwSaved, setPwSaved] = useState('');
   const [isChangingPw, setIsChangingPw] = useState(false);
 
+  const [recoveryRemaining, setRecoveryRemaining] = useState(null);
+  const [recoveryPassword, setRecoveryPassword] = useState('');
+  const [recoveryError, setRecoveryError] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [newCodes, setNewCodes] = useState(null);
+  const [codesCopied, setCodesCopied] = useState(false);
+
   const loadStaff = () => {
     setIsLoading(true);
     api.get('/api/staff')
@@ -170,6 +177,60 @@ export default function StaffSettingsStaffPage() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const loadRecoveryStatus = () => {
+    api.get('/api/auth/recovery-codes')
+      .then(res => setRecoveryRemaining(res.data.remaining))
+      .catch(() => setRecoveryRemaining(null));
+  };
+
+  useEffect(() => {
+    if (isOwner) loadRecoveryStatus();
+  }, [isOwner]);
+
+  const handleGenerateCodes = async () => {
+    setRecoveryError('');
+    if (!recoveryPassword) {
+      setRecoveryError('Enter your current password to generate codes.');
+      return;
+    }
+    if (recoveryRemaining > 0 && !window.confirm('This replaces your existing recovery codes — the old ones stop working. Continue?')) {
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const res = await api.post('/api/auth/recovery-codes', { currentPassword: recoveryPassword });
+      setNewCodes(res.data.codes);
+      setCodesCopied(false);
+      setRecoveryPassword('');
+      setRecoveryRemaining(res.data.codes.length);
+    } catch (err) {
+      setRecoveryError(err.message || 'Could not generate codes.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleCopyCodes = async () => {
+    try {
+      await navigator.clipboard.writeText(newCodes.join('\n'));
+      setCodesCopied(true);
+    } catch {
+      setCodesCopied(false);
+    }
+  };
+
+  const handlePrintCodes = () => {
+    const w = window.open('', '_blank', 'width=480,height=640');
+    if (!w) return;
+    w.document.write(
+      '<pre style="font:18px/2 monospace">Spice Garden — Owner recovery codes\n\n' +
+      newCodes.join('\n') +
+      '\n\nEach code works once. Keep this sheet somewhere safe.</pre>'
+    );
+    w.document.close();
+    w.print();
   };
 
   const handleChangePassword = async () => {
@@ -304,6 +365,74 @@ export default function StaffSettingsStaffPage() {
         >
           {isChangingPw ? 'Changing...' : 'Change Password'}
         </button>
+      </div>
+
+      {/* Recovery Codes */}
+      <div className="bg-white border border-muted-border p-6 mt-6">
+        <h2 className="font-serif text-xl text-ink-navy font-semibold mb-1">Recovery Codes</h2>
+        <p className="text-xs text-subtle-text mb-5">
+          If you forget your password and no other Owner can reset it, one of these codes gets you back in from the login screen's "Reset Access" link. Each code works once. Print them and keep the sheet somewhere safe — anyone holding a code and your username can take over this account.
+        </p>
+
+        {recoveryRemaining !== null && (
+          <p className={`text-sm mb-4 ${recoveryRemaining === 0 ? 'text-red-600' : 'text-ink-navy'}`}>
+            {recoveryRemaining === 0
+              ? 'You have no recovery codes. Generate a set now.'
+              : `${recoveryRemaining} unused recovery code${recoveryRemaining === 1 ? '' : 's'} left.`}
+          </p>
+        )}
+
+        {newCodes ? (
+          <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-sm bg-gray-50 border border-muted-border p-4">
+              {newCodes.map((c) => <span key={c}>{c}</span>)}
+            </div>
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2 mt-4">
+              This is the only time these codes are shown. Print or copy them now.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
+              <button
+                onClick={handlePrintCodes}
+                className="px-4 h-10 text-xs uppercase tracking-widest border border-muted-border text-ink-navy hover:border-saffron-gold cursor-pointer"
+              >
+                Print
+              </button>
+              <button
+                onClick={handleCopyCodes}
+                className="px-4 h-10 text-xs uppercase tracking-widest border border-muted-border text-ink-navy hover:border-saffron-gold cursor-pointer"
+              >
+                {codesCopied ? 'Copied' : 'Copy'}
+              </button>
+              <button
+                onClick={() => { setNewCodes(null); setCodesCopied(false); }}
+                className="px-4 h-10 text-xs uppercase tracking-widest border border-muted-border text-ink-navy hover:border-saffron-gold cursor-pointer"
+              >
+                I've saved them
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <input
+              type="password"
+              value={recoveryPassword}
+              onChange={(e) => setRecoveryPassword(e.target.value)}
+              placeholder="Current password"
+              autoComplete="current-password"
+              className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+            />
+            {recoveryError && (
+              <p className="text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2 mt-4">{recoveryError}</p>
+            )}
+            <button
+              onClick={handleGenerateCodes}
+              disabled={isGenerating}
+              className="w-full mt-5 bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[48px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isGenerating ? 'Generating...' : (recoveryRemaining > 0 ? 'Generate New Codes' : 'Generate Recovery Codes')}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Add Account */}

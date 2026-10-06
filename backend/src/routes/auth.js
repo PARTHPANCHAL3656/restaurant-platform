@@ -1,7 +1,8 @@
 import express from "express"
 import rateLimit from "express-rate-limit"
-import { staffLogin, changePassword } from "../controllers/authController.js"
+import { staffLogin, changePassword, getRecoveryStatus, generateRecoveryCodes, recoverAccess } from "../controllers/authController.js"
 import staffAuth from "../middleware/auth.js"
+import { requireRole } from "../middleware/roleCheck.js"
 
 const router = express.Router()
 
@@ -28,6 +29,18 @@ const passwordChangeLimiter = rateLimit({
   message: { error: "Too many failed attempts. Please try again in a few minutes." }
 })
 
+// The public "I'm locked out" form: 5 failed tries per hour per address.
+// The codes carry ~80 bits of randomness, so guessing is hopeless anyway —
+// this just keeps the endpoint from being a free punching bag.
+const recoverLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many failed recovery attempts. Please try again in an hour." }
+})
+
 // POST /api/auth/login
 router.post("/login", loginLimiter, staffLogin)
 
@@ -41,5 +54,12 @@ router.get("/me", staffAuth, (req, res) => {
 
 // POST /api/auth/change-password — any signed-in account, current password required
 router.post("/change-password", staffAuth, passwordChangeLimiter, changePassword)
+
+// Owner recovery codes — status and (re)generation need an Owner session
+router.get("/recovery-codes", staffAuth, requireRole("OWNER"), getRecoveryStatus)
+router.post("/recovery-codes", staffAuth, requireRole("OWNER"), passwordChangeLimiter, generateRecoveryCodes)
+
+// POST /api/auth/recover — public, uses a recovery code instead of a session
+router.post("/recover", recoverLimiter, recoverAccess)
 
 export default router

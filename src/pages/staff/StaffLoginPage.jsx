@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StaffLogo from '../../components/staff/StaffLogo';
+import StaffRecoverModal from '../../components/staff/StaffRecoverModal';
 import api from '../../utils/api';
 import { useStaff } from '../../context/StaffContext';
 
@@ -13,6 +14,7 @@ export default function StaffLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showRecover, setShowRecover] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,6 +60,19 @@ export default function StaffLoginPage() {
 
   return (
     <div className="relative min-h-screen bg-midnight-black text-canvas-cream flex items-center justify-center overflow-hidden">
+
+      {showRecover && (
+        <StaffRecoverModal
+          initialUsername={username}
+          onClose={() => setShowRecover(false)}
+          onDone={(doneUsername) => {
+            setShowRecover(false);
+            setUsername(doneUsername);
+            setPassword('');
+            setError('');
+          }}
+        />
+      )}
       
       {/* Background Image Panel (Fidelity from Stitch) */}
       <div className="absolute inset-0 z-0 overflow-hidden select-none pointer-events-none">
@@ -152,7 +167,7 @@ export default function StaffLoginPage() {
               </label>
               <a 
                 href="#" 
-                onClick={(e) => { e.preventDefault(); setError('Contact administration to reset your portal password.'); }}
+                onClick={(e) => { e.preventDefault(); setShowRecover(true); }}
                 className="font-label-caps text-[10px] text-canvas-cream/60 uppercase tracking-widest hover:text-saffron-gold transition-colors border-b border-transparent hover:border-saffron-gold/50 pb-0.5"
               >
                 Reset Access
