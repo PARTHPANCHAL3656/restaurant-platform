@@ -46,13 +46,18 @@ export default function StaffDashboardPage() {
   const avgBill = paidInvoices.length > 0 ? paidInvoices.reduce((sum, inv) => sum + inv.amount, 0) / paidInvoices.length : 0;
   const diningSessions = occupiedTables + completedBills;
 
+  // Same boundaries as the sidebar and the server: billing and the menu
+  // catalog are Owner/Manager only, so Staff don't get shortcuts to them.
+  const staffRole = sessionStorage.getItem('staffRole');
+  const canManageMoney = staffRole === 'OWNER' || staffRole === 'MANAGER';
+
   const quickActions = [
     { name: 'Reserve Table', icon: 'add_circle', path: '/staff/tables' },
     { name: 'Manage Orders', icon: 'receipt_long', path: '/staff/orders' },
-    { name: 'Settle Payments', icon: 'payments', path: '/staff/billing' },
+    { name: 'Settle Payments', icon: 'payments', path: '/staff/billing', managerOnly: true },
     { name: 'Guest Queue', icon: 'hourglass_empty', path: '/staff/guest-queue' },
-    { name: 'Manage Catalog', icon: 'restaurant_menu', path: '/staff/menu' }
-  ];
+    { name: 'Manage Catalog', icon: 'restaurant_menu', path: '/staff/menu', managerOnly: true }
+  ].filter(action => canManageMoney || !action.managerOnly);
 
   return (
     <div className="px-4 md:px-6 lg:px-12 py-6 md:py-8 space-y-8 md:space-y-10 max-w-container-max mx-auto">
@@ -150,7 +155,8 @@ export default function StaffDashboardPage() {
 
             </div>
 
-            {/* Revenue */}
+            {/* Revenue — Owner/Manager only; Staff can't load invoices, so it would only ever read ₹0 */}
+            {canManageMoney && (
             <div 
               onClick={() => navigate('/staff/billing')}
               className="bg-canvas-cream border border-saffron-gold/15 p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between cursor-pointer"
@@ -193,6 +199,7 @@ export default function StaffDashboardPage() {
                 />
               </div>
             </div>
+            )}
 
           </div>
         </div>

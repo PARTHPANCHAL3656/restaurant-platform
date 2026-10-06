@@ -5,6 +5,7 @@ import { CartProvider, useCart } from './context/CartContext';
 import { StaffProvider } from './context/StaffContext';
 import DesktopSidebar from './components/DesktopSidebar';
 import MobileHeader from './components/MobileHeader';
+import RequireRole from './components/staff/RequireRole';
 // Eager imports: both are unconditionally mounted in AppLayout on every
 // route (just hidden via isOpen=false) and are tiny (~1-2KB gzipped each),
 // so lazy-loading them buys nothing. It also removes them as a source of
@@ -171,14 +172,14 @@ function MainAppRouter() {
           <Route path="/staff/login" element={<StaffLoginPage />} />
           <Route element={<StaffLayout />}>
             <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
-            <Route path="/staff/analytics" element={<StaffAnalyticsPage />} />
+            <Route path="/staff/analytics" element={<RequireRole roles={['OWNER', 'MANAGER']}><StaffAnalyticsPage /></RequireRole>} />
             <Route path="/staff/tables" element={<StaffTablesPage />} />
             <Route path="/staff/orders" element={<StaffOrdersPage />} />
             <Route path="/staff/takeaway" element={<StaffTakeawayPage />} />
-            <Route path="/staff/billing" element={<StaffBillingPage />} />
+            <Route path="/staff/billing" element={<RequireRole roles={['OWNER', 'MANAGER']}><StaffBillingPage /></RequireRole>} />
             <Route path="/staff/guest-queue" element={<StaffGuestQueuePage />} />
-            <Route path="/staff/menu" element={<StaffMenuPage />} />
-            <Route path="/staff/settings" element={<StaffSettingsPage />} />
+            <Route path="/staff/menu" element={<RequireRole roles={['OWNER', 'MANAGER']}><StaffMenuPage /></RequireRole>} />
+            <Route path="/staff/settings" element={<RequireRole roles={['OWNER', 'MANAGER']}><StaffSettingsPage /></RequireRole>} />
             <Route path="/staff/settings/legal" element={<StaffSettingsLegalPage />} />
             <Route path="/staff/settings/operations" element={<StaffSettingsOperationsPage />} />
             <Route path="/staff/settings/contact" element={<StaffSettingsContactPage />} />

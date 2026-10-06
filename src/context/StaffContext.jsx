@@ -548,6 +548,7 @@ export function StaffProvider({ children }) {
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [isError, setIsError] = useState(false);
   const isFetchingRef = useRef(false);
+  const reloadQueuedRef = useRef(false);
   const isFetchingPublicRef = useRef(false);
 
   // Recent Activity Timeline state — starts empty and fills from live events
@@ -879,7 +880,13 @@ export function StaffProvider({ children }) {
 
   const loadStaffData = useCallback(async () => {
     if (!sessionStorage.getItem('staffToken')) return;
-    if (isFetchingRef.current) return;
+    // A refresh is already running. Don't drop this request — it was
+    // triggered by a change that may have landed AFTER that refresh read the
+    // data — so run once more as soon as the current one finishes.
+    if (isFetchingRef.current) {
+      reloadQueuedRef.current = true;
+      return;
+    }
     
     isFetchingRef.current = true;
     setIsError(false);
@@ -913,6 +920,10 @@ export function StaffProvider({ children }) {
       setIsError(true);
     } finally {
       isFetchingRef.current = false;
+      if (reloadQueuedRef.current) {
+        reloadQueuedRef.current = false;
+        loadStaffData();
+      }
     }
   }, [fetchTables, fetchReservations, fetchOrders, fetchQueue, fetchInvoices, mapBackendOrder, mapBackendTable, mapBackendReservation, mapBackendQueueItem, mapBackendInvoice]);
 

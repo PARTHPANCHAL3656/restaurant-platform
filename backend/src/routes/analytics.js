@@ -1,5 +1,6 @@
 import express from "express"
 import staffAuth from "../middleware/auth.js"
+import { requireRole } from "../middleware/roleCheck.js"
 import {
   getRevenueStats,
   getAOV,
@@ -11,11 +12,15 @@ import {
 
 const router = express.Router()
 
-router.get("/revenue", staffAuth, getRevenueStats)
-router.get("/aov", staffAuth, getAOV)
-router.get("/footfall", staffAuth, getFootfall)
-router.get("/rush-hours", staffAuth, getRushHours)
-router.get("/items", staffAuth, getItemPerformance)
-router.get("/order-log", staffAuth, getOrderLog)
+// Revenue, item and customer data: Owner and Manager only. The sidebar
+// already hides Analytics from Staff; this makes the server agree.
+router.use(staffAuth, requireRole("OWNER", "MANAGER"))
+
+router.get("/revenue", getRevenueStats)
+router.get("/aov", getAOV)
+router.get("/footfall", getFootfall)
+router.get("/rush-hours", getRushHours)
+router.get("/items", getItemPerformance)
+router.get("/order-log", getOrderLog)
 
 export default router
