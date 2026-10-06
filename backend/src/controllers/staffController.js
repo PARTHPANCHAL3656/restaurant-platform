@@ -58,8 +58,19 @@ export const createStaff = async (req, res) => {
     if (!VALID_ROLES.includes(role)) {
       return res.status(400).json({ error: "Role must be OWNER, MANAGER, or STAFF." })
     }
+    if (typeof username !== "string" || typeof password !== "string" || typeof name !== "string") {
+      return res.status(400).json({ error: "Username, password, and name must be text." })
+    }
     if (password.length < 8) {
       return res.status(400).json({ error: "Password must be at least 8 characters." })
+    }
+    // bcrypt silently ignores everything past 72 bytes, so a longer password
+    // would be weaker than it looks.
+    if (password.length > 72) {
+      return res.status(400).json({ error: "Password must be at most 72 characters." })
+    }
+    if (!/^[a-z0-9._-]{3,32}$/.test(username.trim().toLowerCase())) {
+      return res.status(400).json({ error: "Username must be 3–32 characters: letters, numbers, dots, dashes or underscores, no spaces." })
     }
 
     const existing = await Staff.findOne({ username: username.trim().toLowerCase() })

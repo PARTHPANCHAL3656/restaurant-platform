@@ -20,11 +20,15 @@ export const getAllTables = async (req, res) => {
   }
 }
 
-// POST /api/tables/seed
-// Run once to create the 10 tables in MongoDB — DELETE this route after use
+// POST /api/tables/seed   (Owner only)
+// First-run helper: creates the 10 starter tables in an EMPTY database. It
+// refuses to run if any tables already exist — it used to wipe the whole
+// collection first, which any staff login could trigger mid-service.
 export const seedTables = async (req, res) => {
   try {
-    await Table.deleteMany({})
+    if (await Table.exists({})) {
+      return res.status(409).json({ error: "Tables already exist. Nothing was changed." })
+    }
 
     const tables = [
       { tableNumber: 1, capacity: 6 },

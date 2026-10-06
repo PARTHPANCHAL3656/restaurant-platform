@@ -1,5 +1,6 @@
 import express from "express"
 import staffAuth from "../middleware/auth.js"
+import { requireRole } from "../middleware/roleCheck.js"
 import {
   getAllTables,
   seedTables,
@@ -18,7 +19,7 @@ const router = express.Router()
 router.get("/", getAllTables)
 
 // Staff only
-router.post("/seed", staffAuth, seedTables)         // run once to init tables
+router.post("/seed", staffAuth, requireRole("OWNER"), seedTables)  // first-run only: refuses if tables exist
 router.post("/:id/assign", staffAuth, assignTable)  // assign → returns QR
 router.post("/:id/free", staffAuth, freeTable)      // free table after payment
 router.patch("/:id/reserve", staffAuth, reserveTable)

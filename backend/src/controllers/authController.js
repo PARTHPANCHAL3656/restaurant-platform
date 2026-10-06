@@ -3,6 +3,11 @@ import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
 import Staff from "../models/Staff.js"
 import { logStaffChange, revokeStaffSockets } from "./staffController.js"
+// A real bcrypt hash of a throwaway string. Login compares against it when the
+// username doesn't exist, so every attempt costs the same ~70ms and response
+// time can't reveal which usernames are real.
+const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 10)
+
 // POST /api/auth/login
 // Staff enters username + password → gets JWT to use on all protected routes
 export const staffLogin = async (req, res) => {
@@ -12,14 +17,16 @@ export const staffLogin = async (req, res) => {
     if (!username || !password) {
       return res.status(400).json({ error: "Username and password are required." })
     }
-
-    const staff = await Staff.findOne({ username: username.trim().toLowerCase() })
-    if (!staff || !staff.active) {
-      return res.status(401).json({ error: "Incorrect username or password." })
+    // Strings only — a JSON body like {"username": {"$gt": ""}} must never
+    // reach the database query.
+    if (typeof username !== "string" || typeof password !== "string") {
+      return res.status(400).json({ error: "Username and password are required." })
     }
 
-    const match = await bcrypt.compare(password, staff.passwordHash)
-    if (!match) {
+    const staff = await Staff.findOne({ username: username.trim().toLowerCase() })
+
+    const match = await bcrypt.compare(password, staff ? staff.passwordHash : DUMMY_HASH)
+    if (!staff || !staff.active || !match) {
       return res.status(401).json({ error: "Incorrect username or password." })
     }
 

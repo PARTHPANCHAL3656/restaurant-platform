@@ -97,6 +97,22 @@ app.use(helmet())
 app.use(express.json({ limit: "10mb" }))
 app.use(mongoSanitize())
 
+// Safety net for every 5xx: controllers still write `{ error: err.message }`
+// in their catch blocks, and raw error text can expose database or code
+// details. Outside local development, replace it with a generic message and
+// keep the real one in the server log.
+app.use((req, res, next) => {
+  const sendJson = res.json.bind(res)
+  res.json = (body) => {
+    if (res.statusCode >= 500 && process.env.NODE_ENV !== "development") {
+      console.error(`[${req.method} ${req.originalUrl}] ${res.statusCode}:`, body?.error ?? body)
+      return sendJson({ error: "Something went wrong on our side. Please try again." })
+    }
+    return sendJson(body)
+  }
+  next()
+})
+
 // -------------------------------------------------------
 // DEPLOYMENT NOTE — Socket.IO on Render:
 // Socket.IO works on Render with no extra config.
