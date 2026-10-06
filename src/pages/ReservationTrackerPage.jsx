@@ -33,6 +33,7 @@ function statusMessage(res) {
 
 export default function ReservationTrackerPage() {
   const [phone, setPhone] = useState('');
+  const [reference, setReference] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -43,10 +44,14 @@ export default function ReservationTrackerPage() {
     setError(null);
     setResult(null);
     try {
-      const res = await api.get(`/api/reservations/status/${encodeURIComponent(phone.trim())}`);
+      const res = await api.get(`/api/reservations/status/${encodeURIComponent(phone.trim())}`, {
+        params: { ref: reference.trim() }
+      });
       setResult(res.data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Something went wrong. Please try again.');
+      // api.js turns server errors into plain Error objects carrying the
+      // server's message, so read err.message (err.response is not kept).
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -60,7 +65,7 @@ export default function ReservationTrackerPage() {
         <span className="font-label-caps text-label-caps text-saffron-gold tracking-[0.3em] uppercase mb-4 block">Table Booking</span>
         <h1 className="font-serif text-display-lg-mobile md:text-display-lg mb-6 max-w-3xl mx-auto">Check Reservation</h1>
         <p className="font-sans text-body-lg text-subtle-text max-w-2xl mx-auto">
-          Didn't get a call yet? Look up your reservation with the phone number you booked with.
+          Didn't get a call yet? Look up your reservation with the phone number you booked with and the reference code from your confirmation. Lost it? Call us and we'll find it for you.
         </p>
       </header>
 
@@ -78,9 +83,23 @@ export default function ReservationTrackerPage() {
             />
           </div>
 
+          <div>
+            <label className="font-label-caps text-label-caps text-subtle-text uppercase block mb-2">Reference Code</label>
+            <input
+              type="text"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="From your confirmation, e.g. RES-3F9A2C"
+              required
+              autoCapitalize="characters"
+              spellCheck={false}
+              className="w-full bg-transparent border-b border-ink-navy py-3 focus:outline-none focus:border-saffron-gold transition-colors font-body-md outline-none"
+            />
+          </div>
+
           <button
             type="submit"
-            disabled={loading || !phone.trim()}
+            disabled={loading || !phone.trim() || !reference.trim()}
             className="w-full bg-ink-navy text-canvas-cream font-cta-label text-cta-label py-4 uppercase tracking-[0.2em] hover:bg-saffron-gold hover:text-ink-navy transition-all duration-500 shadow-md focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Checking...' : 'Check Status'}

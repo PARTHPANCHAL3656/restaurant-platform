@@ -242,10 +242,12 @@ export const getReservationAvailability = async (req, res) => {
   }
 }
 
-// GET /api/reservations/status/:phone
-// Public — the guest-facing "Check Reservation" tracker. Returns the most
-// recent request for that phone number, so a guest who never got a call
-// can check without needing to remember a reference code.
+// GET /api/reservations/status/:phone?ref=RES-XXXXXX
+// Public — the guest-facing "Check Reservation" tracker. It needs BOTH the
+// phone number and the reference code shown when the request was made. Phone
+// alone would let anyone who knows a person's number see their name and
+// booking time. A wrong combination always gets the same answer, so the
+// endpoint can't be used to find out whose number has a booking.
 export const getReservationStatusByPhone = async (req, res) => {
   try {
     const phone = normalizePhone(req.params.phone)
@@ -253,12 +255,19 @@ export const getReservationStatusByPhone = async (req, res) => {
       return res.status(400).json({ error: "Enter a valid 10-digit phone number." })
     }
 
-    const reservation = await Reservation
-      .findOne({ phone: new RegExp(phone + "$"), source: "Customer" })
-      .sort({ createdAt: -1 })
+    const ref = typeof req.query.ref === "string" ? req.query.ref.trim().toUpperCase() : ""
+    if (!/^RES-[0-9A-F]{6}$/.test(ref)) {
+      return res.status(400).json({ error: "Enter the reference code from your booking confirmation (it looks like RES-3F9A2C)." })
+    }
+
+    const reservation = await Reservation.findOne({
+      phone: new RegExp(phone + "$"),
+      referenceCode: ref,
+      source: "Customer"
+    })
 
     if (!reservation) {
-      return res.status(404).json({ error: "No reservation found for that phone number." })
+      return res.status(404).json({ error: "We couldn't find a reservation matching that phone number and reference code." })
     }
 
     res.json({
