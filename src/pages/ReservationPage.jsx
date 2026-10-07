@@ -29,7 +29,7 @@ export default function ReservationPage() {
 
   // Booking-window rules from Settings -> Operations, so this form reflects
   // whatever the Owner/Manager configured rather than hardcoded numbers.
-  const [rules, setRules] = useState({ resMaxAdvanceDays: 14, resRequireManagerLargeParties: 8 });
+  const [rules, setRules] = useState({ resMaxAdvanceDays: 14, resRequireManagerLargeParties: 0 });
   useEffect(() => {
     api.get('/api/settings')
       .then(res => { if (res.data?.reservations) setRules(res.data.reservations); })
@@ -157,7 +157,7 @@ export default function ReservationPage() {
           {/* Reservation Form Column */}
           <form onSubmit={handleSubmit} className="lg:col-span-7 space-y-12 bg-white/50 p-6 md:p-10 border border-muted-border shadow-sm">
             <p className="text-[11px] text-subtle-text -mt-6">
-              Bookings open up to {rules.resMaxAdvanceDays} days ahead. Parties of {rules.resRequireManagerLargeParties}+ may take a little longer to confirm.
+              Bookings open up to {rules.resMaxAdvanceDays} days ahead.{rules.resRequireManagerLargeParties > 0 && ` Parties of ${rules.resRequireManagerLargeParties}+ may take a little longer to confirm.`}
             </p>
             {/* Step 1: Details */}
             <section className="space-y-6">
@@ -391,7 +391,7 @@ export default function ReservationPage() {
 
               <div className="pt-4 border-t border-muted-border">
                 <p className="font-label-caps text-[10px] text-subtle-text leading-relaxed uppercase tracking-wider">
-                  * Note: This is a reservation request. Our team will contact you within 2 hours to confirm your booking. For parties larger than {rules.resRequireManagerLargeParties}, please contact us directly.
+                  * Note: This is a reservation request. Our team will contact you within 2 hours to confirm your booking.{rules.resRequireManagerLargeParties > 0 && ` For parties larger than ${rules.resRequireManagerLargeParties}, please contact us directly.`}
                 </p>
               </div>
             </div>

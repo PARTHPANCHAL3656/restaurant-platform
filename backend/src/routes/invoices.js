@@ -24,7 +24,7 @@ router.get("/my-bill-preview", tableSession, getMyBillPreview)
 
 // Staff routes
 router.get("/", staffAuth, requireRole("OWNER", "MANAGER"), getAllInvoices)
-router.post("/table/:id", staffAuth, requireRole("OWNER", "MANAGER"), generateInvoiceForTable)
+router.post("/table/:id", staffAuth, generateInvoiceForTable)
 router.patch("/:id", staffAuth, requireRole("OWNER", "MANAGER"), updateInvoiceStatus)
 router.delete("/:id", staffAuth, requireRole("OWNER"), deleteInvoice)
 export default router

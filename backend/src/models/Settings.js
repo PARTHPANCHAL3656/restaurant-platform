@@ -103,7 +103,7 @@ const settingsSchema = new mongoose.Schema({
     resHoldGraceMinutes: { type: Number, default: 15 },
     // Party size at or above which confirming the request requires a
     // Manager or Owner rather than any staff member.
-    resRequireManagerLargeParties: { type: Number, default: 8 },
+    resRequireManagerLargeParties: { type: Number, default: 0 },
     // If true, a new booking request for a slot with no remaining table
     // capacity is declined immediately instead of sitting in Pending.
     resAutoRejectIfFull: { type: Boolean, default: true }

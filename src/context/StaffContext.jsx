@@ -78,7 +78,7 @@ export function StaffProvider({ children }) {
     resMinLeadTimeHours: 2,
     resMaxAdvanceDays: 14,
     resHoldGraceMinutes: 15,
-    resRequireManagerLargeParties: 8,
+    resRequireManagerLargeParties: 0,
     resAutoRejectIfFull: true
   });
 

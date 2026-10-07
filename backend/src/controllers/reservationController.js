@@ -147,7 +147,9 @@ export const updateReservationStatus = async (req, res) => {
     const settings = await Settings.getSingleton()
     const largePartyThreshold = settings.reservations.resRequireManagerLargeParties
 
-    if (status === "confirmed" && reservation.guests >= largePartyThreshold && req.staff.role === "STAFF") {
+    // 0 means the rule is off (the default). When an owner sets a size, parties
+    // that big can only be confirmed by a Manager or Owner.
+    if (largePartyThreshold > 0 && status === "confirmed" && reservation.guests >= largePartyThreshold && req.staff.role === "STAFF") {
       return res.status(403).json({ error: `Parties of ${largePartyThreshold}+ need a Manager or Owner to confirm.` })
     }
 
@@ -155,14 +157,10 @@ export const updateReservationStatus = async (req, res) => {
       if (reservation.status !== "confirmed") {
         return res.status(400).json({ error: "Only a confirmed reservation can be marked a no-show." })
       }
-      if (req.staff.role === "STAFF") {
-        return res.status(403).json({ error: "Only a Manager or Owner can mark a reservation as a no-show." })
-      }
-
       // Free whichever table was being held for this reservation, if any.
       // Besides the strike below, this is the ONLY automatic side effect of
       // a no-show — there is no auto-cancel timer and this never runs on
-      // its own; it only fires from the Manager's explicit click.
+      // its own; it only fires from a staff member's explicit click.
       await releaseHeldTable(reservation)
 
       // A strike, not a blacklist. The existing takeout no-show flow has
@@ -201,6 +199,15 @@ export const updateReservationStatus = async (req, res) => {
 // Protected by staffAuth
 export const deleteReservation = async (req, res) => {
   try {
+    // The one reservation rule that needs a Manager: wiping a CONFIRMED
+    // booking from the records. Staff can still delete anything else (pending,
+    // rejected, cancelled) and can cancel a confirmed one by changing its
+    // status, which keeps the record.
+    const existing = await Reservation.findById(req.params.id)
+    if (existing && existing.status === "confirmed" && req.staff.role === "STAFF") {
+      return res.status(403).json({ error: "Only a Manager or Owner can delete a confirmed reservation." })
+    }
+
     const reservation = await Reservation.findByIdAndDelete(req.params.id)
     if (reservation) {
       io.to("staff").emit("reservation:updated", { _id: req.params.id, deleted: true })

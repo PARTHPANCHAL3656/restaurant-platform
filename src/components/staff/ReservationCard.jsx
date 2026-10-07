@@ -25,7 +25,8 @@ export default function ReservationCard({
   const isLate = timing === 'late';
   const isPast = timing === 'past';
   const isFuture = timing === 'future';
-  const isLargeParty = res.partySize >= largePartyThreshold;
+  // A threshold of 0 means the large-party rule is off.
+  const isLargeParty = largePartyThreshold > 0 && res.partySize >= largePartyThreshold;
   const staffBlockedFromConfirm = isLargeParty && !canManage;
   const hasHeldTable = !!res.table;
   const fitTables = availableTables.filter(t => t.seats >= res.partySize);
@@ -51,9 +52,7 @@ export default function ReservationCard({
   const noShowButton = (
     <button
       onClick={() => onNoShow()}
-      disabled={!canManage}
-      title={canManage ? '' : 'Only a Manager or Owner can mark a no-show'}
-      className="flex-1 py-1.5 bg-red-900/10 text-red-700 font-bold text-[10px] uppercase tracking-widest hover:bg-red-900/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+      className="flex-1 py-1.5 bg-red-900/10 text-red-700 font-bold text-[10px] uppercase tracking-widest hover:bg-red-900/20 cursor-pointer"
     >
       Mark No-Show
     </button>

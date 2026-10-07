@@ -179,7 +179,7 @@ export default function StaffSettingsOperationsPage() {
             { field: 'resMinLeadTimeHours', label: 'Minimum notice (hours)', hint: 'Blocks bookings made too close to the table time, e.g. 8:00 PM booked at 7:55 PM.' },
             { field: 'resMaxAdvanceDays', label: 'Furthest booking ahead (days)', hint: 'Blocks bookings made too far in advance.' },
             { field: 'resHoldGraceMinutes', label: 'Table hold grace (minutes)', hint: 'After this long past the booked time, the reservation is flagged LATE. It is never removed automatically.' },
-            { field: 'resRequireManagerLargeParties', label: 'Large party size (guests)', hint: 'Parties this size or bigger can only be confirmed by a Manager or Owner.' }
+            { field: 'resRequireManagerLargeParties', label: 'Large party rule (guests, 0 = off)', hint: 'Off by default (0): any staff member can confirm any party size. Set a size, e.g. 8, and parties that big or bigger can only be confirmed by a Manager or Owner.' }
           ].map(({ field, label, hint }) => (
             <div key={field} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <div className="sm:flex-1">

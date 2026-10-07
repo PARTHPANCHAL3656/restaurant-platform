@@ -249,7 +249,8 @@ export default function StaffTablesPage() {
     }
 
     const invoice = await finalizeTableBill(selectedTableId);
-    if (invoice) {
+    // Staff can't open the Billing tab, so only Managers and Owners are sent there.
+    if (invoice && canManage) {
       navigate('/staff/billing', { 
         state: { 
           selectInvoiceId: invoice.id 
@@ -264,7 +265,8 @@ export default function StaffTablesPage() {
     if (!selectedTableId) return;
 
     const invoice = await finalizeTableBill(selectedTableId, phone || undefined);
-    if (invoice) {
+    // Staff can't open the Billing tab, so only Managers and Owners are sent there.
+    if (invoice && canManage) {
       navigate('/staff/billing', {
         state: {
           selectInvoiceId: invoice.id
@@ -760,11 +762,10 @@ export default function StaffTablesPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <button 
                           onClick={handleGenerateInvoice}
-                          disabled={Boolean(invoiceWaitingOn) || !canManage}
-                          title={canManage ? '' : 'Only a Manager or Owner can generate the invoice'}
+                          disabled={Boolean(invoiceWaitingOn)}
                           className="h-[56px] bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 cursor-pointer shadow-md rounded-none text-center font-bold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100"
                         >
-                          {canManage ? 'Generate Invoice' : 'Manager Bills This'}
+                          Generate Invoice
                         </button>
                         <button 
                           onClick={() => setShowReleaseConfirm(true)}
