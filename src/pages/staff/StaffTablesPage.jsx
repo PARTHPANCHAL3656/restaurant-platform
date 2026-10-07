@@ -760,10 +760,11 @@ export default function StaffTablesPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <button 
                           onClick={handleGenerateInvoice}
-                          disabled={Boolean(invoiceWaitingOn)}
+                          disabled={Boolean(invoiceWaitingOn) || !canManage}
+                          title={canManage ? '' : 'Only a Manager or Owner can generate the invoice'}
                           className="h-[56px] bg-saffron-gold text-ink-navy font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 cursor-pointer shadow-md rounded-none text-center font-bold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100"
                         >
-                          Generate Invoice
+                          {canManage ? 'Generate Invoice' : 'Manager Bills This'}
                         </button>
                         <button 
                           onClick={() => setShowReleaseConfirm(true)}
