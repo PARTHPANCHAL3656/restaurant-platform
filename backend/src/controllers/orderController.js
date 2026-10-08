@@ -7,6 +7,8 @@ import { calculateBill } from "../utils/calculateBill.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
 import { refreshUnpaidInvoice } from "../utils/refreshInvoice.js"
+import { autoReleaseTable } from "../utils/tableRelease.js"
+import Table from "../models/Table.js"
 
 // POST /api/orders/add-items
 // Customer places first order OR adds more items (same endpoint for both)
@@ -18,6 +20,23 @@ export const addItems = async (req, res) => {
 
     if (!items || items.length === 0) {
       return res.status(400).json({ error: "No items provided." })
+    }
+
+    // Once the bill is paid the visit is over. A paid invoice is final, so
+    // anything ordered now could never be billed. Refuse it, and close the
+    // table out right away instead of waiting for the safety-net timer.
+    const paidInvoice = await Invoice.findOne({ sessionId, status: "paid" })
+    if (paidInvoice) {
+      if (paidInvoice.orderType !== "takeout" && tableId) {
+        const table = await Table.findOne({ _id: tableId, currentSessionId: sessionId })
+        if (table) {
+          await autoReleaseTable(table, "paid-order-attempt")
+        }
+      }
+      return res.status(409).json({
+        error: "This bill has already been paid, so no more orders can be placed on this table. For anything else, please speak to our manager, visit us again, or book a reservation.",
+        code: "BILL_PAID"
+      })
     }
 
     // Two diners at the same table can tap "place order" at the same instant.
