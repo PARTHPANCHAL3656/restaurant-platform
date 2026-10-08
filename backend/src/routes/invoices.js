@@ -8,7 +8,8 @@ import {
   getMyBillPreview,
   updateInvoiceStatus,
   generateInvoiceForTable,
-  deleteInvoice
+  deleteInvoice,
+  markReceiptDownloaded
 } from "../controllers/invoiceController.js"
 
 const router = express.Router()
@@ -21,6 +22,9 @@ const router = express.Router()
 // nothing meaningful to estimate for an order that's already finished.
 router.get("/my-invoice", invoiceLookupSession, getMyInvoice)
 router.get("/my-bill-preview", tableSession, getMyBillPreview)
+// Same relaxed check as my-invoice: this must keep working after the table
+// is released, since the guest may download their receipt after that.
+router.post("/my-invoice/receipt-downloaded", invoiceLookupSession, markReceiptDownloaded)
 
 // Staff routes
 router.get("/", staffAuth, requireRole("OWNER", "MANAGER"), getAllInvoices)

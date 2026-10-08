@@ -106,6 +106,15 @@ const invoiceSchema = new mongoose.Schema({
   generatedBy: {
     type: String,
     default: "Floor Manager"
+  },
+  paidAt: {
+    type: Date,
+    default: null
+  },
+  // Set when the guest downloads their receipt PDF from the bill page.
+  receiptDownloadedAt: {
+    type: Date,
+    default: null
   }
 }, { timestamps: true })
 

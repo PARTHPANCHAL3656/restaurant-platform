@@ -6,6 +6,7 @@ import Customer from "../models/Customer.js"
 import { calculateBill } from "../utils/calculateBill.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
+import { refreshUnpaidInvoice } from "../utils/refreshInvoice.js"
 
 // POST /api/orders/add-items
 // Customer places first order OR adds more items (same endpoint for both)
@@ -73,6 +74,18 @@ export const addItems = async (req, res) => {
       return res.status(409).json({
         error: "This table's order is being updated by someone else right now. Please try again."
       })
+    }
+
+    // If a bill was already generated and nobody has paid it yet, bring it up
+    // to date with this round (same invoice number) so the new items are never
+    // left off the bill. A paid invoice is final and is not touched.
+    try {
+      const refreshedInvoice = await refreshUnpaidInvoice(order)
+      if (refreshedInvoice) {
+        io.emit("invoice:generated", { invoiceId: refreshedInvoice._id })
+      }
+    } catch (invoiceErr) {
+      console.error("Could not refresh the unpaid invoice after a new round:", invoiceErr)
     }
 
     // Full order (items, notes, takeout guest details) — staff room only.

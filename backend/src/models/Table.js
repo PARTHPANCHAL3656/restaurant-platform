@@ -58,6 +58,14 @@ const tableSchema = new mongoose.Schema({
   token: {
     type: String,
     default: ""
+  },
+  // Set when this table's bill is marked paid; the server sweeper releases
+  // the table at this time if staff haven't done it first. Cleared on every
+  // release. Stored in the database so a server restart or a Render wake-up
+  // from sleep doesn't forget it.
+  autoReleaseAt: {
+    type: Date,
+    default: null
   }
 }, { timestamps: true })
 

@@ -82,7 +82,11 @@ const settingsSchema = new mongoose.Schema({
     // starts giving money away the moment repeat customers exist.
     repeatCustomerDiscountEnabled: { type: Boolean, default: false },
     repeatCustomerVisitThreshold: { type: Number, default: 3 },
-    repeatCustomerDiscountPercent: { type: Number, default: 5 }
+    repeatCustomerDiscountPercent: { type: Number, default: 5 },
+    // Safety net, not a feature toggle: how long after a dine-in bill is
+    // marked paid the server releases the table if staff haven't. A manual
+    // release always wins. Cannot be turned off; minimum 5 minutes.
+    tableAutoReleaseMinutes: { type: Number, default: 10, min: 5 }
   },
 
   // Reservation-booking rules an Owner/Manager configures from Settings →

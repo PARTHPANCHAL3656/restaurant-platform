@@ -7,6 +7,7 @@ import { generateTableToken } from "../utils/generateTableToken.js"
 import { nextBillNumber } from "../utils/nextBillNumber.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { releaseHeldTable } from "./reservationController.js"
+import { releaseTableSession } from "../utils/tableRelease.js"
 import { io } from "../index.js"
 
 // GET /api/tables
@@ -189,27 +190,9 @@ export const freeTable = async (req, res) => {
       }
     }
 
-    // Close the active order
-    if (table.currentOrderId) {
-      await Order.findByIdAndUpdate(table.currentOrderId, { status: "Served" })
-    }
-
-    // Reset the table
-    table.status = "available"
-    table.currentSessionId = null
-    table.currentOrderId = null
-    table.guestName = ""
-    table.arrivalTime = ""
-    table.notes = ""
-    table.guestCount = 0
-    table.reservationId = null
-    table.qrDataUrl = ""
-    table.token = ""
-    await table.save()
-
-    // Notify all clients
-    io.emit("table:released", { tableId: table._id, status: "available", tableNumber: table.tableNumber })
-    io.emit("table:updated", { tableId: table._id, status: "available", tableNumber: table.tableNumber })
+    // Same cleanup the automatic paths use (utils/tableRelease.js). A manual
+    // release always works, and it clears any pending auto-release timer.
+    await releaseTableSession(table, "manual")
 
     res.json({ message: `Table ${table.tableNumber} is now free.` })
   } catch (err) {

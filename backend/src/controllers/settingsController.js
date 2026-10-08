@@ -42,6 +42,13 @@ export const updateSettings = async (req, res) => {
       }
     }
 
+    if (billing && billing.tableAutoReleaseMinutes !== undefined) {
+      const minutes = billing.tableAutoReleaseMinutes
+      if (!Number.isInteger(minutes) || minutes < 5 || minutes > 120) {
+        return res.status(400).json({ error: "Auto-release time must be a whole number between 5 and 120 minutes." })
+      }
+    }
+
     if (openingHours && !Array.isArray(openingHours)) {
       return res.status(400).json({ error: "openingHours must be an array." })
     }

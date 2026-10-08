@@ -8,6 +8,7 @@ import { calculateBill } from "../utils/calculateBill.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
 import { io } from "../index.js"
+import { autoReleaseTable } from "../utils/tableRelease.js"
 
 // Reservation.source is "Customer" (a real advance booking) or "Walk-in"
 // (seated from the Guest Queue) — the correct distinction, unlike
@@ -250,16 +251,34 @@ export const updateInvoiceStatus = async (req, res) => {
     if (status) update.status = status
     if (paymentMethod) update.paymentMethod = paymentMethod
 
-    const wasAlreadyPaid = (await Invoice.findById(req.params.id))?.status === "paid"
+    const existing = await Invoice.findById(req.params.id)
+    if (!existing) return res.status(404).json({ error: "Invoice not found." })
 
-    const invoice = await Invoice.findByIdAndUpdate(req.params.id, update, { new: true })
-    if (!invoice) return res.status(404).json({ error: "Invoice not found." })
+    // Paid is final. It can still be refunded, but never set back to unpaid.
+    if (existing.status === "paid" && status === "unpaid") {
+      return res.status(409).json({ error: "This invoice is already paid and can't be set back to unpaid." })
+    }
 
-    if (invoice.status === "paid") {
-      // Only record a visit the first time this invoice is marked paid -
-      // guards against double-counting if staff toggle status back and forth.
+    let invoice
+    let justPaid = false
+    if (status === "paid") {
+      // The flip to paid is a single atomic step, so a double-click or two
+      // staff screens can only ever "win" once. Only the winner runs the
+      // side effects below (customer stats, events, the release timer).
+      invoice = await Invoice.findOneAndUpdate(
+        { _id: req.params.id, status: "unpaid" },
+        { ...update, paidAt: new Date() },
+        { new: true }
+      )
+      if (!invoice) return res.json(existing) // already paid or refunded: nothing to do
+      justPaid = true
+    } else {
+      invoice = await Invoice.findByIdAndUpdate(req.params.id, update, { new: true })
+    }
+
+    if (justPaid) {
       const phone = normalizePhone(invoice.guestPhone)
-      if (phone && !wasAlreadyPaid) {
+      if (phone) {
         await Customer.findOneAndUpdate(
           { phone },
           {
@@ -282,6 +301,23 @@ export const updateInvoiceStatus = async (req, res) => {
       if (invoice.orderType === "takeout" && invoice.sessionId) {
         io.emit("takeout:sessionEnded", { sessionId: invoice.sessionId, invoiceId: invoice._id })
       }
+
+      // Dine-in safety net: if staff forget to release the table after
+      // payment, the server releases it once the grace period from Settings
+      // runs out (never less than 5 minutes). Matching on this invoice's own
+      // sessionId means it can never arm a timer on a newer party's table.
+      if (invoice.orderType !== "takeout" && invoice.tableId) {
+        const settings = await Settings.getSingleton()
+        const minutes = Math.max(5, Number(settings.billing?.tableAutoReleaseMinutes) || 10)
+        const armed = await Table.findOneAndUpdate(
+          { _id: invoice.tableId, currentSessionId: invoice.sessionId },
+          { $set: { autoReleaseAt: new Date(Date.now() + minutes * 60 * 1000) } },
+          { new: true }
+        )
+        if (armed) {
+          io.emit("table:updated", { tableId: armed._id, status: armed.status, tableNumber: armed.tableNumber })
+        }
+      }
     } else {
       io.to("staff").emit("invoice:updated", invoice)
     }
@@ -296,6 +332,41 @@ export const deleteInvoice = async (req, res) => {
   try {
     await Invoice.findByIdAndDelete(req.params.id)
     res.json({ message: "Invoice deleted." })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+// POST /api/invoices/my-invoice/receipt-downloaded
+// The guest's bill page calls this right after the receipt PDF is saved.
+// Only meaningful once the invoice is paid. If the table is still held on
+// this guest's session it is released now (unless items were added after
+// the bill - see autoReleaseTable). Needs only the guest's own session token.
+export const markReceiptDownloaded = async (req, res) => {
+  try {
+    const { sessionId } = req.tableSession
+    const invoice = await Invoice.findOne({ sessionId })
+    if (!invoice) {
+      return res.status(404).json({ error: "No bill found for this session." })
+    }
+    if (invoice.status !== "paid") {
+      return res.json({ released: false })
+    }
+
+    if (!invoice.receiptDownloadedAt) {
+      invoice.receiptDownloadedAt = new Date()
+      await invoice.save()
+    }
+
+    let released = false
+    if (invoice.orderType !== "takeout" && invoice.tableId) {
+      const table = await Table.findOne({ _id: invoice.tableId, currentSessionId: sessionId })
+      if (table) {
+        released = (await autoReleaseTable(table, "receipt")) === "released"
+      }
+    }
+
+    res.json({ released })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
