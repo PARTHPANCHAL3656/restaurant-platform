@@ -71,7 +71,14 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
         return 'Guest Queue Management';
       case '/staff/menu':
         return 'Menu Management';
+      case '/staff/analytics':
+        return 'Analytics';
+      case '/staff/takeaway':
+        return 'Takeaway Orders';
+      case '/staff/settings':
+        return 'Settings';
       default:
+        if (location.pathname.startsWith('/staff/settings/')) return 'Settings';
         return 'Staff Portal';
     }
   };
