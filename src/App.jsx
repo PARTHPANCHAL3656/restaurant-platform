@@ -1,5 +1,5 @@
 import React, { useEffect, useState, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 // (Lenis import removed from the top — loaded dynamically below instead)
 import { CartProvider, useCart } from './context/CartContext';
 import { StaffProvider } from './context/StaffContext';
@@ -86,8 +86,9 @@ function ScrollToTop() {
 function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { sessionExpired, setSessionExpired, sessionEndedPaid, tableToken } = useCart();
+  const { sessionExpired, setSessionExpired, sessionEndedPaid, receiptPrompt, dismissReceiptPrompt, tableToken } = useCart();
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-canvas-cream text-ink-navy flex flex-col lg:flex-row">
@@ -106,6 +107,23 @@ function AppLayout() {
               className="bg-saffron-gold text-ink-navy px-8 py-3.5 uppercase font-cta-label text-cta-label tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-md focus:outline-none cursor-pointer"
             >
               Acknowledge
+            </button>
+          </div>
+        </div>
+      )}
+      {receiptPrompt && !sessionExpired && (
+        <div className="fixed inset-0 z-[100] bg-ink-navy/95 backdrop-blur-md flex items-center justify-center p-6 text-center text-canvas-cream">
+          <div className="max-w-md space-y-6">
+            <span className="material-symbols-outlined text-saffron-gold text-5xl">check_circle</span>
+            <h2 className="font-serif text-headline-md text-canvas-cream">Payment Received</h2>
+            <p className="font-body-md text-sm text-canvas-cream/70 leading-relaxed font-sans">
+              Thank you! Your bill is paid. Please download your receipt as proof of payment before you leave.
+            </p>
+            <button
+              onClick={() => { dismissReceiptPrompt(); navigate('/bill'); }}
+              className="bg-saffron-gold text-ink-navy px-8 py-3.5 uppercase font-cta-label text-cta-label tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-md focus:outline-none cursor-pointer"
+            >
+              View Receipt
             </button>
           </div>
         </div>

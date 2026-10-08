@@ -24,6 +24,22 @@ export function CartProvider({ children }) {
   const receiptHoldRef = useRef(false);
   const [billPaid, setBillPaid] = useState(false);
   const [sessionEndedPaid, setSessionEndedPaid] = useState(false);
+  const [receiptPrompt, setReceiptPrompt] = useState(false);
+
+  // Something just ended this session because the bill was paid (takeout
+  // pickup, the safety-net timer, or an order attempt after paying). Never
+  // cut the guest off from their receipt: if they're already on the bill page
+  // keep it open (even if it hasn't refreshed to "paid" yet), otherwise offer
+  // to take them there.
+  const handlePaidSessionEnd = () => {
+    if (receiptHoldRef.current) return;
+    setBillPaid(true);
+    if (window.location.pathname.startsWith('/bill')) {
+      receiptHoldRef.current = true;
+      return;
+    }
+    setReceiptPrompt(true);
+  };
 
   useEffect(() => {
     const handleCustomerExpired = () => {
@@ -144,9 +160,11 @@ export function CartProvider({ children }) {
       if (data && data.tableId && data.tableId === tableId) {
         // Paid bill still open on screen: keep it until it's downloaded.
         if (receiptHoldRef.current) return;
-        // These reasons only ever happen after payment, so use the thank-you wording.
+        // These reasons only ever happen after payment: take the guest to
+        // their receipt instead of cutting them off.
         if (['auto', 'receipt', 'paid-order-attempt'].includes(data.reason)) {
-          setSessionEndedPaid(true);
+          handlePaidSessionEnd();
+          return;
         }
         setSessionExpired(true);
       }
@@ -167,10 +185,9 @@ export function CartProvider({ children }) {
   useEffect(() => {
     const handleTakeoutSessionEnded = (data) => {
       if (data && data.sessionId && data.sessionId === tableSessionId) {
-        // Same rule as dine-in: a paid bill stays until it's downloaded.
-        if (receiptHoldRef.current) return;
-        setSessionEndedPaid(true); // takeout only ends once it's paid
-        setSessionExpired(true);
+        // Takeout only ends once it's paid. Same rule as dine-in: never cut
+        // the guest off from their receipt.
+        handlePaidSessionEnd();
       }
     };
 
@@ -423,6 +440,8 @@ export function CartProvider({ children }) {
       },
       sessionEndedPaid,
       billPaid,
+      receiptPrompt,
+      dismissReceiptPrompt: () => setReceiptPrompt(false),
       // Bill page: tells the context a paid bill is on screen (hold on) or not.
       markBillPaid: (paid) => {
         receiptHoldRef.current = paid;
