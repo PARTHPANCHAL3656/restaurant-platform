@@ -21,7 +21,10 @@ export default function BillSummaryPage() {
     tableNumber,
     isTakeout,
     activeOrderTime,
-    activeOrderBillNumber
+    activeOrderBillNumber,
+    markBillPaid,
+    releaseReceiptHold,
+    endPaidSession
   } = useCart();
   const { restaurantInfo } = useStaff();
 
@@ -67,6 +70,15 @@ export default function BillSummaryPage() {
       socket.off('order:updated', fetchBill);
     };
   }, []);
+
+  // A paid bill is the end of the visit. While it's on screen, tell the
+  // cart context so a table release can't wipe it before it's downloaded
+  // (the page re-checks every 15 seconds, so this kicks in within that).
+  const isPaid = Boolean(invoice && invoice.status === 'paid');
+  useEffect(() => {
+    markBillPaid(isPaid);
+    return () => releaseReceiptHold();
+  }, [isPaid]);
 
   // Fallback mock items matching the exact Stitch design (Step 40) if no order has been placed yet
   const hasActiveOrder = activeOrderItems && activeOrderItems.length > 0;
@@ -200,6 +212,15 @@ export default function BillSummaryPage() {
 
       pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
       pdf.save(`spice_garden_${hasInvoice ? 'invoice' : 'bill'}_${displayOrderId}.pdf`);
+
+      // Paid + downloaded = the visit is complete. Tell the server (it frees
+      // the table if staff haven't yet), then end this guest's session with
+      // the "you can close this page" screen.
+      if (isPaid) {
+        api.post('/api/invoices/my-invoice/receipt-downloaded')
+          .catch(() => {})
+          .finally(() => endPaidSession());
+      }
     }).catch((err) => {
       console.error('Receipt download failed:', err);
       alert('Could not generate the receipt PDF. Please try again or ask staff for a printed copy.');
@@ -407,6 +428,16 @@ export default function BillSummaryPage() {
             />
           </div>
         </div>
+
+        {isPaid && (
+          <div className="mt-8 w-full border border-saffron-gold/40 bg-white p-5 text-center">
+            <span className="material-symbols-outlined text-saffron-gold text-3xl">check_circle</span>
+            <p className="font-serif text-lg text-ink-navy mt-1">Payment received. Thank you!</p>
+            <p className="font-body-md text-sm text-ink-navy/70 mt-1">
+              Download your receipt below as proof of payment. You can close this page afterwards.
+            </p>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex items-center justify-center space-x-6 mt-8 w-full">

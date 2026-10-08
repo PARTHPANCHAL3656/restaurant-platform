@@ -17,8 +17,17 @@ export function CartProvider({ children }) {
   const [tableId, setTableId] = useState(null);
   const [tableSessionId, setTableSessionId] = useState(null);
 
+  // Paid-bill handling. While the guest has a PAID bill open on the bill
+  // page, the table being released (by staff, the safety-net timer or the
+  // receipt download) must not yank it away: they still need to download it
+  // as proof of payment. billPaid also hides "Order more".
+  const receiptHoldRef = useRef(false);
+  const [billPaid, setBillPaid] = useState(false);
+  const [sessionEndedPaid, setSessionEndedPaid] = useState(false);
+
   useEffect(() => {
     const handleCustomerExpired = () => {
+      if (receiptHoldRef.current) return;
       setSessionExpired(true);
     };
     const handleCustomerInvalid = () => {
@@ -133,6 +142,12 @@ export function CartProvider({ children }) {
   useEffect(() => {
     const handleTableReleased = (data) => {
       if (data && data.tableId && data.tableId === tableId) {
+        // Paid bill still open on screen: keep it until it's downloaded.
+        if (receiptHoldRef.current) return;
+        // These reasons only ever happen after payment, so use the thank-you wording.
+        if (['auto', 'receipt', 'paid-order-attempt'].includes(data.reason)) {
+          setSessionEndedPaid(true);
+        }
         setSessionExpired(true);
       }
     };
@@ -152,6 +167,9 @@ export function CartProvider({ children }) {
   useEffect(() => {
     const handleTakeoutSessionEnded = (data) => {
       if (data && data.sessionId && data.sessionId === tableSessionId) {
+        // Same rule as dine-in: a paid bill stays until it's downloaded.
+        if (receiptHoldRef.current) return;
+        setSessionEndedPaid(true); // takeout only ends once it's paid
         setSessionExpired(true);
       }
     };
@@ -398,7 +416,28 @@ export function CartProvider({ children }) {
       getGrandTotal,
       placeOrder,
       sessionExpired,
-      setSessionExpired
+      // Dismissing the "session ended" screen also clears its thank-you wording.
+      setSessionExpired: (value) => {
+        if (!value) setSessionEndedPaid(false);
+        setSessionExpired(value);
+      },
+      sessionEndedPaid,
+      billPaid,
+      // Bill page: tells the context a paid bill is on screen (hold on) or not.
+      markBillPaid: (paid) => {
+        receiptHoldRef.current = paid;
+        if (paid) setBillPaid(true);
+      },
+      releaseReceiptHold: () => {
+        receiptHoldRef.current = false;
+      },
+      // Receipt downloaded: the visit is over, so end the session.
+      endPaidSession: () => {
+        receiptHoldRef.current = false;
+        setBillPaid(false);
+        setSessionEndedPaid(true);
+        setSessionExpired(true);
+      }
     }}>
       {children}
     </CartContext.Provider>

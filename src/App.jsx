@@ -86,7 +86,7 @@ function ScrollToTop() {
 function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const { sessionExpired, setSessionExpired, tableToken } = useCart();
+  const { sessionExpired, setSessionExpired, sessionEndedPaid, tableToken } = useCart();
   const location = useLocation();
 
   return (
@@ -94,10 +94,12 @@ function AppLayout() {
       {sessionExpired && (
         <div className="fixed inset-0 z-[100] bg-ink-navy/95 backdrop-blur-md flex items-center justify-center p-6 text-center text-canvas-cream">
           <div className="max-w-md space-y-6">
-            <span className="material-symbols-outlined text-saffron-gold text-5xl">warning</span>
-            <h2 className="font-serif text-headline-md text-canvas-cream">Dining Session Ended</h2>
+            <span className="material-symbols-outlined text-saffron-gold text-5xl">{sessionEndedPaid ? 'check_circle' : 'warning'}</span>
+            <h2 className="font-serif text-headline-md text-canvas-cream">{sessionEndedPaid ? 'Thank You' : 'Dining Session Ended'}</h2>
             <p className="font-body-md text-sm text-canvas-cream/70 leading-relaxed font-sans">
-              This dining session has ended. Please request a new table from restaurant staff.
+              {sessionEndedPaid
+                ? 'Your bill is settled and your visit is complete. You can now close this page. We hope to see you again soon.'
+                : 'This dining session has ended. Please request a new table from restaurant staff.'}
             </p>
             <button 
               onClick={() => setSessionExpired(false)} 
