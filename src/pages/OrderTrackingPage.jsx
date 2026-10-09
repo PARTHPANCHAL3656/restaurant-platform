@@ -324,7 +324,7 @@ export default function OrderTrackingPage() {
                       className="inline-flex items-center gap-2 font-cta-label text-cta-label text-saffron-gold uppercase tracking-widest hover:underline"
                     >
                       Open in Google Maps
-                      <span className="material-symbols-outlined text-sm">open_in_new</span>
+                      <span aria-hidden="true">↗</span>
                     </a>
                   )}
                 </>
