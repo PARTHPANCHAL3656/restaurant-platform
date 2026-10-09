@@ -18,7 +18,8 @@ export default function CartPage() {
     getGST, 
     getGrandTotal, 
     placeOrder,
-    isTakeout
+    isTakeout,
+    takeoutLocked
   } = useCart();
   const { restaurantInfo } = useStaff();
 
@@ -174,10 +175,17 @@ export default function CartPage() {
               <div className="flex flex-col space-y-4 pt-4">
                 <button 
                   onClick={handleCheckout}
+                  disabled={takeoutLocked}
+                  style={takeoutLocked ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
                   className="w-full bg-ink-navy text-canvas-cream py-4 font-cta-label text-cta-label tracking-widest uppercase hover:bg-saffron-gold hover:text-ink-navy transition-all duration-300 shadow-md"
                 >
-                  Place Order
+                  {takeoutLocked ? 'Order Already Started' : 'Place Order'}
                 </button>
+                {takeoutLocked && (
+                  <p className="text-center text-xs text-subtle-text leading-relaxed">
+                    Your takeout order is already being prepared, so items can't be added to it. To order more, please place a new takeout order.
+                  </p>
+                )}
                 <Link 
                   to="/menu"
                   className="text-center font-cta-label text-cta-label text-xs uppercase tracking-widest text-ink-navy hover:text-saffron-gold transition-colors py-2 block border border-ink-navy/20 hover:border-saffron-gold"

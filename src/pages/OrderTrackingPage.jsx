@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import Footer from '../components/Footer';
 import socket from '../utils/socket';
 import api from '../utils/api';
+import { useStaff } from '../context/StaffContext';
 
 import { getImage } from '../utils/assetHelper';
 import { formatINR } from '../utils/currency';
@@ -22,6 +23,7 @@ export default function OrderTrackingPage() {
     billPaid
   } = useCart();
 
+  const { restaurantInfo } = useStaff();
   const [localStatus, setLocalStatus] = useState('Received');
   const [loading, setLoading] = useState(true);
 
@@ -112,7 +114,8 @@ export default function OrderTrackingPage() {
     }
   };
 
-  const displayStatus = localStatus || 'Received';
+  // Takeout guests collect their food, so "At Table" doesn't apply to them.
+  const displayStatus = isTakeout && localStatus === 'At Table' ? 'Picked Up' : (localStatus || 'Received');
 
   if (loading) {
     return (
@@ -199,14 +202,14 @@ export default function OrderTrackingPage() {
             ) : localStatus === 'At Table' ? (
               <>
                 <p className="font-label-caps text-label-caps text-subtle-text tracking-widest mb-1">ORDER STATUS</p>
-                <div className="font-serif text-3xl text-saffron-gold font-bold">SERVED</div>
-                <p className="font-body-md text-subtle-text mt-2 italic text-xs">Enjoy your culinary selection</p>
+                <div className="font-serif text-3xl text-saffron-gold font-bold">{isTakeout ? 'PICKED UP' : 'SERVED'}</div>
+                <p className="font-body-md text-subtle-text mt-2 italic text-xs">{isTakeout ? 'Thank you for collecting your order' : 'Enjoy your culinary selection'}</p>
               </>
             ) : localStatus === 'Ready' ? (
               <>
                 <p className="font-label-caps text-label-caps text-subtle-text tracking-widest mb-1">ORDER STATUS</p>
                 <div className="font-serif text-3xl text-saffron-gold font-bold">READY</div>
-                <p className="font-body-md text-subtle-text mt-2 italic text-xs">Ready at pass counter</p>
+                <p className="font-body-md text-subtle-text mt-2 italic text-xs">{isTakeout ? 'Ready for pickup at our address' : 'Ready at pass counter'}</p>
               </>
             ) : (
               <>
@@ -274,7 +277,7 @@ export default function OrderTrackingPage() {
                     </div>
                     <div className="text-center">
                       <p className={`font-label-caps text-label-caps uppercase ${step.labelColor}`}>Ready</p>
-                      <p className="font-body-md text-[11px] text-subtle-text mt-0.5">At pass counter</p>
+                      <p className="font-body-md text-[11px] text-subtle-text mt-0.5">{isTakeout ? 'For pickup' : 'At pass counter'}</p>
                     </div>
                   </div>
                 );
@@ -289,8 +292,8 @@ export default function OrderTrackingPage() {
                       <span className="material-symbols-outlined !text-[20px]">{step.icon}</span>
                     </div>
                     <div className="text-center">
-                      <p className={`font-label-caps text-label-caps uppercase ${step.labelColor}`}>At Table</p>
-                      <p className="font-body-md text-[11px] text-subtle-text mt-0.5">Served hot</p>
+                      <p className={`font-label-caps text-label-caps uppercase ${step.labelColor}`}>{isTakeout ? 'Picked Up' : 'At Table'}</p>
+                      <p className="font-body-md text-[11px] text-subtle-text mt-0.5">{isTakeout ? 'Collected' : 'Served hot'}</p>
                     </div>
                   </div>
                 );
@@ -304,10 +307,39 @@ export default function OrderTrackingPage() {
           {/* Sommelier Order More Box */}
           <div className="lg:col-span-4 bg-ink-navy p-10 text-canvas-cream flex flex-col justify-between h-96 shadow-md">
             <div>
-              <h3 className="font-serif text-headline-sm text-canvas-cream mb-4">Craving another pairing?</h3>
-              <p className="font-body-md text-sm opacity-80 leading-relaxed mb-6">
-                Our sommelier has curated a selection of rare vintages that perfectly complement your current order.
-              </p>
+              {isTakeout ? (
+                <>
+                  <h3 className="font-serif text-headline-sm text-canvas-cream mb-4">Pick up at our address</h3>
+                  <p className="font-body-md text-sm opacity-80 leading-relaxed mb-4">
+                    Please collect your order from the restaurant once it's ready.
+                  </p>
+                  {restaurantInfo.address && (
+                    <p className="font-body-md text-sm leading-relaxed mb-4">{restaurantInfo.address}</p>
+                  )}
+                  {restaurantInfo.googleMapsUrl && (
+                    <a
+                      href={restaurantInfo.googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 font-cta-label text-cta-label text-saffron-gold uppercase tracking-widest hover:underline"
+                    >
+                      Open in Google Maps
+                      <span className="material-symbols-outlined text-sm">open_in_new</span>
+                    </a>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h3 className="font-serif text-headline-sm text-canvas-cream mb-4">
+                    {billPaid ? 'Thank you for dining with us' : 'Need anything else?'}
+                  </h3>
+                  <p className="font-body-md text-sm opacity-80 leading-relaxed mb-6">
+                    {billPaid
+                      ? 'Your bill is paid. We hope to see you again soon.'
+                      : "Add more dishes to your table whenever you like, and ask for your bill when you're done."}
+                  </p>
+                </>
+              )}
             </div>
             
             <div className="space-y-4">

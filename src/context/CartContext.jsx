@@ -413,6 +413,8 @@ export function CartProvider({ children }) {
       isTakeout,
       orderId,
       orderStatus,
+      // A takeout order is closed to additions once the kitchen has started it.
+      takeoutLocked: isTakeout && Boolean(orderId) && orderStatus !== 'Received',
       activeOrderItems,
       activeOrderTotal,
       activeOrderTime,

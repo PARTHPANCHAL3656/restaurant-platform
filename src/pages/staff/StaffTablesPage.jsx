@@ -903,20 +903,31 @@ export default function StaffTablesPage() {
                   <p className="font-sans text-[11px] leading-relaxed text-subtle-text">
                     Live session — scanning opens the digital menu for this table.
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(sessionMenuUrl);
-                      alert('Menu link copied — paste it in a browser to test without scanning.');
-                    }}
-                    className="font-mono text-[10px] text-saffron-gold underline break-all cursor-pointer hover:text-ink-navy transition-colors"
-                  >
-                    {sessionMenuUrl}
-                  </button>
+                  <p className="font-mono text-[10px] text-subtle-text break-all">{sessionMenuUrl}</p>
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <a
+                      href={sessionMenuUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2.5 bg-ink-navy text-canvas-cream font-cta-label text-[10px] uppercase tracking-widest hover:bg-saffron-gold hover:text-ink-navy transition-all duration-300 cursor-pointer text-center"
+                    >
+                      Open in New Tab
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(sessionMenuUrl);
+                        alert('Menu link copied.');
+                      }}
+                      className="py-2.5 border border-ink-navy text-ink-navy font-cta-label text-[10px] uppercase tracking-widest hover:bg-ink-navy hover:text-canvas-cream transition-all duration-300 cursor-pointer text-center"
+                    >
+                      Copy Link
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <p className="font-sans text-[11px] leading-relaxed text-subtle-text">
-                  Guests can scan this QR to access the digital menu and place orders directly from their table.
+                <p className="font-sans text-[11px] leading-relaxed text-ink-navy font-semibold">
+                  No live session found for this table, so this QR can't place orders. Reload, or seat the table first.
                 </p>
               )}
 

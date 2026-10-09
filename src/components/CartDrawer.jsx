@@ -22,7 +22,8 @@ export default function CartDrawer({ isOpen, onClose }) {
     getGST, 
     getGrandTotal, 
     placeOrder,
-    isTakeout
+    isTakeout,
+    takeoutLocked
   } = useCart();
 
   const [specialNotes, setSpecialNotes] = useState('');
@@ -225,10 +226,17 @@ export default function CartDrawer({ isOpen, onClose }) {
                   <div className="flex flex-col space-y-3 pt-2">
                     <button 
                       onClick={handleCheckout}
+                      disabled={takeoutLocked}
+                      style={takeoutLocked ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
                       className="w-full bg-ink-navy text-canvas-cream py-4 font-cta-label text-cta-label tracking-widest uppercase hover:bg-saffron-gold hover:text-ink-navy transition-all duration-300 shadow-lg text-center"
                     >
-                      Place Order
+                      {takeoutLocked ? 'Order Already Started' : 'Place Order'}
                     </button>
+                    {takeoutLocked && (
+                      <p className="text-center text-xs text-subtle-text leading-relaxed">
+                        Your takeout order is already being prepared, so items can't be added to it. To order more, please place a new takeout order.
+                      </p>
+                    )}
                     <button 
                       onClick={onClose}
                       className="w-full text-center text-xs font-label-caps tracking-widest uppercase text-subtle-text hover:text-ink-navy transition-colors py-2"
