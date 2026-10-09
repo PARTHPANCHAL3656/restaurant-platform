@@ -56,6 +56,16 @@ export const addItems = async (req, res) => {
         return res.status(404).json({ error: "No active order found for this table." })
       }
 
+      // A takeout order is one handoff, and the staff board shows it as a flat
+      // list. Once the kitchen has started it, adding items would re-list
+      // everything already cooked as new, so it's closed to additions.
+      if (current.orderType === "takeout" && current.status !== "Received") {
+        return res.status(409).json({
+          error: "Your takeout order is already being prepared, so items can't be added to it. Please place a new takeout order instead.",
+          code: "TAKEOUT_LOCKED"
+        })
+      }
+
       if (guestPhone && !current.guestPhone) {
         current.guestPhone = guestPhone
       }

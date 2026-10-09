@@ -323,7 +323,7 @@ export default function OrderTrackingPage() {
               
               <button 
                 onClick={() => navigate('/menu')}
-                style={billPaid ? { display: 'none' } : undefined}
+                style={billPaid || (isTakeout && orderStatus !== 'Received') ? { display: 'none' } : undefined}
                 className="w-full py-4 border border-canvas-cream/30 text-canvas-cream font-cta-label text-cta-label tracking-widest hover:bg-canvas-cream hover:text-ink-navy transition-all flex items-center justify-center gap-2 uppercase"
               >
                 Order More 
