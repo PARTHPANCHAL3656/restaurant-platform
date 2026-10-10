@@ -83,6 +83,15 @@ export default function useSidebarBadges({
       if (r.status === 'pending' && r.source !== 'Walk-in') out.reservations.push(`reservations|${r.id}`);
     }
     for (const o of orders) {
+      if (o.orderType !== 'takeout' && Array.isArray(o.rounds) && o.rounds.length > 0) {
+        // Dine-in: every round is its own ticket. It counts while it's new
+        // (kitchen hasn't started it) and again when it's ready for a waiter.
+        for (const r of o.rounds) {
+          if (r.status === 'Received') out.orders.push(`orders|${o.id}:${r.round}`);
+          else if (r.status === 'Ready') out.orders.push(`orders|${o.id}:${r.round}:ready`);
+        }
+        continue;
+      }
       if (o.status !== 'new') continue; // already being prepared / ready = handled
       // An "order more" round on the same order gets a new round number -> new key.
       let round = 1;

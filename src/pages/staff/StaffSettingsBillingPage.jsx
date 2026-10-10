@@ -251,6 +251,11 @@ export default function StaffSettingsBillingPage() {
               max="120"
               value={form.tableAutoReleaseMinutes}
               onChange={(e) => updateField('tableAutoReleaseMinutes', e.target.value)}
+              onBlur={() => {
+                // Clicking away corrects it: below 5 becomes 5, above 120 becomes 120, empty becomes 10.
+                const n = Math.round(Number(form.tableAutoReleaseMinutes));
+                updateField('tableAutoReleaseMinutes', String(Number.isFinite(n) && form.tableAutoReleaseMinutes !== '' ? Math.min(120, Math.max(5, n)) : 10));
+              }}
               className="w-full sm:w-40 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
           </div>

@@ -13,7 +13,7 @@ const BELL_ALERTS = [
 ];
 
 export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0, onMarkAllSeen }) {
-  const { staffProfile, staffName, logoutStaff } = useStaff();
+  const { staffProfile, staffName, staffJobTitle, logoutStaff } = useStaff();
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -203,7 +203,7 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
                 {staffName}
               </span>
               <span className="text-[10px] text-subtle-text mt-0.5 leading-none">
-                {(() => {
+                {staffJobTitle || (() => {
                   const role = sessionStorage.getItem('staffRole');
                   return role ? role.charAt(0) + role.slice(1).toLowerCase() : staffProfile.role;
                 })()}

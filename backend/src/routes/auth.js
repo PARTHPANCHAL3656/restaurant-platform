@@ -49,7 +49,7 @@ router.post("/login", loginLimiter, staffLogin)
 // frontend uses it to notice a role change (e.g. a demotion) without waiting
 // for the user to log out and back in.
 router.get("/me", staffAuth, (req, res) => {
-  res.json({ name: req.staff.name, role: req.staff.role })
+  res.json({ name: req.staff.name, role: req.staff.role, jobTitle: req.staff.jobTitle || "" })
 })
 
 // POST /api/auth/change-password — any signed-in account, current password required

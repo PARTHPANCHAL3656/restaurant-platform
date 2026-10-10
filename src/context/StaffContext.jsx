@@ -582,6 +582,7 @@ export function StaffProvider({ children }) {
   // The signed-in person's name lives in state so the header and dashboard
   // update the moment it changes (sessionStorage alone can't trigger a re-render).
   const [staffName, setStaffName] = useState(() => (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('staffName') || '' : ''));
+  const [staffJobTitle, setStaffJobTitle] = useState(() => (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('staffJobTitle') || '' : ''));
 
   const authenticateStaff = useCallback((token, name, role) => {
     sessionStorage.setItem('staffToken', token);
@@ -617,8 +618,11 @@ export function StaffProvider({ children }) {
       checking = true;
       try {
         const res = await api.get('/api/auth/me');
-        const { name, role } = res.data || {};
+        const { name, role, jobTitle } = res.data || {};
         if (!role) return;
+        // The job title is display-only, so it updates in place without a reload.
+        sessionStorage.setItem('staffJobTitle', jobTitle || '');
+        setStaffJobTitle(jobTitle || '');
         const roleChanged = sessionStorage.getItem('staffRole') !== role;
         const nameChanged = sessionStorage.getItem('staffName') !== name;
         if (roleChanged || nameChanged) {
@@ -680,6 +684,15 @@ export function StaffProvider({ children }) {
         round: i.round
       })),
       servedThroughRound: o.servedThroughRound || 0,
+      // One entry per round for dine-in orders (the kitchen board works per round).
+      rounds: (o.rounds || []).map(r => ({
+        round: r.round,
+        status: r.status,
+        placedAt: r.placedAt,
+        startedAt: r.startedAt || null,
+        readyAt: r.readyAt || null,
+        servedAt: r.servedAt || null
+      })),
       notes: o.notes || '',
       isCustomerOrder: true,
       createdAt: o.createdAt,
@@ -1176,6 +1189,13 @@ export function StaffProvider({ children }) {
   };
 
   // Kitchen Advance Order status (Accept & Start Prep -> Mark Ready -> Settle)
+  // Kitchen board: move one round of an order to a new status. Throws with the
+  // server's message if the move isn't allowed, so the caller can show it.
+  const advanceRound = async (orderId, round, status) => {
+    await api.patch(`/api/orders/${orderId}/rounds/${round}/status`, { status });
+    await loadAllData();
+  };
+
   const advanceOrder = async (orderId) => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
@@ -1989,6 +2009,8 @@ export function StaffProvider({ children }) {
       staffProfile,
       staffName,
       setStaffName,
+      staffJobTitle,
+      setStaffJobTitle,
       reservations,
       tables,
       tableQrData,
@@ -2008,6 +2030,7 @@ export function StaffProvider({ children }) {
       deleteReservation,
       addOrder,
       advanceOrder,
+      advanceRound,
       cancelOrder,
       assignTable,
       markInvoicePaid,

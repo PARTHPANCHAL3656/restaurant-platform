@@ -20,7 +20,7 @@ export default function StaffSettingsStaffPage() {
   const staffRole = sessionStorage.getItem('staffRole');
   const isOwner = staffRole === 'OWNER';
   const myId = getMyStaffId();
-  const { setStaffName } = useStaff();
+  const { setStaffName, setStaffJobTitle } = useStaff();
 
   const [staffList, setStaffList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -108,6 +108,8 @@ export default function StaffSettingsStaffPage() {
       await api.patch(`/api/staff/${myId}`, { name: myProfile.name, jobTitle: myProfile.jobTitle });
       sessionStorage.setItem('staffName', myProfile.name.trim());
       setStaffName(myProfile.name.trim());
+      sessionStorage.setItem('staffJobTitle', (myProfile.jobTitle || '').trim());
+      setStaffJobTitle((myProfile.jobTitle || '').trim());
       setProfileSaved('Saved.');
       setTimeout(() => setProfileSaved(''), 3000);
       loadStaff();
