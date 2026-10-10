@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import api from '../../utils/api';
 import socket from '../../utils/socket';
+import { useStaff } from '../../context/StaffContext';
 
 function getMyStaffId() {
   try {
@@ -19,6 +20,7 @@ export default function StaffSettingsStaffPage() {
   const staffRole = sessionStorage.getItem('staffRole');
   const isOwner = staffRole === 'OWNER';
   const myId = getMyStaffId();
+  const { setStaffName } = useStaff();
 
   const [staffList, setStaffList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -104,6 +106,8 @@ export default function StaffSettingsStaffPage() {
     setIsSavingProfile(true);
     try {
       await api.patch(`/api/staff/${myId}`, { name: myProfile.name, jobTitle: myProfile.jobTitle });
+      sessionStorage.setItem('staffName', myProfile.name.trim());
+      setStaffName(myProfile.name.trim());
       setProfileSaved('Saved.');
       setTimeout(() => setProfileSaved(''), 3000);
       loadStaff();

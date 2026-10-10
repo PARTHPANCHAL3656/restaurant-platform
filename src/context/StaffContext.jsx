@@ -68,7 +68,8 @@ export function StaffProvider({ children }) {
     invoicePrefix: "SG",
     repeatCustomerDiscountEnabled: true,
     repeatCustomerVisitThreshold: 3,
-    repeatCustomerDiscountPercent: 5
+    repeatCustomerDiscountPercent: 5,
+    tableAutoReleaseMinutes: 10
   });
 
   // Reservation booking rules (Settings -> Operations). Mirrors the backend
@@ -578,11 +579,16 @@ export function StaffProvider({ children }) {
     socket.connect();
   }, []);
 
+  // The signed-in person's name lives in state so the header and dashboard
+  // update the moment it changes (sessionStorage alone can't trigger a re-render).
+  const [staffName, setStaffName] = useState(() => sessionStorage.getItem('staffName') || '');
+
   const authenticateStaff = useCallback((token, name, role) => {
     sessionStorage.setItem('staffToken', token);
     sessionStorage.setItem('staffAuthenticated', 'true');
     sessionStorage.setItem('staffName', name);
     sessionStorage.setItem('staffRole', role);
+    setStaffName(name);
     setIsAuthenticated(true);
   }, []);
 
@@ -722,7 +728,9 @@ export function StaffProvider({ children }) {
       currentSessionId: t.currentSessionId,
       currentOrderId: t.currentOrderId,
       reservationId: t.reservationId,
-      token: t.token
+      token: t.token,
+      // Set once this table's bill is paid; the server frees the table at this time.
+      autoReleaseAt: t.autoReleaseAt || null
     };
   }, [billing]);
 
@@ -1009,8 +1017,27 @@ export function StaffProvider({ children }) {
         .catch(() => {});
     };
 
+    // Safety-net events, so staff are never surprised by a table changing on
+    // its own. logActivity is defined further down this component; it only runs
+    // later, when an event arrives.
+    const handleAutoReleaseNotice = (data) => {
+      if (data && (data.reason === 'auto' || data.reason === 'receipt' || data.reason === 'paid-order-attempt')) {
+        const why = data.reason === 'receipt'
+          ? 'Guest downloaded the receipt after paying'
+          : data.reason === 'paid-order-attempt'
+            ? 'Guest tried to order after paying'
+            : 'Bill was paid and the release timer ran out';
+        logActivity(`Table ${data.tableNumber} released automatically`, why, 'check_circle', '/staff/tables');
+      }
+    };
+    const handleAutoReleaseSkipped = (data) => {
+      logActivity(`Table ${data?.tableNumber} was not auto-released`, 'New items were added after the bill. Check the table before releasing.', 'warning', '/staff/tables');
+    };
+
     socket.on('table:updated', handleTableUpdate);
     socket.on('table:released', handleTableUpdate);
+    socket.on('table:released', handleAutoReleaseNotice);
+    socket.on('table:autoReleaseSkipped', handleAutoReleaseSkipped);
     socket.on('order:updated', handleOrderUpdate);
     socket.on('order:new', handleOrderUpdate);
     socket.on('reservation:new', handleReservationNew);
@@ -1025,6 +1052,8 @@ export function StaffProvider({ children }) {
     return () => {
       socket.off('table:updated', handleTableUpdate);
       socket.off('table:released', handleTableUpdate);
+      socket.off('table:released', handleAutoReleaseNotice);
+      socket.off('table:autoReleaseSkipped', handleAutoReleaseSkipped);
       socket.off('order:updated', handleOrderUpdate);
       socket.off('order:new', handleOrderUpdate);
       socket.off('reservation:new', handleReservationNew);
@@ -1958,6 +1987,8 @@ export function StaffProvider({ children }) {
     <StaffContext.Provider value={{
       restaurantInfo,
       staffProfile,
+      staffName,
+      setStaffName,
       reservations,
       tables,
       tableQrData,

@@ -6,7 +6,7 @@ import { getTodayIST } from '../../utils/reservationTime';
 
 export default function StaffDashboardPage() {
   const navigate = useNavigate();
-  const { tables, orders, invoices, queue, staffProfile, reservations } = useStaff();
+  const { tables, orders, invoices, queue, staffProfile, staffName, reservations } = useStaff();
 
   // Computations based on shared context state
   const totalTables = tables.length;
@@ -66,7 +66,7 @@ export default function StaffDashboardPage() {
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-muted-border pb-6">
         <div>
           <p className="font-label-caps text-[10px] text-saffron-gold tracking-[0.25em] uppercase font-bold mb-1">Shift active</p>
-          <h1 className="font-serif text-display-lg-mobile md:text-headline-md text-ink-navy">Welcome Back, {(sessionStorage.getItem('staffName') || staffProfile.name).split(' ')[0]}</h1>
+          <h1 className="font-serif text-display-lg-mobile md:text-headline-md text-ink-navy">Welcome Back{staffName ? `, ${staffName.split(' ')[0]}` : ''}</h1>
         </div>
         <div className="flex items-center gap-2.5 text-subtle-text font-body-md text-xs font-semibold">
           <span className="material-symbols-outlined text-lg text-saffron-gold">calendar_today</span>

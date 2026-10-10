@@ -449,7 +449,21 @@ export default function StaffTablesPage() {
                   {tbl.status === 'reserved' && lateReservationIds.has(tbl.reservationId) && (
                     <p className="mt-0.5 text-red-600 font-black">LATE</p>
                   )}
+                  {tbl.status === 'occupied' && tbl.autoReleaseAt && (
+                    <p className="mt-0.5 text-[9px] font-black tracking-wider">PAID</p>
+                  )}
                 </div>
+                {tbl.status === 'occupied' && tbl.autoReleaseAt && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => { e.stopPropagation(); releaseTable(tbl.id); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); releaseTable(tbl.id); } }}
+                    className="absolute bottom-0 inset-x-0 py-1.5 bg-saffron-gold text-ink-navy text-[10px] font-black uppercase tracking-widest text-center hover:brightness-110 cursor-pointer"
+                  >
+                    Release
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -759,6 +773,11 @@ export default function StaffTablesPage() {
                           This order is {invoiceWaitingOn === 'new' ? 'still waiting for the kitchen' : invoiceWaitingOn === 'preparing' ? 'still being prepared' : 'ready but not served yet'}. Mark it as Served in Order Management before generating the invoice.
                         </p>
                       )}
+                      {currentTable.autoReleaseAt && (
+                        <p className="text-[11px] leading-snug text-ink-navy bg-saffron-gold/10 border border-saffron-gold/40 p-3" role="status">
+                          Bill paid. This table frees itself at {new Date(currentTable.autoReleaseAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Tap Release Table to free it now.
+                        </p>
+                      )}
                       <div className="grid grid-cols-2 gap-4">
                         <button 
                           onClick={handleGenerateInvoice}
@@ -768,7 +787,7 @@ export default function StaffTablesPage() {
                           Generate Invoice
                         </button>
                         <button 
-                          onClick={() => setShowReleaseConfirm(true)}
+                          onClick={() => (currentTable.autoReleaseAt ? handleConfirmRelease() : setShowReleaseConfirm(true))}
                           className="h-[56px] bg-red-950 text-white font-cta-label text-cta-label uppercase tracking-widest hover:bg-red-900 transition-all duration-300 cursor-pointer rounded-none text-center"
                         >
                           Release Table

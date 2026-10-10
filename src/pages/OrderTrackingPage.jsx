@@ -305,7 +305,7 @@ export default function OrderTrackingPage() {
         {/* Order Details Grid */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
           {/* Sommelier Order More Box */}
-          <div className="lg:col-span-4 bg-ink-navy p-10 text-canvas-cream flex flex-col justify-between h-96 shadow-md">
+          <div className="lg:col-span-4 bg-ink-navy p-10 text-canvas-cream flex flex-col gap-8 shadow-md">
             <div>
               {isTakeout ? (
                 <>
@@ -396,11 +396,11 @@ export default function OrderTrackingPage() {
                 <div className="text-left">
                   <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest mb-1">Status</p>
                   <span className="font-label-caps text-xs px-3 py-1 bg-saffron-gold/15 text-saffron-gold font-semibold border border-saffron-gold/20 uppercase tracking-widest">
-                    {orderStatus}
+                    {isTakeout && orderStatus === 'At Table' ? 'Picked Up' : orderStatus}
                   </span>
                 </div>
                 <div className="text-right">
-                  <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest mb-1">Total to Table</p>
+                  <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest mb-1">{isTakeout ? 'Order Total' : 'Total to Table'}</p>
                   <p className="font-display-lg text-headline-md text-ink-navy">{formatINR(activeOrderTotal)}</p>
                 </div>
               </div>

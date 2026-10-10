@@ -227,6 +227,16 @@ export default function App({ RouterComponent = Router, routerProps = {} }) {
         duration: 1.2,
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         smoothWheel: true,
+        // Let any element that can scroll on its own take the mouse wheel
+        // natively. Without this Lenis scrolls the page instead, and inner
+        // panels only scroll by dragging their scrollbar.
+        prevent: (node) => {
+          for (let el = node; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+            const { overflowY } = getComputedStyle(el);
+            if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) return true;
+          }
+          return false;
+        },
       });
 
       function raf(time) {

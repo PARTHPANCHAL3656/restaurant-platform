@@ -13,7 +13,7 @@ const BELL_ALERTS = [
 ];
 
 export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0, onMarkAllSeen }) {
-  const { staffProfile, logoutStaff } = useStaff();
+  const { staffProfile, staffName, logoutStaff } = useStaff();
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -200,7 +200,7 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
             <StaffAvatar className="w-9 h-9" />
             <div className="hidden sm:flex flex-col shrink-0">
               <span className="font-semibold text-xs text-ink-navy leading-tight">
-                {sessionStorage.getItem('staffName') || staffProfile.name}
+                {staffName}
               </span>
               <span className="text-[10px] text-subtle-text mt-0.5 leading-none">
                 {(() => {

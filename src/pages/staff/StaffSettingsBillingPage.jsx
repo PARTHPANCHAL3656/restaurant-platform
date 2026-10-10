@@ -23,7 +23,8 @@ export default function StaffSettingsBillingPage() {
     repeatCustomerDiscountPercent: restaurantInfo.repeatCustomerDiscountPercent,
     billFooterNote: restaurantInfo.billFooterNote,
     takeoutBillNote: restaurantInfo.takeoutBillNote,
-    invoicePrefix: restaurantInfo.invoicePrefix
+    invoicePrefix: restaurantInfo.invoicePrefix,
+    tableAutoReleaseMinutes: restaurantInfo.tableAutoReleaseMinutes
   });
   const [isSaving, setIsSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState('');
@@ -45,9 +46,10 @@ export default function StaffSettingsBillingPage() {
       repeatCustomerDiscountPercent: restaurantInfo.repeatCustomerDiscountPercent,
       billFooterNote: restaurantInfo.billFooterNote,
       takeoutBillNote: restaurantInfo.takeoutBillNote,
-      invoicePrefix: restaurantInfo.invoicePrefix
+      invoicePrefix: restaurantInfo.invoicePrefix,
+      tableAutoReleaseMinutes: restaurantInfo.tableAutoReleaseMinutes
     });
-  }, [restaurantInfo.cgstRate, restaurantInfo.sgstRate, restaurantInfo.pricesIncludeGst, restaurantInfo.serviceChargeEnabled, restaurantInfo.serviceChargePercent, restaurantInfo.serviceChargeTaxable, restaurantInfo.packagingFeeEnabled, restaurantInfo.packagingFeeAmount, restaurantInfo.packagingFeeLabel, restaurantInfo.repeatCustomerDiscountEnabled, restaurantInfo.repeatCustomerVisitThreshold, restaurantInfo.repeatCustomerDiscountPercent, restaurantInfo.billFooterNote, restaurantInfo.takeoutBillNote, restaurantInfo.invoicePrefix]);
+  }, [restaurantInfo.cgstRate, restaurantInfo.sgstRate, restaurantInfo.pricesIncludeGst, restaurantInfo.serviceChargeEnabled, restaurantInfo.serviceChargePercent, restaurantInfo.serviceChargeTaxable, restaurantInfo.packagingFeeEnabled, restaurantInfo.packagingFeeAmount, restaurantInfo.packagingFeeLabel, restaurantInfo.repeatCustomerDiscountEnabled, restaurantInfo.repeatCustomerVisitThreshold, restaurantInfo.repeatCustomerDiscountPercent, restaurantInfo.billFooterNote, restaurantInfo.takeoutBillNote, restaurantInfo.invoicePrefix, restaurantInfo.tableAutoReleaseMinutes]);
 
   const updateField = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -64,10 +66,15 @@ export default function StaffSettingsBillingPage() {
       serviceChargePercent: Number(safeForm.serviceChargePercent),
       packagingFeeAmount: Number(safeForm.packagingFeeAmount),
       repeatCustomerVisitThreshold: Number(safeForm.repeatCustomerVisitThreshold),
-      repeatCustomerDiscountPercent: Number(safeForm.repeatCustomerDiscountPercent)
+      repeatCustomerDiscountPercent: Number(safeForm.repeatCustomerDiscountPercent),
+      tableAutoReleaseMinutes: Number(safeForm.tableAutoReleaseMinutes)
     };
     if (numericForm.cgstRate < 0 || numericForm.sgstRate < 0 || numericForm.serviceChargePercent < 0 || numericForm.packagingFeeAmount < 0 || numericForm.repeatCustomerVisitThreshold < 1 || numericForm.repeatCustomerDiscountPercent < 0) {
       setError('Rates and amounts cannot be negative.');
+      return;
+    }
+    if (!Number.isInteger(numericForm.tableAutoReleaseMinutes) || numericForm.tableAutoReleaseMinutes < 5 || numericForm.tableAutoReleaseMinutes > 120) {
+      setError('Auto-release time must be a whole number between 5 and 120 minutes.');
       return;
     }
     setForm(numericForm);
@@ -230,6 +237,25 @@ export default function StaffSettingsBillingPage() {
           </div>
           <p className="text-xs text-subtle-text">
             Applied to the subtotal before service charge and GST — the tax itself goes down too, matching how discounts are meant to work under GST law.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Table Auto-Release</h3>
+          <div>
+            <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Minutes after payment</span>
+            <input
+              type="number"
+              step="1"
+              min="5"
+              max="120"
+              value={form.tableAutoReleaseMinutes}
+              onChange={(e) => updateField('tableAutoReleaseMinutes', e.target.value)}
+              className="w-full sm:w-40 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+            />
+          </div>
+          <p className="text-xs text-subtle-text">
+            A safety net, not a rule. If staff forget to release a paid table, the system frees it after this many minutes. Staff can always release sooner. It can't be turned off, and the minimum is 5.
           </p>
         </div>
 
