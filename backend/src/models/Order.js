@@ -11,6 +11,18 @@ const orderItemSchema = new mongoose.Schema({
   round:    { type: Number, default: 1 }
 }, { _id: false })
 
+// Dine-in orders are cooked and served round by round, so each round carries
+// its own status and timestamps (the timestamps also feed future wait-time
+// estimates). Takeout orders don't use this.
+const roundSchema = new mongoose.Schema({
+  round:     { type: Number, required: true },
+  status:    { type: String, enum: ["Received", "Preparing", "Ready", "Served"], default: "Received" },
+  placedAt:  { type: Date, default: Date.now },
+  startedAt: { type: Date, default: null },
+  readyAt:   { type: Date, default: null },
+  servedAt:  { type: Date, default: null }
+}, { _id: false })
+
 const orderSchema = new mongoose.Schema({
   // "dine-in" orders always have a tableId/tableNumber. "takeout" orders
   // never do — they're identified by sessionId + orderNumber instead.
@@ -82,6 +94,7 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  rounds: [roundSchema],
     status: {
     type: String,
     enum: ["Received", "Preparing", "Ready", "Served", "Cancelled"],

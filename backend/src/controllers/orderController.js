@@ -8,6 +8,7 @@ import { normalizePhone } from "../utils/normalizePhone.js"
 import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
 import { refreshUnpaidInvoice } from "../utils/refreshInvoice.js"
 import { autoReleaseTable } from "../utils/tableRelease.js"
+import { STEPS, ensureRounds, deriveStatus, servedThrough, applyRoundStatus, setUnservedRoundsTo } from "../utils/orderRounds.js"
 import Table from "../models/Table.js"
 
 // POST /api/orders/add-items
@@ -84,7 +85,15 @@ export const addItems = async (req, res) => {
         }
       })
 
-      current.status = "Received"
+      if (current.orderType === "takeout") {
+        current.status = "Received"
+      } else {
+        // Dine-in: each round has its own status, so a new round never resets
+        // one that's already being cooked or waiting to be served.
+        ensureRounds(current)
+        current.rounds.push({ round, status: "Received", placedAt: new Date() })
+        current.status = deriveStatus(current)
+      }
       current.currentRound = round + 1
 
       try {
@@ -179,8 +188,73 @@ export const getOrderByTable = async (req, res) => {
 export const getAllActiveOrders = async (req, res) => {
   try {
     const orders = await Order.find({ status: { $in: ["Received", "Preparing", "Ready"] } }).sort({ createdAt: 1 })
+    // Older orders without a rounds list get one built on the fly (not saved).
+    orders.forEach(o => ensureRounds(o))
     res.json(orders)
   } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+// PATCH /api/orders/:id/rounds/:round/status
+// Kitchen board: move ONE round of a dine-in order along
+// Received → Preparing → Ready → Served. Going forward may skip a step; going
+// back is allowed one step at a time (the board's Undo). A served round can't
+// be un-served once a bill exists.
+export const updateRoundStatus = async (req, res) => {
+  try {
+    const { status } = req.body
+    const roundNumber = Number(req.params.round)
+
+    if (!STEPS.includes(status)) {
+      return res.status(400).json({ error: "Invalid status value." })
+    }
+
+    const order = await Order.findById(req.params.id)
+    if (!order) return res.status(404).json({ error: "Order not found." })
+    if (order.orderType === "takeout") {
+      return res.status(400).json({ error: "Takeout orders don't use rounds." })
+    }
+
+    ensureRounds(order)
+    const round = order.rounds.find(r => r.round === roundNumber)
+    if (!round) return res.status(404).json({ error: "Round not found." })
+
+    const from = STEPS.indexOf(round.status)
+    const to = STEPS.indexOf(status)
+    if (to === from) return res.json(order)
+    if (to < from && from - to !== 1) {
+      return res.status(409).json({ error: "A round can only be moved back one step." })
+    }
+    if (round.status === "Served" && to < from) {
+      const invoice = await Invoice.findOne({ sessionId: order.sessionId })
+      if (invoice) {
+        return res.status(409).json({ error: "A bill has already been generated, so this round can't be un-served." })
+      }
+    }
+
+    applyRoundStatus(round, status)
+    order.status = deriveStatus(order)
+    order.servedThroughRound = servedThrough(order)
+    await order.save()
+
+    io.emit("order:statusChanged", {
+      orderId: order._id,
+      tableNumber: order.tableNumber,
+      status: order.status
+    })
+    io.emit("order:updated", {
+      orderId: order._id,
+      tableNumber: order.tableNumber,
+      status: order.status,
+      round: roundNumber
+    })
+
+    res.json(order)
+  } catch (err) {
+    if (err.name === "VersionError") {
+      return res.status(409).json({ error: "This order was just updated by someone else. Please try again." })
+    }
     res.status(500).json({ error: err.message })
   }
 }
@@ -212,6 +286,16 @@ export const updateOrderStatus = async (req, res) => {
       // If the guest orders again later, only that new round will show
       // as needing prep - this round won't reappear in the queue.
       order.servedThroughRound = order.currentRound - 1
+    }
+
+    // Dine-in orders also track a status per round (the kitchen board works
+    // per round). Keep those in step when this whole-order endpoint is used:
+    // every round that isn't already served moves to the new status.
+    if (order.orderType !== "takeout" && status !== "Cancelled") {
+      ensureRounds(order)
+      setUnservedRoundsTo(order, status)
+      order.status = deriveStatus(order)
+      order.servedThroughRound = servedThrough(order)
     }
     await order.save()
 
