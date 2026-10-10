@@ -581,7 +581,7 @@ export function StaffProvider({ children }) {
 
   // The signed-in person's name lives in state so the header and dashboard
   // update the moment it changes (sessionStorage alone can't trigger a re-render).
-  const [staffName, setStaffName] = useState(() => sessionStorage.getItem('staffName') || '');
+  const [staffName, setStaffName] = useState(() => (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('staffName') || '' : ''));
 
   const authenticateStaff = useCallback((token, name, role) => {
     sessionStorage.setItem('staffToken', token);
