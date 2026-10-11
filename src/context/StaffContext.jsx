@@ -623,11 +623,14 @@ export function StaffProvider({ children }) {
         // The job title is display-only, so it updates in place without a reload.
         sessionStorage.setItem('staffJobTitle', jobTitle || '');
         setStaffJobTitle(jobTitle || '');
-        const roleChanged = sessionStorage.getItem('staffRole') !== role;
-        const nameChanged = sessionStorage.getItem('staffName') !== name;
-        if (roleChanged || nameChanged) {
-          sessionStorage.setItem('staffRole', role);
+        // A changed name or title is only display, so it updates in place. A
+        // changed role changes what this person may open, so that still reloads.
+        if (sessionStorage.getItem('staffName') !== name) {
           sessionStorage.setItem('staffName', name);
+          setStaffName(name);
+        }
+        if (sessionStorage.getItem('staffRole') !== role) {
+          sessionStorage.setItem('staffRole', role);
           window.location.assign('/staff/dashboard');
         }
       } catch (err) {
@@ -1192,8 +1195,28 @@ export function StaffProvider({ children }) {
   // Kitchen board: move one round of an order to a new status. Throws with the
   // server's message if the move isn't allowed, so the caller can show it.
   const advanceRound = async (orderId, round, status) => {
-    await api.patch(`/api/orders/${orderId}/rounds/${round}/status`, { status });
-    await loadAllData();
+    // Show the move straight away; the server confirms in the background.
+    const stamp = new Date().toISOString();
+    setOrders(prev => prev.map(o => (
+      o.id === orderId
+        ? {
+            ...o,
+            rounds: (o.rounds || []).map(r => (r.round === round ? {
+              ...r,
+              status,
+              startedAt: status === 'Preparing' && !r.startedAt ? stamp : r.startedAt,
+              readyAt: status === 'Ready' && !r.readyAt ? stamp : r.readyAt
+            } : r))
+          }
+        : o
+    )));
+    try {
+      await api.patch(`/api/orders/${orderId}/rounds/${round}/status`, { status });
+      await loadAllData();
+    } catch (err) {
+      await loadAllData(); // put the board back to what the server says
+      throw err;
+    }
   };
 
   const advanceOrder = async (orderId) => {

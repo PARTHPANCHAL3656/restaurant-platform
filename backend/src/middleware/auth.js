@@ -30,7 +30,7 @@ const staffAuth = async (req, res, next) => {
   }
 
   try {
-    const staff = await Staff.findById(decoded.staffId).select("username name role active tokenVersion")
+    const staff = await Staff.findById(decoded.staffId).select("username name role jobTitle active tokenVersion")
 
     // Tokens issued before tokenVersion existed carry no "tv" — treat as 0.
     if (!staff || !staff.active || (decoded.tv ?? 0) !== (staff.tokenVersion ?? 0)) {
@@ -42,7 +42,8 @@ const staffAuth = async (req, res, next) => {
       staffId: staff._id.toString(),
       username: staff.username,
       name: staff.name,
-      role: staff.role
+      role: staff.role,
+      jobTitle: staff.jobTitle || ""
     }
     next()
   } catch (err) {

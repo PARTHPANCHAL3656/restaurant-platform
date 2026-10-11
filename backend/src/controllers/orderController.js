@@ -91,7 +91,19 @@ export const addItems = async (req, res) => {
         // Dine-in: each round has its own status, so a new round never resets
         // one that's already being cooked or waiting to be served.
         ensureRounds(current)
-        current.rounds.push({ round, status: "Received", placedAt: new Date() })
+        // ensureRounds can create this very round itself (from the items that
+        // were just added above), carrying the order's old status. Make sure
+        // it exists exactly once and starts as Received.
+        const placedRound = current.rounds.find(r => r.round === round)
+        if (placedRound) {
+          placedRound.status = "Received"
+          placedRound.placedAt = new Date()
+          placedRound.startedAt = null
+          placedRound.readyAt = null
+          placedRound.servedAt = null
+        } else {
+          current.rounds.push({ round, status: "Received", placedAt: new Date() })
+        }
         current.status = deriveStatus(current)
       }
       current.currentRound = round + 1
