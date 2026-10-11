@@ -2,6 +2,8 @@ import Table from "../models/Table.js"
 import Order from "../models/Order.js"
 import Invoice from "../models/Invoice.js"
 import { io } from "../index.js"
+import Settings from "../models/Settings.js"
+import { ensureRounds, applyRoundStatus, deriveStatus, servedThrough } from "./orderRounds.js"
 
 // True when every item on the order appears on the invoice in at least the
 // same quantity. Used by the automatic paths only: if a guest ordered more
@@ -70,6 +72,50 @@ export async function autoReleaseTable(table, reason) {
 
   await releaseTableSession(table, reason)
   return "released"
+}
+
+// Kitchen safety net. A round that has been "Ready" (sent out) for longer than
+// the Owner's auto-serve setting (2-10 minutes, default 5) is marked Served, so
+// a forgotten tap never blocks the bill or leaves a table stuck. Rounds that
+// haven't been sent out are never auto-served.
+export async function autoServeReadyRounds() {
+  const settings = await Settings.getSingleton()
+  const minutes = Math.min(10, Math.max(2, Number(settings.billing?.autoServeMinutes) || 5))
+  const cutoff = Date.now() - minutes * 60 * 1000
+
+  const orders = await Order.find({
+    orderType: { $ne: "takeout" },
+    status: { $in: ["Received", "Preparing", "Ready"] },
+    $or: [
+      { "rounds.status": "Ready" },
+      { status: "Ready", rounds: { $size: 0 } } // older orders without a rounds list
+    ]
+  })
+
+  for (const order of orders) {
+    ensureRounds(order)
+    let changed = false
+    for (const r of order.rounds) {
+      const since = new Date(r.readyAt || order.updatedAt).getTime()
+      if (r.status === "Ready" && since <= cutoff) {
+        applyRoundStatus(r, "Served")
+        changed = true
+      }
+    }
+    if (!changed) continue
+
+    order.status = deriveStatus(order)
+    order.servedThroughRound = servedThrough(order)
+    try {
+      await order.save()
+    } catch (err) {
+      continue // updated elsewhere at the same moment; the next sweep retries
+    }
+
+    io.emit("order:statusChanged", { orderId: order._id, tableNumber: order.tableNumber, status: order.status })
+    io.emit("order:updated", { orderId: order._id, tableNumber: order.tableNumber, status: order.status })
+    io.to("staff").emit("order:autoServed", { tableNumber: order.tableNumber })
+  }
 }
 
 // Runs every 30 seconds (and once shortly after boot). Each due table is

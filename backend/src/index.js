@@ -26,7 +26,7 @@ import paymentRoutes from "./routes/payments.js"
 import invoiceRoutes from "./routes/invoices.js"
 import analyticsRoutes from "./routes/analytics.js"
 import crmRoutes from "./routes/crm.js"
-import { runAutoReleaseSweep } from "./utils/tableRelease.js"
+import { runAutoReleaseSweep, autoServeReadyRounds } from "./utils/tableRelease.js"
 
 dotenv.config()
 connectDB()
@@ -174,7 +174,10 @@ if (!process.env.VERCEL) {
   // Table auto-release safety net (see utils/tableRelease.js). The due time
   // lives in the database, so after a restart or a Render wake-up the first
   // sweep simply catches up on anything that came due while we were asleep.
-  const sweep = () => runAutoReleaseSweep().catch((err) => console.error("Auto-release sweep failed:", err))
+  const sweep = () => {
+    runAutoReleaseSweep().catch((err) => console.error("Auto-release sweep failed:", err))
+    autoServeReadyRounds().catch((err) => console.error("Auto-serve sweep failed:", err))
+  }
   setTimeout(sweep, 10 * 1000)
   setInterval(sweep, 30 * 1000)
 }

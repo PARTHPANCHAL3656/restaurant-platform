@@ -200,9 +200,26 @@ export const getOrderByTable = async (req, res) => {
 export const getAllActiveOrders = async (req, res) => {
   try {
     const orders = await Order.find({ status: { $in: ["Received", "Preparing", "Ready"] } }).sort({ createdAt: 1 })
-    // Older orders without a rounds list get one built on the fly (not saved).
-    orders.forEach(o => ensureRounds(o))
-    res.json(orders)
+    // Repair what's stored so the board, the Tables panel and billing all agree:
+    // older orders get their rounds list, and an order whose saved status no
+    // longer matches its rounds (for example after a duplicate round was
+    // collapsed) is corrected. Orders that turn out to be fully served drop off.
+    const live = []
+    for (const o of orders) {
+      const changed = ensureRounds(o)
+      const derived = deriveStatus(o)
+      if (changed || derived !== o.status) {
+        o.status = derived
+        o.servedThroughRound = servedThrough(o)
+        try {
+          await o.save()
+        } catch (err) {
+          // updated elsewhere at the same moment; the next load fixes it
+        }
+      }
+      if (["Received", "Preparing", "Ready"].includes(o.status)) live.push(o)
+    }
+    res.json(live)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

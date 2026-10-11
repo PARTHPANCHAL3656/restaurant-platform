@@ -86,7 +86,10 @@ const settingsSchema = new mongoose.Schema({
     // Safety net, not a feature toggle: how long after a dine-in bill is
     // marked paid the server releases the table if staff haven't. A manual
     // release always wins. Cannot be turned off; minimum 5 minutes.
-    tableAutoReleaseMinutes: { type: Number, default: 10, min: 5 }
+    tableAutoReleaseMinutes: { type: Number, default: 10, min: 5 },
+    // Kitchen safety net: how long a round may sit "Ready" before the system
+    // marks it served. Between 2 and 10 minutes.
+    autoServeMinutes: { type: Number, default: 5, min: 2, max: 10 }
   },
 
   // Reservation-booking rules an Owner/Manager configures from Settings →

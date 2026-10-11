@@ -69,7 +69,8 @@ export function StaffProvider({ children }) {
     repeatCustomerDiscountEnabled: true,
     repeatCustomerVisitThreshold: 3,
     repeatCustomerDiscountPercent: 5,
-    tableAutoReleaseMinutes: 10
+    tableAutoReleaseMinutes: 10,
+    autoServeMinutes: 5
   });
 
   // Reservation booking rules (Settings -> Operations). Mirrors the backend
@@ -1053,7 +1054,16 @@ export function StaffProvider({ children }) {
     socket.on('table:updated', handleTableUpdate);
     socket.on('table:released', handleTableUpdate);
     socket.on('table:released', handleAutoReleaseNotice);
+    const handleAutoServed = (data) => {
+      logActivity(
+        `${data && data.tableNumber ? 'Table ' + data.tableNumber : 'An order'} marked served automatically`,
+        'Food was sent out and nobody tapped Served in time',
+        'check_circle',
+        '/staff/orders'
+      );
+    };
     socket.on('table:autoReleaseSkipped', handleAutoReleaseSkipped);
+    socket.on('order:autoServed', handleAutoServed);
     socket.on('order:updated', handleOrderUpdate);
     socket.on('order:new', handleOrderUpdate);
     socket.on('reservation:new', handleReservationNew);
@@ -1070,6 +1080,7 @@ export function StaffProvider({ children }) {
       socket.off('table:released', handleTableUpdate);
       socket.off('table:released', handleAutoReleaseNotice);
       socket.off('table:autoReleaseSkipped', handleAutoReleaseSkipped);
+      socket.off('order:autoServed', handleAutoServed);
       socket.off('order:updated', handleOrderUpdate);
       socket.off('order:new', handleOrderUpdate);
       socket.off('reservation:new', handleReservationNew);

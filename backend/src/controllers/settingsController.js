@@ -49,6 +49,13 @@ export const updateSettings = async (req, res) => {
       }
     }
 
+    if (billing && billing.autoServeMinutes !== undefined) {
+      const minutes = billing.autoServeMinutes
+      if (!Number.isInteger(minutes) || minutes < 2 || minutes > 10) {
+        return res.status(400).json({ error: "Auto-serve time must be a whole number between 2 and 10 minutes." })
+      }
+    }
+
     if (openingHours && !Array.isArray(openingHours)) {
       return res.status(400).json({ error: "openingHours must be an array." })
     }
