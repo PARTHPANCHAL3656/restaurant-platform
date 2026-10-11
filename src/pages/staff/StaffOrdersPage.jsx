@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useStaff } from '../../context/StaffContext';
+import { isKitchenSoundOn, getKitchenAudio, playKitchenChime } from '../../utils/kitchenChime';
 
 // One ticket = one round of one table. Chef taps Start, then Send out; the
 // waiter taps Served. Takeout lives on its own page.
@@ -215,47 +216,13 @@ export default function StaffOrdersPage() {
   }, []);
 
   // ---- Chime when a new ticket arrives ----
-  const [soundOn, setSoundOn] = useState(() => localStorage.getItem('kdsSound') === 'on');
-  const audioRef = useRef(null);
-
-  const getAudio = () => {
-    try {
-      if (!audioRef.current) audioRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioRef.current.state === 'suspended') audioRef.current.resume();
-    } catch (e) { /* no audio available */ }
-    return audioRef.current;
-  };
-
-  const chime = () => {
-    const ctx = getAudio();
-    if (!ctx) return;
-    [660, 880].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const t = ctx.currentTime + i * 0.18;
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.32);
-    });
-  };
-
-  const toggleSound = () => {
-    const next = !soundOn;
-    setSoundOn(next);
-    localStorage.setItem('kdsSound', next ? 'on' : 'off');
-    if (next) chime(); // confirms the sound works
-  };
+  // The on/off switch lives in Settings → Operations (it is saved per device).
+  const [soundOn] = useState(() => isKitchenSoundOn());
 
   // Browsers only allow sound after a tap, so after a reload the first tap wakes it.
   useEffect(() => {
     if (!soundOn) return undefined;
-    const wake = () => getAudio();
+    const wake = () => getKitchenAudio();
     window.addEventListener('pointerdown', wake, { once: true });
     return () => window.removeEventListener('pointerdown', wake);
   }, [soundOn]);
@@ -265,7 +232,7 @@ export default function StaffOrdersPage() {
     const current = new Set(columns.Received.map(t => t.key));
     if (seenNew.current && soundOn) {
       for (const k of current) {
-        if (!seenNew.current.has(k)) { chime(); break; }
+        if (!seenNew.current.has(k)) { playKitchenChime(); break; }
       }
     }
     seenNew.current = current; // first load only sets the baseline, no chime
@@ -325,17 +292,10 @@ export default function StaffOrdersPage() {
     <div className="flex flex-col md:h-[calc(100vh-80px)] md:overflow-hidden select-none bg-surface">
       <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3 border-b border-muted-border bg-white shrink-0">
         <p className="text-xs text-subtle-text">
-          {tickets.length} open {tickets.length === 1 ? 'ticket' : 'tickets'} · Keys: 1-9 move a ticket on, 0 undoes
+          {tickets.length} open {tickets.length === 1 ? 'ticket' : 'tickets'}
         </p>
         <div className="flex items-center gap-3">
           {message && <span className="text-xs text-red-600">{message}</span>}
-          <button
-            type="button"
-            onClick={toggleSound}
-            className="text-[11px] uppercase tracking-widest border border-muted-border px-3 h-9 text-ink-navy hover:border-saffron-gold transition-colors cursor-pointer whitespace-nowrap"
-          >
-            Sound {soundOn ? 'on' : 'off'}
-          </button>
         </div>
       </div>
 

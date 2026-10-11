@@ -552,6 +552,12 @@ export function StaffProvider({ children }) {
   const isFetchingRef = useRef(false);
   const reloadQueuedRef = useRef(false);
   const isFetchingPublicRef = useRef(false);
+  // Kitchen board moves: how many are still on their way to the server, a
+  // counter that changes on every tap, and the line they wait in so they go
+  // one at a time.
+  const roundPendingRef = useRef(0);
+  const roundEpochRef = useRef(0);
+  const roundQueueRef = useRef(Promise.resolve());
 
   // Recent Activity Timeline state — starts empty and fills from live events
   const [activities, setActivities] = useState([]);
@@ -905,6 +911,11 @@ export function StaffProvider({ children }) {
 
   const loadStaffData = useCallback(async () => {
     if (!sessionStorage.getItem('staffToken')) return;
+    // Kitchen moves are still on their way to the server. Data fetched now
+    // could be older than those moves, so skip it. One fresh refresh runs
+    // when the last move finishes.
+    if (roundPendingRef.current > 0) return;
+    const epochAtStart = roundEpochRef.current;
     // A refresh is already running. Don't drop this request — it was
     // triggered by a change that may have landed AFTER that refresh read the
     // data — so run once more as soon as the current one finishes.
@@ -930,6 +941,10 @@ export function StaffProvider({ children }) {
         // the whole dashboard down; the identity check will fix the role.
         canViewInvoices ? fetchInvoices().catch(() => []) : Promise.resolve([]),
       ]);
+
+      // A kitchen tap happened while this was loading, so this data may be
+      // older than the tap. Throw it away; the tap triggers its own refresh.
+      if (roundPendingRef.current > 0 || roundEpochRef.current !== epochAtStart) return;
 
       const mappedOrders = rawOrders.map(mapBackendOrder);
       setOrders(mappedOrders);
@@ -1205,7 +1220,12 @@ export function StaffProvider({ children }) {
   // Kitchen Advance Order status (Accept & Start Prep -> Mark Ready -> Settle)
   // Kitchen board: move one round of an order to a new status. Throws with the
   // server's message if the move isn't allowed, so the caller can show it.
-  const advanceRound = async (orderId, round, status) => {
+  const advanceRound = (orderId, round, status) => {
+    // Any refresh that started before this tap may hold older data than the
+    // tap itself, so mark it out of date.
+    roundEpochRef.current += 1;
+    roundPendingRef.current += 1;
+
     // Show the move straight away; the server confirms in the background.
     const stamp = new Date().toISOString();
     setOrders(prev => prev.map(o => (
@@ -1221,13 +1241,23 @@ export function StaffProvider({ children }) {
           }
         : o
     )));
-    try {
-      await api.patch(`/api/orders/${orderId}/rounds/${round}/status`, { status });
-      await loadAllData();
-    } catch (err) {
-      await loadAllData(); // put the board back to what the server says
-      throw err;
-    }
+
+    // Moves go to the server one at a time. Two quick taps on the same table
+    // would otherwise save the same order at the same moment and trip over
+    // each other. Throws with the server's message if a move isn't allowed.
+    const send = async () => {
+      try {
+        await api.patch(`/api/orders/${orderId}/rounds/${round}/status`, { status });
+      } finally {
+        roundPendingRef.current -= 1;
+        // One refresh after the last queued move; it also puts the board back
+        // to what the server says if any move was refused.
+        if (roundPendingRef.current === 0) await loadAllData();
+      }
+    };
+    const result = roundQueueRef.current.then(send);
+    roundQueueRef.current = result.catch(() => {});
+    return result;
   };
 
   const advanceOrder = async (orderId) => {

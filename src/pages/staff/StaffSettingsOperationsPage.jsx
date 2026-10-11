@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStaff } from '../../context/StaffContext';
+import { isKitchenSoundOn, setKitchenSound, playKitchenChime } from '../../utils/kitchenChime';
 
 export default function StaffSettingsOperationsPage() {
-  const { restaurantInfo, updateOpeningHours, reservationRules, updateReservationRules } = useStaff();
+  const { restaurantInfo, updateOpeningHours, reservationRules, updateReservationRules, updateBillingInfo } = useStaff();
   const [hours, setHours] = useState(restaurantInfo.openingHours);
   const [isSaving, setIsSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState('');
@@ -62,6 +63,59 @@ export default function StaffSettingsOperationsPage() {
     } finally {
       setIsSavingRules(false);
     }
+  };
+
+  // Kitchen & table timers. The server stores these two numbers with the
+  // billing settings, but they have no tax effect, so a Manager may change them.
+  const [kitchen, setKitchen] = useState({
+    autoServeMinutes: String(restaurantInfo.autoServeMinutes),
+    tableAutoReleaseMinutes: String(restaurantInfo.tableAutoReleaseMinutes)
+  });
+  const [isSavingKitchen, setIsSavingKitchen] = useState(false);
+  const [kitchenSavedMessage, setKitchenSavedMessage] = useState('');
+  const [kitchenError, setKitchenError] = useState('');
+
+  useEffect(() => {
+    setKitchen({
+      autoServeMinutes: String(restaurantInfo.autoServeMinutes),
+      tableAutoReleaseMinutes: String(restaurantInfo.tableAutoReleaseMinutes)
+    });
+  }, [restaurantInfo.autoServeMinutes, restaurantInfo.tableAutoReleaseMinutes]);
+
+  const updateKitchen = (field, value) => {
+    setKitchen(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveKitchen = async () => {
+    setKitchenError('');
+    const autoServe = Number(kitchen.autoServeMinutes);
+    const autoRelease = Number(kitchen.tableAutoReleaseMinutes);
+    if (kitchen.autoServeMinutes.trim() === '' || !Number.isInteger(autoServe) || autoServe < 2 || autoServe > 10) {
+      setKitchenError('Auto-serve time must be a whole number between 2 and 10 minutes.');
+      return;
+    }
+    if (kitchen.tableAutoReleaseMinutes.trim() === '' || !Number.isInteger(autoRelease) || autoRelease < 5 || autoRelease > 120) {
+      setKitchenError('Auto-release time must be a whole number between 5 and 120 minutes.');
+      return;
+    }
+    setIsSavingKitchen(true);
+    try {
+      await updateBillingInfo({ autoServeMinutes: autoServe, tableAutoReleaseMinutes: autoRelease });
+      setKitchenSavedMessage('Saved. The new times apply straight away.');
+      setTimeout(() => setKitchenSavedMessage(''), 4000);
+    } catch (err) {
+      setKitchenError(err.response?.data?.error || err.message || 'Could not save. Please try again.');
+    } finally {
+      setIsSavingKitchen(false);
+    }
+  };
+
+  // The chime switch is per device and saves the moment it is ticked.
+  const [soundOn, setSoundOn] = useState(() => isKitchenSoundOn());
+  const handleSoundToggle = (checked) => {
+    setSoundOn(checked);
+    setKitchenSound(checked);
+    if (checked) playKitchenChime(); // so you hear it work
   };
 
   const updateEntry = (idx, field, value) => {
@@ -223,6 +277,94 @@ export default function StaffSettingsOperationsPage() {
           className="w-full mt-5 bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[48px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           {isSavingRules ? 'Saving...' : 'Save Reservation Rules'}
+        </button>
+      </div>
+
+      <div className="bg-white border border-muted-border p-6 mt-6">
+        <h2 className="font-serif text-xl text-ink-navy font-semibold mb-1">Operations — Kitchen &amp; Tables</h2>
+        <p className="text-xs text-subtle-text mb-5">
+          Timers that keep the kitchen board and table release from getting stuck, and the new-ticket chime.
+        </p>
+
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Kitchen Sound</h3>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={soundOn}
+                onChange={(e) => handleSoundToggle(e.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-ink-navy">Play a chime when a new ticket arrives</span>
+                <span className="block text-xs text-subtle-text">Applies only to the screen you are using now, and saves instantly (no Save button). It is on by default. After a page reload, the first tap on the board wakes the sound.</span>
+              </span>
+            </label>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Kitchen Auto-Serve</h3>
+            <div>
+              <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Minutes after food is sent out</span>
+              <input
+                type="number"
+                step="1"
+                min="2"
+                max="10"
+                value={kitchen.autoServeMinutes}
+                onChange={(e) => updateKitchen('autoServeMinutes', e.target.value)}
+                onBlur={() => {
+                  // Clicking away corrects it: below 2 becomes 2, above 10 becomes 10, empty becomes 5.
+                  const n = Math.round(Number(kitchen.autoServeMinutes));
+                  updateKitchen('autoServeMinutes', String(Number.isFinite(n) && kitchen.autoServeMinutes !== '' ? Math.min(10, Math.max(2, n)) : 5));
+                }}
+                className="w-full sm:w-40 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              />
+            </div>
+            <p className="text-xs text-subtle-text">
+              Once the kitchen taps Send out, a ticket that nobody taps Served is marked served automatically after this many minutes (2 to 10). That keeps billing and table release from getting stuck. Tickets that haven't been sent out are never auto-served.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Table Auto-Release</h3>
+            <div>
+              <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Minutes after payment</span>
+              <input
+                type="number"
+                step="1"
+                min="5"
+                max="120"
+                value={kitchen.tableAutoReleaseMinutes}
+                onChange={(e) => updateKitchen('tableAutoReleaseMinutes', e.target.value)}
+                onBlur={() => {
+                  // Clicking away corrects it: below 5 becomes 5, above 120 becomes 120, empty becomes 10.
+                  const n = Math.round(Number(kitchen.tableAutoReleaseMinutes));
+                  updateKitchen('tableAutoReleaseMinutes', String(Number.isFinite(n) && kitchen.tableAutoReleaseMinutes !== '' ? Math.min(120, Math.max(5, n)) : 10));
+                }}
+                className="w-full sm:w-40 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              />
+            </div>
+            <p className="text-xs text-subtle-text">
+              A safety net, not a rule. If staff forget to release a paid table, the system frees it after this many minutes. Staff can always release sooner. It can't be turned off, and the minimum is 5.
+            </p>
+          </div>
+        </div>
+
+        {kitchenError && (
+          <p className="text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2 mt-4">{kitchenError}</p>
+        )}
+        {kitchenSavedMessage && (
+          <p className="text-xs text-green-700 bg-green-50 border border-green-200 px-3 py-2 mt-4">{kitchenSavedMessage}</p>
+        )}
+
+        <button
+          onClick={handleSaveKitchen}
+          disabled={isSavingKitchen}
+          className="w-full mt-5 bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[48px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+        >
+          {isSavingKitchen ? 'Saving...' : 'Save Timers'}
         </button>
       </div>
     </div>

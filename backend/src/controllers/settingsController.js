@@ -29,7 +29,12 @@ export const updateSettings = async (req, res) => {
   try {
     const { openingHours, legal, contact, billing, links, reservations } = req.body
 
-    if ((legal || contact || billing) && req.staff.role !== "OWNER") {
+    // Two fields in the billing section are really kitchen/table timers with
+    // no tax effect. A Manager may change those two, and nothing else in billing.
+    const MANAGER_BILLING_FIELDS = ["tableAutoReleaseMinutes", "autoServeMinutes"]
+    const billingIsTimersOnly = !!billing && Object.keys(billing).every(k => MANAGER_BILLING_FIELDS.includes(k))
+
+    if ((legal || contact || (billing && !billingIsTimersOnly)) && req.staff.role !== "OWNER") {
       return res.status(403).json({ error: "Only the Owner can edit business/legal, contact, or billing details." })
     }
 

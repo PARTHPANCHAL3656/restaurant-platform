@@ -23,9 +23,7 @@ export default function StaffSettingsBillingPage() {
     repeatCustomerDiscountPercent: restaurantInfo.repeatCustomerDiscountPercent,
     billFooterNote: restaurantInfo.billFooterNote,
     takeoutBillNote: restaurantInfo.takeoutBillNote,
-    invoicePrefix: restaurantInfo.invoicePrefix,
-    tableAutoReleaseMinutes: restaurantInfo.tableAutoReleaseMinutes,
-    autoServeMinutes: restaurantInfo.autoServeMinutes
+    invoicePrefix: restaurantInfo.invoicePrefix
   });
   const [isSaving, setIsSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState('');
@@ -47,11 +45,9 @@ export default function StaffSettingsBillingPage() {
       repeatCustomerDiscountPercent: restaurantInfo.repeatCustomerDiscountPercent,
       billFooterNote: restaurantInfo.billFooterNote,
       takeoutBillNote: restaurantInfo.takeoutBillNote,
-      invoicePrefix: restaurantInfo.invoicePrefix,
-      tableAutoReleaseMinutes: restaurantInfo.tableAutoReleaseMinutes,
-      autoServeMinutes: restaurantInfo.autoServeMinutes
+      invoicePrefix: restaurantInfo.invoicePrefix
     });
-  }, [restaurantInfo.cgstRate, restaurantInfo.sgstRate, restaurantInfo.pricesIncludeGst, restaurantInfo.serviceChargeEnabled, restaurantInfo.serviceChargePercent, restaurantInfo.serviceChargeTaxable, restaurantInfo.packagingFeeEnabled, restaurantInfo.packagingFeeAmount, restaurantInfo.packagingFeeLabel, restaurantInfo.repeatCustomerDiscountEnabled, restaurantInfo.repeatCustomerVisitThreshold, restaurantInfo.repeatCustomerDiscountPercent, restaurantInfo.billFooterNote, restaurantInfo.takeoutBillNote, restaurantInfo.invoicePrefix, restaurantInfo.tableAutoReleaseMinutes, restaurantInfo.autoServeMinutes]);
+  }, [restaurantInfo.cgstRate, restaurantInfo.sgstRate, restaurantInfo.pricesIncludeGst, restaurantInfo.serviceChargeEnabled, restaurantInfo.serviceChargePercent, restaurantInfo.serviceChargeTaxable, restaurantInfo.packagingFeeEnabled, restaurantInfo.packagingFeeAmount, restaurantInfo.packagingFeeLabel, restaurantInfo.repeatCustomerDiscountEnabled, restaurantInfo.repeatCustomerVisitThreshold, restaurantInfo.repeatCustomerDiscountPercent, restaurantInfo.billFooterNote, restaurantInfo.takeoutBillNote, restaurantInfo.invoicePrefix]);
 
   const updateField = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -68,20 +64,10 @@ export default function StaffSettingsBillingPage() {
       serviceChargePercent: Number(safeForm.serviceChargePercent),
       packagingFeeAmount: Number(safeForm.packagingFeeAmount),
       repeatCustomerVisitThreshold: Number(safeForm.repeatCustomerVisitThreshold),
-      repeatCustomerDiscountPercent: Number(safeForm.repeatCustomerDiscountPercent),
-      tableAutoReleaseMinutes: Number(safeForm.tableAutoReleaseMinutes),
-      autoServeMinutes: Number(safeForm.autoServeMinutes)
+      repeatCustomerDiscountPercent: Number(safeForm.repeatCustomerDiscountPercent)
     };
     if (numericForm.cgstRate < 0 || numericForm.sgstRate < 0 || numericForm.serviceChargePercent < 0 || numericForm.packagingFeeAmount < 0 || numericForm.repeatCustomerVisitThreshold < 1 || numericForm.repeatCustomerDiscountPercent < 0) {
       setError('Rates and amounts cannot be negative.');
-      return;
-    }
-    if (!Number.isInteger(numericForm.tableAutoReleaseMinutes) || numericForm.tableAutoReleaseMinutes < 5 || numericForm.tableAutoReleaseMinutes > 120) {
-      setError('Auto-release time must be a whole number between 5 and 120 minutes.');
-      return;
-    }
-    if (!Number.isInteger(numericForm.autoServeMinutes) || numericForm.autoServeMinutes < 2 || numericForm.autoServeMinutes > 10) {
-      setError('Auto-serve time must be a whole number between 2 and 10 minutes.');
       return;
     }
     setForm(numericForm);
@@ -244,54 +230,6 @@ export default function StaffSettingsBillingPage() {
           </div>
           <p className="text-xs text-subtle-text">
             Applied to the subtotal before service charge and GST — the tax itself goes down too, matching how discounts are meant to work under GST law.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Kitchen Auto-Serve</h3>
-          <div>
-            <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Minutes after food is sent out</span>
-            <input
-              type="number"
-              step="1"
-              min="2"
-              max="10"
-              value={form.autoServeMinutes}
-              onChange={(e) => updateField('autoServeMinutes', e.target.value)}
-              onBlur={() => {
-                // Clicking away corrects it: below 2 becomes 2, above 10 becomes 10, empty becomes 5.
-                const n = Math.round(Number(form.autoServeMinutes));
-                updateField('autoServeMinutes', String(Number.isFinite(n) && form.autoServeMinutes !== '' ? Math.min(10, Math.max(2, n)) : 5));
-              }}
-              className="w-full sm:w-40 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
-            />
-          </div>
-          <p className="text-xs text-subtle-text">
-            Once the kitchen taps Send out, a ticket that nobody taps Served is marked served automatically after this many minutes (2 to 10). That keeps billing and table release from getting stuck. Tickets that haven't been sent out are never auto-served.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Table Auto-Release</h3>
-          <div>
-            <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Minutes after payment</span>
-            <input
-              type="number"
-              step="1"
-              min="5"
-              max="120"
-              value={form.tableAutoReleaseMinutes}
-              onChange={(e) => updateField('tableAutoReleaseMinutes', e.target.value)}
-              onBlur={() => {
-                // Clicking away corrects it: below 5 becomes 5, above 120 becomes 120, empty becomes 10.
-                const n = Math.round(Number(form.tableAutoReleaseMinutes));
-                updateField('tableAutoReleaseMinutes', String(Number.isFinite(n) && form.tableAutoReleaseMinutes !== '' ? Math.min(120, Math.max(5, n)) : 10));
-              }}
-              className="w-full sm:w-40 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
-            />
-          </div>
-          <p className="text-xs text-subtle-text">
-            A safety net, not a rule. If staff forget to release a paid table, the system frees it after this many minutes. Staff can always release sooner. It can't be turned off, and the minimum is 5.
           </p>
         </div>
 
