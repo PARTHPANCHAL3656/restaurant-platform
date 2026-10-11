@@ -1,78 +1,326 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useStaff } from '../../context/StaffContext';
 import { formatINR } from '../../utils/currency';
+import { isKitchenSoundOn, getKitchenAudio, playKitchenChime } from '../../utils/kitchenChime';
+
+// One ticket = one takeout order (takeout has no rounds). The chef taps Start,
+// then Ready for pickup; whoever is at the counter taps Picked Up when the
+// customer collects. Picked Up creates the bill, so it is never automatic and
+// it needs a second tap. Dine-in lives on the Order Management page.
+const NEXT = { new: 'Preparing', preparing: 'Ready', ready: 'Served' };
+const BUTTON_LABEL = { new: 'Start', preparing: 'Ready for pickup', ready: 'Picked up' };
+const MOVED_TO = { Received: 'New', Preparing: 'Preparing', Ready: 'Ready for pickup', Served: 'Picked up' };
+const BACKEND_NAME = { new: 'Received', preparing: 'Preparing', ready: 'Ready', served: 'Served' };
+
+// Minutes after which a ticket turns red.
+const LATE_NEW_MIN = 5;
+const LATE_PREPARING_MIN = 20;
+const OVERDUE_READY_MIN = 25;
+// An order stuck in New or Preparing this long was probably abandoned.
+const STALE_MIN = 45;
+// Flagging a no-show cancels the order and blocks the customer, so staff can't
+// open that flow until the order has been Ready for this long.
+const MIN_NOSHOW_WAIT_MIN = 15;
+
+const STAGE = {
+  new: {
+    title: 'New',
+    header: 'bg-saffron-gold/20 text-ink-navy border-b border-saffron-gold/40',
+    button: 'bg-saffron-gold text-ink-navy',
+    pill: 'bg-saffron-gold/15 text-saffron-gold',
+    border: 'border-saffron-gold/50'
+  },
+  preparing: {
+    title: 'Preparing',
+    header: 'bg-blue-100 text-blue-900 border-b border-blue-200',
+    button: 'bg-blue-800 text-white',
+    pill: 'bg-blue-100 text-blue-800',
+    border: 'border-blue-200'
+  },
+  ready: {
+    title: 'Ready for Pickup',
+    header: 'bg-green-100 text-green-900 border-b border-green-200',
+    button: 'bg-green-800 text-white',
+    pill: 'bg-green-100 text-green-800',
+    border: 'border-green-200'
+  }
+};
+
+function useNow(ms) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), ms);
+    return () => clearInterval(id);
+  }, [ms]);
+  return now;
+}
+
+const clock = (ms) => {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
+function Ticket({ ticket, num, now, confirming, onBump, onOpen }) {
+  const stage = STAGE[ticket.status];
+  const elapsedMs = now - ticket.since;
+  const minutes = elapsedMs / 60000;
+  const late = ticket.status === 'new'
+    ? minutes >= LATE_NEW_MIN
+    : ticket.status === 'preparing'
+      ? minutes >= LATE_PREPARING_MIN
+      : minutes >= OVERDUE_READY_MIN;
+  const itemCount = ticket.items.reduce((n, i) => n + i.qty, 0);
+  const stale = (ticket.status === 'new' || ticket.status === 'preparing')
+    && (now - ticket.createdMs) / 60000 >= STALE_MIN;
+  const compact = ticket.status === 'ready';
+
+  return (
+    <div className={`bg-white border ${stale ? 'border-red-400' : stage.border} shadow-sm flex flex-col`}>
+      <div
+        onClick={onOpen}
+        className={`${stage.header} px-4 py-3 cursor-pointer`}
+        title="Tap for details"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <span className="font-serif text-2xl font-bold leading-none whitespace-nowrap">{ticket.label}</span>
+          <span className={`font-mono text-sm font-bold px-2 py-0.5 rounded-sm whitespace-nowrap ${late ? 'bg-red-600 text-white' : 'bg-white text-ink-navy'}`}>
+            {clock(elapsedMs)}
+          </span>
+        </div>
+        <div className="mt-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-widest">
+          <span>{itemCount} {itemCount === 1 ? 'item' : 'items'} · Pickup {ticket.pickupTime || 'ASAP'}</span>
+          {num ? <span className="opacity-70">Key {num}</span> : null}
+        </div>
+      </div>
+
+      {stale && (
+        <p className="px-4 pt-3 text-[11px] text-red-600 font-bold uppercase tracking-wide">
+          Likely abandoned. No progress in {STALE_MIN}+ min
+        </p>
+      )}
+      {ticket.status === 'ready' && late && (
+        <p className="px-4 pt-3 text-[11px] text-red-600 font-bold uppercase tracking-wide">
+          Overdue. Still waiting for pickup
+        </p>
+      )}
+
+      <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wider text-subtle-text">{ticket.guestName}</p>
+
+      <ul className="px-4 py-3 space-y-1.5">
+        {ticket.items.map((item, idx) => (
+          <li key={idx} className={`flex gap-2 ${compact ? 'text-sm' : 'text-base'}`}>
+            <span className="font-bold text-saffron-gold w-8 shrink-0">{item.qty}x</span>
+            <span className="font-semibold text-ink-navy">{item.name}</span>
+          </li>
+        ))}
+      </ul>
+
+      {ticket.notes && ticket.status !== 'ready' && (
+        <p className="mx-4 mb-3 text-sm bg-yellow-50 border border-yellow-200 text-ink-navy px-3 py-2">
+          Note: {ticket.notes}
+        </p>
+      )}
+
+      <button
+        type="button"
+        onClick={onBump}
+        className={`mx-4 mb-4 h-14 ${confirming ? 'bg-red-700 text-white' : stage.button} font-cta-label text-cta-label uppercase tracking-widest hover:brightness-110 transition-all cursor-pointer`}
+      >
+        {confirming ? 'Tap again to confirm' : BUTTON_LABEL[ticket.status]}
+      </button>
+    </div>
+  );
+}
 
 export default function StaffTakeawayPage() {
-  const { orders, advanceOrder, cancelOrder, flagCustomerNoShow } = useStaff();
+  const { orders, moveTakeout, cancelOrder, flagCustomerNoShow } = useStaff();
+  const now = useNow(1000);
+
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [noShowModalOpen, setNoShowModalOpen] = useState(false);
   const [noShowReason, setNoShowReason] = useState('');
   const [hasCalledCustomer, setHasCalledCustomer] = useState(false);
 
-  // isOverdue/isStale/canFlagNoShow all compare against Date.now() at
-  // render time, but nothing was ever making this component re-render as
-  // time actually passed — orders only update via socket events, so a
-  // threshold crossing (e.g. hitting the 15-minute no-show mark) sat
-  // invisible until some unrelated update happened to re-render the page,
-  // which in practice meant a manual refresh. Ticking this every 15s
-  // forces exactly the re-renders needed for these to update live.
-  const [now, setNow] = useState(() => Date.now());
+  // ---- Tickets: one per live takeout order, oldest first ----
+  const tickets = useMemo(() => {
+    const list = [];
+    for (const o of orders) {
+      if (o.orderType !== 'takeout') continue;
+      if (o.status !== 'new' && o.status !== 'preparing' && o.status !== 'ready') continue;
+      const createdMs = new Date(o.createdAt).getTime();
+      const stamp = o.status === 'new'
+        ? o.createdAt
+        : o.status === 'preparing'
+          ? (o.startedAt || o.createdAt)
+          : (o.readyAt || o.createdAt);
+      list.push({
+        key: o.id,
+        orderId: o.id,
+        label: o.table,
+        status: o.status,
+        items: o.items,
+        notes: o.notes,
+        guestName: o.guestName,
+        pickupTime: o.pickupTime,
+        since: new Date(stamp).getTime(),
+        createdMs
+      });
+    }
+    return list.sort((a, b) => a.createdMs - b.createdMs);
+  }, [orders]);
+
+  const columns = useMemo(() => ({
+    new: tickets.filter(t => t.status === 'new'),
+    preparing: tickets.filter(t => t.status === 'preparing'),
+    ready: tickets.filter(t => t.status === 'ready')
+  }), [tickets]);
+
+  // Numbered in the order they appear on screen (1-9), for the keyboard.
+  const numbered = useMemo(() => [...columns.new, ...columns.preparing, ...columns.ready], [columns]);
+  const numberOf = (key) => {
+    const i = numbered.findIndex(t => t.key === key);
+    return i >= 0 && i < 9 ? i + 1 : 0;
+  };
+
+  const selectedOrder = orders.find(o => o.id === selectedOrderId && o.orderType === 'takeout');
+
+  // ---- Moving tickets, with a 10-second Undo. Picked Up has no Undo because
+  // it creates the bill. ----
+  const pendingRef = useRef(new Set());
+  const undoTimer = useRef(null);
+  const [message, setMessage] = useState('');
+  const [lastAction, setLastAction] = useState(null);
+
+  const move = useCallback(async (orderId, label, from, to, isUndo) => {
+    if (pendingRef.current.has(orderId)) return;
+    pendingRef.current.add(orderId);
+    setMessage('');
+    clearTimeout(undoTimer.current);
+    if (isUndo) {
+      setLastAction(null);
+    } else {
+      setLastAction({ orderId, label, from, to, canUndo: to !== 'Served' });
+      undoTimer.current = setTimeout(() => setLastAction(null), 10000);
+    }
+    try {
+      await moveTakeout(orderId, to);
+    } catch (err) {
+      setLastAction(null);
+      setMessage(err.message || 'Could not update this order. Please try again.');
+    } finally {
+      pendingRef.current.delete(orderId);
+    }
+  }, [moveTakeout]);
+
+  // Picked Up needs a second tap on the same ticket within 3 seconds.
+  const confirmRef = useRef(null);
+  const confirmTimer = useRef(null);
+  const [confirmKey, setConfirmKey] = useState(null);
+
+  const bump = (t) => {
+    if (t.status === 'ready') {
+      if (confirmRef.current !== t.key) {
+        confirmRef.current = t.key;
+        setConfirmKey(t.key);
+        clearTimeout(confirmTimer.current);
+        confirmTimer.current = setTimeout(() => {
+          confirmRef.current = null;
+          setConfirmKey(null);
+        }, 3000);
+        return;
+      }
+      clearTimeout(confirmTimer.current);
+      confirmRef.current = null;
+      setConfirmKey(null);
+    }
+    move(t.orderId, t.label, BACKEND_NAME[t.status], NEXT[t.status], false);
+  };
+
+  const undo = () => {
+    if (!lastAction || !lastAction.canUndo) return;
+    move(lastAction.orderId, lastAction.label, lastAction.to, lastAction.from, true);
+  };
+
+  // ---- Keyboard: 1-9 moves that ticket on, 0 undoes ----
+  const numberedRef = useRef(numbered);
+  const bumpRef = useRef(bump);
+  const undoRef = useRef(undo);
+  numberedRef.current = numbered;
+  bumpRef.current = bump;
+  undoRef.current = undo;
+
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 15000);
-    return () => clearInterval(id);
+    const onKey = (e) => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === '0') { undoRef.current(); return; }
+      const n = Number(e.key);
+      if (n >= 1 && n <= 9) {
+        const t = numberedRef.current[n - 1];
+        if (t) bumpRef.current(t);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const takeoutOrders = orders.filter(o => o.orderType === 'takeout');
-  const getOrdersByStatus = (status) => takeoutOrders.filter(o => o.status === status);
+  useEffect(() => () => {
+    clearTimeout(undoTimer.current);
+    clearTimeout(confirmTimer.current);
+  }, []);
 
-  const selectedOrder = takeoutOrders.find(o => o.id === selectedOrderId);
+  // ---- Chime when a new order arrives (the switch is in Settings → Operations) ----
+  const [soundOn] = useState(() => isKitchenSoundOn());
 
-  const columns = [
-    { key: 'new', title: 'Received', badgeClass: 'bg-saffron-gold/15 text-saffron-gold' },
-    { key: 'preparing', title: 'Preparing', badgeClass: 'bg-blue-100 text-blue-800' },
-    { key: 'ready', title: 'Ready for Pickup', badgeClass: 'bg-green-100 text-green-800' }
-  ];
+  // Browsers only allow sound after a tap, so after a reload the first tap wakes it.
+  useEffect(() => {
+    if (!soundOn) return undefined;
+    const wake = () => getKitchenAudio();
+    window.addEventListener('pointerdown', wake, { once: true });
+    return () => window.removeEventListener('pointerdown', wake);
+  }, [soundOn]);
 
-  const advanceLabel = {
-    new: 'Start Preparing',
-    preparing: 'Mark Ready for Pickup',
-    ready: 'Confirm Picked Up'
-  };
+  const seenNew = useRef(null);
+  useEffect(() => {
+    const current = new Set(columns.new.map(t => t.key));
+    if (seenNew.current && soundOn) {
+      for (const k of current) {
+        if (!seenNew.current.has(k)) { playKitchenChime(); break; }
+      }
+    }
+    seenNew.current = current; // first load only sets the baseline, no chime
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columns, soundOn]);
 
+  // ---- Keep the screen awake while the board is open ----
+  useEffect(() => {
+    let lock = null;
+    const request = async () => {
+      try {
+        if ('wakeLock' in navigator) lock = await navigator.wakeLock.request('screen');
+      } catch (e) { /* not supported or refused */ }
+    };
+    request();
+    const onVisible = () => { if (document.visibilityState === 'visible') request(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      if (lock) lock.release().catch(() => {});
+    };
+  }, []);
+
+  // ---- Details panel: phone, total, cancel abandoned, no-show ----
   const orderTotal = (order) => order.items.reduce((sum, i) => sum + i.price * i.qty, 0);
-
-  // A "Ready for Pickup" order that's been sitting for 25+ minutes is at
-  // real risk of the food going to waste — flag it visually so staff
-  // notice and can call the customer before it's forgotten.
-  const OVERDUE_MINUTES = 25;
-  const isOverdue = (order) => {
-    if (order.status !== 'ready' || !order.readyAt) return false;
-    const minsSinceReady = (now - new Date(order.readyAt).getTime()) / 60000;
-    return minsSinceReady >= OVERDUE_MINUTES;
-  };
-
-  // An order stuck in Received/Preparing for a long time was probably
-  // abandoned (empty or half-built cart, customer just never came back).
-  // Flag it so staff know to just clear it out — this is administrative
-  // cleanup, not a customer no-show, so it never touches the blacklist.
-  const STALE_MINUTES = 45;
-  const isStale = (order) => {
-    if (order.status !== 'new' && order.status !== 'preparing') return false;
-    const minsSinceCreated = (now - new Date(order.createdAt).getTime()) / 60000;
-    return minsSinceCreated >= STALE_MINUTES;
-  };
-
-  // Flagging a no-show is destructive (cancels the order, blocks the
-  // customer) — it should never be a reflexive misclick right after an
-  // order goes Ready. Staff can't even open the flow until this long has
-  // passed, giving a genuinely late customer room to still show up.
-  const MIN_NOSHOW_WAIT_MINUTES = 15;
   const minutesSinceReady = (order) => {
-    if (!order?.readyAt) return 0;
+    if (!order || !order.readyAt) return 0;
     return (now - new Date(order.readyAt).getTime()) / 60000;
   };
-  const canFlagNoShow = (order) => order?.status === 'ready' && minutesSinceReady(order) >= MIN_NOSHOW_WAIT_MINUTES;
-  const minutesUntilEligible = (order) => Math.max(0, Math.ceil(MIN_NOSHOW_WAIT_MINUTES - minutesSinceReady(order)));
+  const canFlagNoShow = (order) => order && order.status === 'ready' && minutesSinceReady(order) >= MIN_NOSHOW_WAIT_MIN;
+  const minutesUntilEligible = (order) => Math.max(0, Math.ceil(MIN_NOSHOW_WAIT_MIN - minutesSinceReady(order)));
+  const isStale = (order) => {
+    if (!order || (order.status !== 'new' && order.status !== 'preparing')) return false;
+    return (now - new Date(order.createdAt).getTime()) / 60000 >= STALE_MIN;
+  };
 
   const closeNoShowModal = () => {
     setNoShowModalOpen(false);
@@ -86,70 +334,59 @@ export default function StaffTakeawayPage() {
     setSelectedOrderId(null);
   };
 
-  return (
-    <div className="flex flex-col-reverse md:flex-row h-[calc(100vh-80px)] relative select-none overflow-hidden">
-
-      <div className="flex-grow flex flex-col overflow-y-auto bg-surface min-h-0" data-lenis-prevent>
-        <div className="p-4 md:p-6 pb-0">
-          <h2 className="font-serif text-xl text-ink-navy font-semibold">Takeaway Orders</h2>
-          <p className="text-xs text-subtle-text mt-1">
-            Self-service pickup orders customers place online — independent of table seating.
-            Orders start on <span className="font-mono">/takeout</span>.
-          </p>
+  const renderColumn = (status) => {
+    const stage = STAGE[status];
+    const list = columns[status];
+    return (
+      <div className="flex flex-col min-h-0 bg-white border border-muted-border p-4">
+        <div className="flex justify-between items-center pb-4 border-b border-muted-border mb-4 shrink-0">
+          <h3 className="font-serif text-md text-ink-navy font-semibold">{stage.title}</h3>
+          <span className={`${stage.pill} text-xs px-2.5 py-0.5 font-bold rounded-full`}>{list.length}</span>
         </div>
-
-        <div className="flex-grow grid grid-cols-1 md:grid-cols-3 gap-4 p-4 md:p-6">
-          {columns.map(col => (
-            <div key={col.key} className="flex flex-col bg-white border border-muted-border p-4">
-              <div className="flex justify-between items-center pb-4 border-b border-muted-border mb-4 shrink-0">
-                <h3 className="font-serif text-md text-ink-navy font-semibold">{col.title}</h3>
-                <span className={`${col.badgeClass} text-xs px-2.5 py-0.5 font-bold rounded-full`}>
-                  {getOrdersByStatus(col.key).length}
-                </span>
-              </div>
-              <div className="space-y-4 overflow-y-auto flex-grow hide-scrollbar" data-lenis-prevent>
-                {getOrdersByStatus(col.key).length === 0 && (
-                  <p className="text-xs text-subtle-text/60 italic">No orders here right now.</p>
-                )}
-                {getOrdersByStatus(col.key).map(o => (
-                  <div
-                    key={o.id}
-                    onClick={() => setSelectedOrderId(o.id)}
-                    className={`p-4 border cursor-pointer transition-all duration-300 ${
-                      isOverdue(o) || isStale(o)
-                        ? 'border-red-400 bg-red-50 hover:border-red-500'
-                        : 'border-muted-border hover:border-saffron-gold bg-canvas-cream'
-                    } ${
-                      selectedOrderId === o.id ? 'ring-2 ring-saffron-gold/30 border-saffron-gold' : ''
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="font-label-caps text-xs font-bold text-ink-navy">{o.table}</span>
-                      <span className={`text-[10px] ${isOverdue(o) ? 'text-red-600 font-bold' : 'text-subtle-text'}`}>
-                        {isOverdue(o) ? 'OVERDUE' : o.time}
-                      </span>
-                    </div>
-                    {isStale(o) && (
-                      <p className="text-[10px] text-red-600 font-bold uppercase tracking-wide mb-1">
-                        Likely abandoned — no progress in {STALE_MINUTES}+ min
-                      </p>
-                    )}
-                    <p className="text-[11px] text-subtle-text font-semibold uppercase tracking-wider">{o.guestName}</p>
-                    <p className="text-xs text-ink-navy mt-2 line-clamp-1">
-                      {o.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
-                    </p>
-                    <p className="text-[10px] text-saffron-gold font-semibold mt-1 uppercase tracking-wide">
-                      Pickup: {o.pickupTime || 'ASAP'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <div
+          className="grid gap-3 content-start md:overflow-y-auto flex-grow min-h-0 hide-scrollbar"
+          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}
+          data-lenis-prevent
+        >
+          {list.length === 0 && (
+            <p className="text-xs italic text-subtle-text">Nothing here right now.</p>
+          )}
+          {list.map(t => (
+            <Ticket
+              key={t.key}
+              ticket={t}
+              num={numberOf(t.key)}
+              now={now}
+              confirming={confirmKey === t.key}
+              onBump={() => bump(t)}
+              onOpen={() => setSelectedOrderId(t.orderId)}
+            />
           ))}
         </div>
       </div>
+    );
+  };
 
-      {/* Detail Slide-over Panel */}
+  return (
+    <div className="flex flex-col-reverse md:flex-row md:h-[calc(100vh-80px)] relative select-none md:overflow-hidden bg-surface">
+      <div className="flex-grow flex flex-col min-h-0 min-w-0">
+        <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3 border-b border-muted-border bg-white shrink-0">
+          <p className="text-xs text-subtle-text">
+            {tickets.length} open {tickets.length === 1 ? 'order' : 'orders'} · Tap a ticket's top bar for details
+          </p>
+          <div className="flex items-center gap-3">
+            {message && <span className="text-xs text-red-600">{message}</span>}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1.2fr_0.8fr] gap-4 p-4 md:p-6 flex-grow min-h-0">
+          {renderColumn('new')}
+          {renderColumn('preparing')}
+          {renderColumn('ready')}
+        </div>
+      </div>
+
+      {/* Details slide-over panel */}
       {selectedOrder && <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedOrderId(null)} />}
       <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 min-h-0 transition-all duration-300 shadow-2xl flex flex-col ${
         selectedOrder ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
@@ -212,19 +449,10 @@ export default function StaffTakeawayPage() {
             </div>
 
             <div className="p-6 border-t border-muted-border bg-canvas-cream shrink-0 space-y-3">
-              <button
-                onClick={() => {
-                  advanceOrder(selectedOrder.id);
-                  if (selectedOrder.status === 'ready') setSelectedOrderId(null);
-                }}
-                className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[56px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md rounded-none cursor-pointer"
-              >
-                {advanceLabel[selectedOrder.status]}
-              </button>
               {isStale(selectedOrder) && (
                 <button
                   onClick={() => {
-                    if (window.confirm('Cancel this order? Looks abandoned — no items progress in a while. This does NOT block the customer from ordering again.')) {
+                    if (window.confirm('Cancel this order? Looks abandoned: no items progress in a while. This does NOT block the customer from ordering again.')) {
                       cancelOrder(selectedOrder.id);
                       setSelectedOrderId(null);
                     }
@@ -244,9 +472,14 @@ export default function StaffTakeawayPage() {
                   </button>
                 ) : (
                   <p className="text-center text-[11px] text-subtle-text/70 py-2">
-                    No-show option available in {minutesUntilEligible(selectedOrder)} min — give them time, they might just be running late.
+                    No-show option available in {minutesUntilEligible(selectedOrder)} min. Give them time, they might just be running late.
                   </p>
                 )
+              )}
+              {!isStale(selectedOrder) && selectedOrder.status !== 'ready' && (
+                <p className="text-center text-[11px] text-subtle-text/70 py-2">
+                  Move this order on from its ticket on the board.
+                </p>
               )}
             </div>
           </div>
@@ -312,6 +545,21 @@ export default function StaffTakeawayPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {lastAction && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink-navy text-canvas-cream px-5 py-3 shadow-2xl flex items-center gap-4 text-sm">
+          <span>{lastAction.label} moved to {MOVED_TO[lastAction.to]}</span>
+          {lastAction.canUndo && (
+            <button
+              type="button"
+              onClick={undo}
+              className="text-saffron-gold font-bold uppercase tracking-widest text-xs cursor-pointer"
+            >
+              Undo
+            </button>
+          )}
         </div>
       )}
     </div>

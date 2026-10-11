@@ -174,11 +174,6 @@ export default function OrderTrackingPage() {
             
             <div className="flex flex-wrap items-center gap-8 pt-4">
               <div>
-                <p className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase mb-0.5">Order Number</p>
-                <p className="font-serif text-xl font-semibold">{orderId}</p>
-              </div>
-              <div className="w-px h-8 bg-muted-border hidden sm:block" />
-              <div>
                 <p className="font-label-caps text-[9px] text-subtle-text tracking-widest uppercase mb-0.5">
                   {isTakeout ? 'Order Type' : 'Table Number'}
                 </p>

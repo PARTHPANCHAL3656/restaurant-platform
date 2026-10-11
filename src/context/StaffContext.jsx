@@ -685,6 +685,7 @@ export function StaffProvider({ children }) {
       orderNumber: o.orderNumber || '',
       pickupTime: o.pickupTime || '',
       readyAt: o.readyAt || null,
+      startedAt: o.startedAt || null,
       time: timeStr,
       status: mappedStatus,
       items: o.items.map(i => ({
@@ -1252,6 +1253,40 @@ export function StaffProvider({ children }) {
         roundPendingRef.current -= 1;
         // One refresh after the last queued move; it also puts the board back
         // to what the server says if any move was refused.
+        if (roundPendingRef.current === 0) await loadAllData();
+      }
+    };
+    const result = roundQueueRef.current.then(send);
+    roundQueueRef.current = result.catch(() => {});
+    return result;
+  };
+
+  // Takeaway board: move a whole takeout order (it has no rounds) to a new
+  // status. Same idea as advanceRound: the move shows at once, moves go to the
+  // server one at a time, and the board refreshes once after the last one.
+  // Throws with the server's message if the move isn't allowed.
+  const moveTakeout = (orderId, status) => {
+    roundEpochRef.current += 1;
+    roundPendingRef.current += 1;
+
+    const stamp = new Date().toISOString();
+    const localStatus = { Received: 'new', Preparing: 'preparing', Ready: 'ready', Served: 'served' }[status];
+    setOrders(prev => prev.map(o => (
+      o.id === orderId
+        ? {
+            ...o,
+            status: localStatus,
+            startedAt: status === 'Received' ? null : (status === 'Preparing' && !o.startedAt ? stamp : o.startedAt),
+            readyAt: status === 'Ready' ? (o.readyAt || stamp) : ((status === 'Received' || status === 'Preparing') ? null : o.readyAt)
+          }
+        : o
+    )));
+
+    const send = async () => {
+      try {
+        await api.patch(`/api/orders/${orderId}/status`, { status });
+      } finally {
+        roundPendingRef.current -= 1;
         if (roundPendingRef.current === 0) await loadAllData();
       }
     };
@@ -2095,6 +2130,7 @@ export function StaffProvider({ children }) {
       addOrder,
       advanceOrder,
       advanceRound,
+      moveTakeout,
       cancelOrder,
       assignTable,
       markInvoicePaid,

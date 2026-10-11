@@ -303,9 +303,40 @@ export const updateOrderStatus = async (req, res) => {
     const order = await Order.findById(req.params.id)
     if (!order) return res.status(404).json({ error: "Order not found." })
 
+    // Takeout is one ticket with no rounds, so its moves are checked here
+    // (dine-in moves go through the per-round endpoint). Forward any number of
+    // steps, back one step at most, never back out of Picked Up (the bill
+    // exists by then), and a cancelled order stays cancelled.
+    if (order.orderType === "takeout") {
+      const TAKEOUT_RANK = { Received: 0, Preparing: 1, Ready: 2, Served: 3 }
+      if (order.status === "Cancelled") {
+        return res.status(409).json({ error: "This order was cancelled and can't be changed." })
+      }
+      if (order.status === "Served" && status !== "Served") {
+        return res.status(409).json({ error: "This order has already been picked up and billed, so it can't be moved back or cancelled." })
+      }
+      if (status !== "Cancelled" && TAKEOUT_RANK[status] < TAKEOUT_RANK[order.status] - 1) {
+        return res.status(400).json({ error: "An order can only be moved back one step." })
+      }
+    }
+
     order.status = status
     if (status === "Ready" && !order.readyAt) {
       order.readyAt = new Date()
+    }
+    if (order.orderType === "takeout") {
+      if (status === "Preparing" && !order.startedAt) {
+        order.startedAt = new Date()
+      }
+      // Undoing a step clears its timestamp, so the board timers (and the
+      // 15-minute no-show wait) start again from the right moment.
+      if (status === "Received") {
+        order.startedAt = null
+        order.readyAt = null
+      }
+      if (status === "Preparing") {
+        order.readyAt = null
+      }
     }
     if (status === "Cancelled" && noShowReason) {
       order.noShowReason = noShowReason
