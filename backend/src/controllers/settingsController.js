@@ -31,7 +31,7 @@ export const updateSettings = async (req, res) => {
 
     // Two fields in the billing section are really kitchen/table timers with
     // no tax effect. A Manager may change those two, and nothing else in billing.
-    const MANAGER_BILLING_FIELDS = ["tableAutoReleaseMinutes", "autoServeMinutes"]
+    const MANAGER_BILLING_FIELDS = ["tableAutoReleaseMinutes", "autoServeMinutes", "takeoutSessionEndMinutes"]
     const billingIsTimersOnly = !!billing && Object.keys(billing).every(k => MANAGER_BILLING_FIELDS.includes(k))
 
     if ((legal || contact || (billing && !billingIsTimersOnly)) && req.staff.role !== "OWNER") {
@@ -58,6 +58,13 @@ export const updateSettings = async (req, res) => {
       const minutes = billing.autoServeMinutes
       if (!Number.isInteger(minutes) || minutes < 2 || minutes > 10) {
         return res.status(400).json({ error: "Auto-serve time must be a whole number between 2 and 10 minutes." })
+      }
+    }
+
+    if (billing && billing.takeoutSessionEndMinutes !== undefined) {
+      const minutes = billing.takeoutSessionEndMinutes
+      if (!Number.isInteger(minutes) || minutes < 5 || minutes > 120) {
+        return res.status(400).json({ error: "Takeout session end time must be a whole number between 5 and 120 minutes." })
       }
     }
 

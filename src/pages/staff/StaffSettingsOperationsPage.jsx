@@ -69,7 +69,8 @@ export default function StaffSettingsOperationsPage() {
   // billing settings, but they have no tax effect, so a Manager may change them.
   const [kitchen, setKitchen] = useState({
     autoServeMinutes: String(restaurantInfo.autoServeMinutes),
-    tableAutoReleaseMinutes: String(restaurantInfo.tableAutoReleaseMinutes)
+    tableAutoReleaseMinutes: String(restaurantInfo.tableAutoReleaseMinutes),
+    takeoutSessionEndMinutes: String(restaurantInfo.takeoutSessionEndMinutes)
   });
   const [isSavingKitchen, setIsSavingKitchen] = useState(false);
   const [kitchenSavedMessage, setKitchenSavedMessage] = useState('');
@@ -78,9 +79,10 @@ export default function StaffSettingsOperationsPage() {
   useEffect(() => {
     setKitchen({
       autoServeMinutes: String(restaurantInfo.autoServeMinutes),
-      tableAutoReleaseMinutes: String(restaurantInfo.tableAutoReleaseMinutes)
+      tableAutoReleaseMinutes: String(restaurantInfo.tableAutoReleaseMinutes),
+      takeoutSessionEndMinutes: String(restaurantInfo.takeoutSessionEndMinutes)
     });
-  }, [restaurantInfo.autoServeMinutes, restaurantInfo.tableAutoReleaseMinutes]);
+  }, [restaurantInfo.autoServeMinutes, restaurantInfo.tableAutoReleaseMinutes, restaurantInfo.takeoutSessionEndMinutes]);
 
   const updateKitchen = (field, value) => {
     setKitchen(prev => ({ ...prev, [field]: value }));
@@ -90,6 +92,7 @@ export default function StaffSettingsOperationsPage() {
     setKitchenError('');
     const autoServe = Number(kitchen.autoServeMinutes);
     const autoRelease = Number(kitchen.tableAutoReleaseMinutes);
+    const takeoutEnd = Number(kitchen.takeoutSessionEndMinutes);
     if (kitchen.autoServeMinutes.trim() === '' || !Number.isInteger(autoServe) || autoServe < 2 || autoServe > 10) {
       setKitchenError('Auto-serve time must be a whole number between 2 and 10 minutes.');
       return;
@@ -98,9 +101,13 @@ export default function StaffSettingsOperationsPage() {
       setKitchenError('Auto-release time must be a whole number between 5 and 120 minutes.');
       return;
     }
+    if (kitchen.takeoutSessionEndMinutes.trim() === '' || !Number.isInteger(takeoutEnd) || takeoutEnd < 5 || takeoutEnd > 120) {
+      setKitchenError('Takeout session end time must be a whole number between 5 and 120 minutes.');
+      return;
+    }
     setIsSavingKitchen(true);
     try {
-      await updateBillingInfo({ autoServeMinutes: autoServe, tableAutoReleaseMinutes: autoRelease });
+      await updateBillingInfo({ autoServeMinutes: autoServe, tableAutoReleaseMinutes: autoRelease, takeoutSessionEndMinutes: takeoutEnd });
       setKitchenSavedMessage('Saved. The new times apply straight away.');
       setTimeout(() => setKitchenSavedMessage(''), 4000);
     } catch (err) {
@@ -348,6 +355,30 @@ export default function StaffSettingsOperationsPage() {
             </div>
             <p className="text-xs text-subtle-text">
               A safety net, not a rule. If staff forget to release a paid table, the system frees it after this many minutes. Staff can always release sooner. It can't be turned off, and the minimum is 5.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="font-label-caps text-[11px] text-ink-navy tracking-widest uppercase border-b border-muted-border pb-2">Takeout Tracking End</h3>
+            <div>
+              <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Minutes after pickup</span>
+              <input
+                type="number"
+                step="1"
+                min="5"
+                max="120"
+                value={kitchen.takeoutSessionEndMinutes}
+                onChange={(e) => updateKitchen('takeoutSessionEndMinutes', e.target.value)}
+                onBlur={() => {
+                  // Clicking away corrects it: below 5 becomes 5, above 120 becomes 120, empty becomes 15.
+                  const n = Math.round(Number(kitchen.takeoutSessionEndMinutes));
+                  updateKitchen('takeoutSessionEndMinutes', String(Number.isFinite(n) && kitchen.takeoutSessionEndMinutes !== '' ? Math.min(120, Math.max(5, n)) : 15));
+                }}
+                className="w-full sm:w-40 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+              />
+            </div>
+            <p className="text-xs text-subtle-text">
+              After a takeout order is marked Picked Up, the customer's tracking page and bill stay available for this many minutes (5 to 120), then close and the customer's browser forgets the order. It protects privacy on shared phones and computers. Cancelled orders close at once.
             </p>
           </div>
         </div>

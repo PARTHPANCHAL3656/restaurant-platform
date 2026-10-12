@@ -67,6 +67,7 @@ export function StaffProvider({ children }) {
     takeoutBillNote: "Pay at counter. Collect within 20 min of ready time.",
     invoicePrefix: "SG",
     takeoutOrderPrefix: "TA",
+    takeoutSessionEndMinutes: 15,
     repeatCustomerDiscountEnabled: true,
     repeatCustomerVisitThreshold: 3,
     repeatCustomerDiscountPercent: 5,

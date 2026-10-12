@@ -168,7 +168,18 @@ export const getMyOrder = async (req, res) => {
       return res.status(404).json({ error: "No active order found." })
     }
 
-    res.json(order)
+    // Once a takeout order is picked up, its tracking closes after the
+    // "takeout session end" time set in Settings → Operations. Tell the guest's
+    // browser when, so a page that is already open can end itself at that moment.
+    const data = order.toObject()
+    if (order.orderType === "takeout" && order.status === "Served") {
+      const settings = await Settings.getSingleton()
+      const minutes = settings.billing.takeoutSessionEndMinutes || 15
+      const pickedUp = new Date(order.pickedUpAt || order.updatedAt).getTime()
+      data.sessionEndsAt = new Date(pickedUp + minutes * 60000).toISOString()
+    }
+
+    res.json(data)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -327,6 +338,9 @@ export const updateOrderStatus = async (req, res) => {
     if (order.orderType === "takeout") {
       if (status === "Preparing" && !order.startedAt) {
         order.startedAt = new Date()
+      }
+      if (status === "Served" && !order.pickedUpAt) {
+        order.pickedUpAt = new Date()
       }
       // Undoing a step clears its timestamp, so the board timers (and the
       // 15-minute no-show wait) start again from the right moment.

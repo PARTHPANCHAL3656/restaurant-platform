@@ -200,6 +200,26 @@ export function CartProvider({ children }) {
 
   const [activeOrder, setActiveOrder] = useState(null);
 
+  // A picked-up takeout order stops tracking at the time the server gives
+  // (set in Settings → Operations). A paid bill open on screen is never
+  // yanked away (same rule as everywhere else); the next request ends the
+  // session instead.
+  useEffect(() => {
+    const endsAt = activeOrder && activeOrder.sessionEndsAt ? new Date(activeOrder.sessionEndsAt).getTime() : null;
+    if (!endsAt) return undefined;
+    const end = () => {
+      if (receiptHoldRef.current) return;
+      setSessionExpired(true);
+    };
+    const wait = endsAt - Date.now();
+    if (wait <= 0) {
+      end();
+      return undefined;
+    }
+    const id = setTimeout(end, Math.min(wait, 2147483000));
+    return () => clearTimeout(id);
+  }, [activeOrder]);
+
   // Session reset
   useEffect(() => {
     if (sessionExpired) {

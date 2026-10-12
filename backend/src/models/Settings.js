@@ -91,7 +91,11 @@ const settingsSchema = new mongoose.Schema({
     tableAutoReleaseMinutes: { type: Number, default: 10, min: 5 },
     // Kitchen safety net: how long a round may sit "Ready" before the system
     // marks it served. Between 2 and 10 minutes.
-    autoServeMinutes: { type: Number, default: 5, min: 2, max: 10 }
+    autoServeMinutes: { type: Number, default: 5, min: 2, max: 10 },
+    // Takeout: how long after pickup the guest's tracking page stays open
+    // before the session ends and their browser forgets the order. Between
+    // 5 and 120 minutes.
+    takeoutSessionEndMinutes: { type: Number, default: 15, min: 5, max: 120 }
   },
 
   // Reservation-booking rules an Owner/Manager configures from Settings →

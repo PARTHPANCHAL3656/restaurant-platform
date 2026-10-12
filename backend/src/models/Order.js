@@ -76,6 +76,12 @@ const orderSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  // Takeout only: when the order was marked Picked Up. The guest's tracking
+  // session ends a set number of minutes after this (Settings → Operations).
+  pickedUpAt: {
+    type: Date,
+    default: null
+  },
   // Set only when a takeout order is cancelled via the no-show flow —
   // a permanent record of why, for accountability if a customer disputes
   // being blacklisted later.

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken"
 import Table from "../models/Table.js"
 import Order from "../models/Order.js"
+import Settings from "../models/Settings.js"
 
 // Attach this to customer routes that need a valid table OR takeout session
 // Verifies the token from the QR code URL (or the takeout self-service start)
@@ -19,11 +20,13 @@ const tableSession = async (req, res, next) => {
     const { sessionId, orderType } = decoded
 
     // Takeout sessions have no table, and no equivalent of a dine-in
-    // "release" step — so a takeout session is never force-ended by order
-    // status. It used to end the instant an order was marked Served,
-    // which cut a customer off before they could even see their bill.
-    // Cancelled is the one real terminal state worth rejecting on; there's
-    // nothing left to view once an order was cancelled outright.
+    // "release" step. A takeout session used to end the instant an order was
+    // marked Served, which cut a customer off before they could even see
+    // their bill. So now: Cancelled ends it at once (nothing left to view),
+    // and Served ends it a set number of minutes after pickup (the "takeout
+    // session end" time in Settings → Operations), the same idea as the
+    // dine-in table auto-release. Until then the guest can still see and
+    // download their bill.
     if (orderType === "takeout") {
       const order = await Order.findOne({ sessionId, orderType: "takeout" })
 
@@ -33,6 +36,19 @@ const tableSession = async (req, res, next) => {
           sessionEnded: true,
           status: "closed"
         })
+      }
+
+      if (order.status === "Served") {
+        const settings = await Settings.getSingleton()
+        const minutes = settings.billing.takeoutSessionEndMinutes || 15
+        const pickedUp = new Date(order.pickedUpAt || order.updatedAt).getTime()
+        if (Date.now() - pickedUp > minutes * 60000) {
+          return res.status(401).json({
+            error: "Session ended. This takeout order was picked up.",
+            sessionEnded: true,
+            status: "closed"
+          })
+        }
       }
 
       req.tableSession = { sessionId, orderType: "takeout" }
