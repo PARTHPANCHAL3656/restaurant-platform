@@ -191,7 +191,7 @@ export default function TakeoutStartPage() {
       });
 
       const { token } = res.data;
-      localStorage.setItem('tableToken', token);
+      sessionStorage.setItem('tableToken', token);
       setTableToken(token);
       navigate('/menu');
     } catch (err) {
@@ -210,7 +210,7 @@ export default function TakeoutStartPage() {
     try {
       const res = await api.post('/api/takeout/resume', { guestPhone: resumePhone.trim() });
       const { token } = res.data;
-      localStorage.setItem('tableToken', token);
+      sessionStorage.setItem('tableToken', token);
       setTableToken(token);
       navigate('/menu');
     } catch (err) {

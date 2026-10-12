@@ -61,6 +61,16 @@ const clock = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
+// "Just now", "6 mins ago", "2 hrs ago". Worked out from the clock on every
+// tick, so it never goes stale while the board stays open.
+const ago = (ms) => {
+  const mins = Math.max(0, Math.floor(ms / 60000));
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} ${mins === 1 ? 'min' : 'mins'} ago`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs} ${hrs === 1 ? 'hr' : 'hrs'} ago`;
+};
+
 function Ticket({ ticket, now, confirming, onBump, onFlagNoShow, onCancel }) {
   const stage = STAGE[ticket.status];
   const elapsedMs = now - ticket.since;
@@ -105,7 +115,7 @@ function Ticket({ ticket, now, confirming, onBump, onFlagNoShow, onCancel }) {
       <div className="px-4 pt-3">
         <p className="text-sm font-semibold text-ink-navy">{ticket.guestName}</p>
         <p className="text-[11px] uppercase tracking-wider text-subtle-text">
-          {ticket.guestPhone} · Ordered {ticket.ordered}
+          {ticket.guestPhone} · Ordered {ago(now - ticket.createdMs)}
         </p>
       </div>
 
@@ -195,7 +205,6 @@ export default function StaffTakeawayPage() {
         notes: o.notes,
         guestName: o.guestName,
         guestPhone: o.guestPhone,
-        ordered: o.time,
         pickupTime: o.pickupTime,
         subtotal: o.items.reduce((sum, i) => sum + i.price * i.qty, 0),
         since: new Date(stamp).getTime(),

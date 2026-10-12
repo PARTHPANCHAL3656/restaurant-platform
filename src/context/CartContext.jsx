@@ -12,7 +12,7 @@ export function useCart() {
 export function CartProvider({ children }) {
   const { orders, addOrder, restaurantInfo } = useStaff();
   const [cartItems, setCartItems] = useState([]);
-  const [orderId, setOrderId] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('lastOrderId') : null) || null);
+  const [orderId, setOrderId] = useState(() => (typeof window !== 'undefined' ? sessionStorage.getItem('lastOrderId') : null) || null);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [tableId, setTableId] = useState(null);
   const [tableSessionId, setTableSessionId] = useState(null);
@@ -47,7 +47,7 @@ export function CartProvider({ children }) {
       setSessionExpired(true);
     };
     const handleCustomerInvalid = () => {
-      localStorage.removeItem('tableToken');
+      sessionStorage.removeItem('tableToken');
       setTableToken('');
     };
     window.addEventListener('customer-session-expired', handleCustomerExpired);
@@ -60,22 +60,31 @@ export function CartProvider({ children }) {
   
   const isFreshScanRef = useRef(false);
 
+  // One-off tidy-up: older versions kept the guest session in localStorage,
+  // which every tab in the browser shares. It now lives in sessionStorage
+  // (this tab only), so remove any old copies left behind.
+  useEffect(() => {
+    try {
+      ['tableToken', 'lastOrderId', 'lastReservationId', 'reservationId'].forEach(k => localStorage.removeItem(k));
+    } catch (e) { /* storage blocked, nothing to clean up */ }
+  }, []);
+
   const [tableToken, setTableToken] = useState(() => {
     if (typeof window === 'undefined') return '';
     const urlToken = new URLSearchParams(window.location.search).get('token');
     if (urlToken) {
-      localStorage.setItem('tableToken', urlToken);
+      sessionStorage.setItem('tableToken', urlToken);
       window.history.replaceState({}, '', window.location.pathname);
       isFreshScanRef.current = true;
       return urlToken;
     }
-    return localStorage.getItem('tableToken') || '';
+    return sessionStorage.getItem('tableToken') || '';
   });
   
   const [tableNumber, setTableNumber] = useState(() => {
     if (typeof window === 'undefined') return '';
     const urlToken = new URLSearchParams(window.location.search).get('token');
-    const token = urlToken || localStorage.getItem('tableToken');
+    const token = urlToken || sessionStorage.getItem('tableToken');
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -98,7 +107,7 @@ export function CartProvider({ children }) {
   const [isTakeout, setIsTakeout] = useState(() => {
     if (typeof window === 'undefined') return false;
     const urlToken = new URLSearchParams(window.location.search).get('token');
-    const token = urlToken || localStorage.getItem('tableToken');
+    const token = urlToken || sessionStorage.getItem('tableToken');
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -135,7 +144,7 @@ export function CartProvider({ children }) {
   useEffect(() => {
     const urlToken = new URLSearchParams(window.location.search).get('token');
     if (urlToken && urlToken !== tableToken) {
-      localStorage.setItem('tableToken', urlToken);
+      sessionStorage.setItem('tableToken', urlToken);
       setTableToken(urlToken);
       try {
         const payload = JSON.parse(atob(urlToken.split('.')[1]));
@@ -223,10 +232,10 @@ export function CartProvider({ children }) {
   // Session reset
   useEffect(() => {
     if (sessionExpired) {
-      localStorage.removeItem('lastOrderId');
-      localStorage.removeItem('lastReservationId');
-      localStorage.removeItem('reservationId');
-      localStorage.removeItem('tableToken');
+      sessionStorage.removeItem('lastOrderId');
+      sessionStorage.removeItem('lastReservationId');
+      sessionStorage.removeItem('reservationId');
+      sessionStorage.removeItem('tableToken');
       
       setCartItems([]);
       setOrderId(null);
@@ -259,12 +268,12 @@ export function CartProvider({ children }) {
       try {
         const res = await api.get('/api/orders/my-order');
         setActiveOrder(res.data);
-        // Rediscover orderId if it was lost (e.g. localStorage was cleared,
-        // or the same session is reopened on another device) but the
+        // Rediscover orderId if it was lost (e.g. the tab's storage was
+        // cleared, or the same session is reopened on another device) but the
         // session itself is still valid server-side.
         if (res.data && res.data._id && res.data._id !== orderId) {
           setOrderId(res.data._id);
-          localStorage.setItem('lastOrderId', res.data._id);
+          sessionStorage.setItem('lastOrderId', res.data._id);
         }
       } catch (err) {
         if (err.response?.status === 404) {
@@ -411,7 +420,7 @@ export function CartProvider({ children }) {
       const order = response.data.order;
       if (order && order._id) {
         setOrderId(order._id);
-        localStorage.setItem('lastOrderId', order._id);
+        sessionStorage.setItem('lastOrderId', order._id);
       }
       if (guestPhone) {
         sessionStorage.setItem('guestPhoneCaptured', 'true');
