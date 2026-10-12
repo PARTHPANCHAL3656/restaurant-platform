@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
+import OnlyWithOrder from './OnlyWithOrder';
 
 export default function DesktopSidebar() {
   const navigate = useNavigate();
@@ -79,16 +80,18 @@ export default function DesktopSidebar() {
           >
             Check Reservation
           </NavLink>
-          <NavLink 
-            to="/order-status" 
-            className={({ isActive }) => 
-              `font-label-caps text-label-caps tracking-widest uppercase hover:text-saffron-gold transition-colors ${
-                isActive ? 'text-saffron-gold' : 'text-canvas-cream/70'
-              }`
-            }
-          >
-            Track Order
-          </NavLink>
+          <OnlyWithOrder>
+            <NavLink 
+              to="/order-status" 
+              className={({ isActive }) => 
+                `font-label-caps text-label-caps tracking-widest uppercase hover:text-saffron-gold transition-colors ${
+                  isActive ? 'text-saffron-gold' : 'text-canvas-cream/70'
+                }`
+              }
+            >
+              Track Order
+            </NavLink>
+          </OnlyWithOrder>
           <NavLink 
             to="/gallery" 
             className={({ isActive }) => 

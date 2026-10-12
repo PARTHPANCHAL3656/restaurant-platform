@@ -23,7 +23,8 @@ export default function StaffSettingsBillingPage() {
     repeatCustomerDiscountPercent: restaurantInfo.repeatCustomerDiscountPercent,
     billFooterNote: restaurantInfo.billFooterNote,
     takeoutBillNote: restaurantInfo.takeoutBillNote,
-    invoicePrefix: restaurantInfo.invoicePrefix
+    invoicePrefix: restaurantInfo.invoicePrefix,
+    takeoutOrderPrefix: restaurantInfo.takeoutOrderPrefix
   });
   const [isSaving, setIsSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState('');
@@ -45,9 +46,10 @@ export default function StaffSettingsBillingPage() {
       repeatCustomerDiscountPercent: restaurantInfo.repeatCustomerDiscountPercent,
       billFooterNote: restaurantInfo.billFooterNote,
       takeoutBillNote: restaurantInfo.takeoutBillNote,
-      invoicePrefix: restaurantInfo.invoicePrefix
+      invoicePrefix: restaurantInfo.invoicePrefix,
+      takeoutOrderPrefix: restaurantInfo.takeoutOrderPrefix
     });
-  }, [restaurantInfo.cgstRate, restaurantInfo.sgstRate, restaurantInfo.pricesIncludeGst, restaurantInfo.serviceChargeEnabled, restaurantInfo.serviceChargePercent, restaurantInfo.serviceChargeTaxable, restaurantInfo.packagingFeeEnabled, restaurantInfo.packagingFeeAmount, restaurantInfo.packagingFeeLabel, restaurantInfo.repeatCustomerDiscountEnabled, restaurantInfo.repeatCustomerVisitThreshold, restaurantInfo.repeatCustomerDiscountPercent, restaurantInfo.billFooterNote, restaurantInfo.takeoutBillNote, restaurantInfo.invoicePrefix]);
+  }, [restaurantInfo.cgstRate, restaurantInfo.sgstRate, restaurantInfo.pricesIncludeGst, restaurantInfo.serviceChargeEnabled, restaurantInfo.serviceChargePercent, restaurantInfo.serviceChargeTaxable, restaurantInfo.packagingFeeEnabled, restaurantInfo.packagingFeeAmount, restaurantInfo.packagingFeeLabel, restaurantInfo.repeatCustomerDiscountEnabled, restaurantInfo.repeatCustomerVisitThreshold, restaurantInfo.repeatCustomerDiscountPercent, restaurantInfo.billFooterNote, restaurantInfo.takeoutBillNote, restaurantInfo.invoicePrefix, restaurantInfo.takeoutOrderPrefix]);
 
   const updateField = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -55,7 +57,7 @@ export default function StaffSettingsBillingPage() {
 
   const handleSave = async () => {
     setError('');
-    const requiredKeys = ['cgstRate', 'sgstRate', 'serviceChargePercent', 'packagingFeeAmount', 'packagingFeeLabel', 'invoicePrefix', 'billFooterNote', 'takeoutBillNote', 'repeatCustomerVisitThreshold', 'repeatCustomerDiscountPercent'];
+    const requiredKeys = ['cgstRate', 'sgstRate', 'serviceChargePercent', 'packagingFeeAmount', 'packagingFeeLabel', 'invoicePrefix', 'takeoutOrderPrefix', 'billFooterNote', 'takeoutBillNote', 'repeatCustomerVisitThreshold', 'repeatCustomerDiscountPercent'];
     const safeForm = fillEmptyFields(form, restaurantInfo, requiredKeys);
     const numericForm = {
       ...safeForm,
@@ -243,6 +245,19 @@ export default function StaffSettingsBillingPage() {
               onChange={(e) => updateField('invoicePrefix', e.target.value)}
               className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
+          </div>
+          <div>
+            <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Takeaway order prefix (e.g. TA)</span>
+            <input
+              type="text"
+              maxLength={6}
+              value={form.takeoutOrderPrefix}
+              onChange={(e) => updateField('takeoutOrderPrefix', e.target.value.toUpperCase())}
+              className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+            />
+            <p className="text-[11px] text-subtle-text mt-1">
+              Takeaway orders are numbered like TA-0001, up to 9999, and start again from 0001 every 1 January. The number on the kitchen board, the guest's page and the bill is always the same one. A new prefix applies to new orders only.
+            </p>
           </div>
           <div>
             <span className="text-[11px] text-subtle-text uppercase tracking-wide block mb-1">Bill footer note</span>

@@ -66,6 +66,7 @@ export function StaffProvider({ children }) {
     billFooterNote: "Please verify the bill before payment. No complaints will be entertained thereafter.",
     takeoutBillNote: "Pay at counter. Collect within 20 min of ready time.",
     invoicePrefix: "SG",
+    takeoutOrderPrefix: "TA",
     repeatCustomerDiscountEnabled: true,
     repeatCustomerVisitThreshold: 3,
     repeatCustomerDiscountPercent: 5,

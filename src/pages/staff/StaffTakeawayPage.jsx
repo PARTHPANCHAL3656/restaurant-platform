@@ -16,10 +16,11 @@ const BACKEND_NAME = { new: 'Received', preparing: 'Preparing', ready: 'Ready', 
 const LATE_NEW_MIN = 5;
 const LATE_PREPARING_MIN = 20;
 const OVERDUE_READY_MIN = 25;
-// An order stuck in New or Preparing this long was probably abandoned.
+// A ticket sitting in New or Preparing this long (since it last moved) is
+// flagged, and the Cancel option appears on it.
 const STALE_MIN = 45;
 // Flagging a no-show cancels the order and blocks the customer, so staff can't
-// open that flow until the order has been Ready for this long.
+// do it until the order has been Ready for this long.
 const MIN_NOSHOW_WAIT_MIN = 15;
 
 const STAGE = {
@@ -60,7 +61,7 @@ const clock = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-function Ticket({ ticket, num, now, confirming, onBump, onOpen }) {
+function Ticket({ ticket, now, confirming, onBump, onFlagNoShow, onCancel }) {
   const stage = STAGE[ticket.status];
   const elapsedMs = now - ticket.since;
   const minutes = elapsedMs / 60000;
@@ -70,32 +71,29 @@ function Ticket({ ticket, num, now, confirming, onBump, onOpen }) {
       ? minutes >= LATE_PREPARING_MIN
       : minutes >= OVERDUE_READY_MIN;
   const itemCount = ticket.items.reduce((n, i) => n + i.qty, 0);
-  const stale = (ticket.status === 'new' || ticket.status === 'preparing')
-    && (now - ticket.createdMs) / 60000 >= STALE_MIN;
+  const stuck = (ticket.status === 'new' || ticket.status === 'preparing') && minutes >= STALE_MIN;
   const compact = ticket.status === 'ready';
+  const noShowWait = Math.max(0, Math.ceil(MIN_NOSHOW_WAIT_MIN - minutes));
 
   return (
-    <div className={`bg-white border ${stale ? 'border-red-400' : stage.border} shadow-sm flex flex-col`}>
-      <div
-        onClick={onOpen}
-        className={`${stage.header} px-4 py-3 cursor-pointer`}
-        title="Tap for details"
-      >
+    <div className={`bg-white border ${stuck ? 'border-red-400' : stage.border} shadow-sm flex flex-col`}>
+      <div className={`${stage.header} px-4 py-3`}>
         <div className="flex items-center justify-between gap-3">
           <span className="font-serif text-2xl font-bold leading-none whitespace-nowrap">{ticket.label}</span>
           <span className={`font-mono text-sm font-bold px-2 py-0.5 rounded-sm whitespace-nowrap ${late ? 'bg-red-600 text-white' : 'bg-white text-ink-navy'}`}>
             {clock(elapsedMs)}
           </span>
         </div>
-        <div className="mt-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-widest">
-          <span>{itemCount} {itemCount === 1 ? 'item' : 'items'} · Pickup {ticket.pickupTime || 'ASAP'}</span>
-          {num ? <span className="opacity-70">Key {num}</span> : null}
+        <div className="mt-1 text-[11px] font-semibold uppercase tracking-widest">
+          {itemCount} {itemCount === 1 ? 'item' : 'items'} · Pickup {ticket.pickupTime || 'ASAP'}
         </div>
       </div>
 
-      {stale && (
+      {stuck && (
         <p className="px-4 pt-3 text-[11px] text-red-600 font-bold uppercase tracking-wide">
-          Likely abandoned. No progress in {STALE_MIN}+ min
+          {ticket.status === 'new'
+            ? `Likely abandoned. Not started in ${STALE_MIN}+ min`
+            : `Cooking for ${STALE_MIN}+ min. Check on it`}
         </p>
       )}
       {ticket.status === 'ready' && late && (
@@ -104,7 +102,12 @@ function Ticket({ ticket, num, now, confirming, onBump, onOpen }) {
         </p>
       )}
 
-      <p className="px-4 pt-3 text-[11px] font-semibold uppercase tracking-wider text-subtle-text">{ticket.guestName}</p>
+      <div className="px-4 pt-3">
+        <p className="text-sm font-semibold text-ink-navy">{ticket.guestName}</p>
+        <p className="text-[11px] uppercase tracking-wider text-subtle-text">
+          {ticket.guestPhone} · Ordered {ticket.ordered}
+        </p>
+      </div>
 
       <ul className="px-4 py-3 space-y-1.5">
         {ticket.items.map((item, idx) => (
@@ -119,6 +122,35 @@ function Ticket({ ticket, num, now, confirming, onBump, onOpen }) {
         <p className="mx-4 mb-3 text-sm bg-yellow-50 border border-yellow-200 text-ink-navy px-3 py-2">
           Note: {ticket.notes}
         </p>
+      )}
+
+      <p className="px-4 pb-3 text-[11px] text-subtle-text">
+        Items subtotal {formatINR(ticket.subtotal)} · before GST and fees
+      </p>
+
+      {stuck && (
+        <button
+          type="button"
+          onClick={onCancel}
+          className="mx-4 mb-3 text-red-500 hover:text-red-600 text-xs font-semibold uppercase tracking-widest py-1 text-left cursor-pointer"
+        >
+          Cancel this order
+        </button>
+      )}
+      {ticket.status === 'ready' && (
+        minutes >= MIN_NOSHOW_WAIT_MIN ? (
+          <button
+            type="button"
+            onClick={onFlagNoShow}
+            className="mx-4 mb-3 text-red-500 hover:text-red-600 text-xs font-semibold uppercase tracking-widest py-1 text-left cursor-pointer"
+          >
+            Flag as no-show
+          </button>
+        ) : (
+          <p className="mx-4 mb-3 text-[11px] text-subtle-text/70">
+            No-show option in {noShowWait} min. They may just be running late.
+          </p>
+        )
       )}
 
       <button
@@ -136,17 +168,18 @@ export default function StaffTakeawayPage() {
   const { orders, moveTakeout, cancelOrder, flagCustomerNoShow } = useStaff();
   const now = useNow(1000);
 
-  const [selectedOrderId, setSelectedOrderId] = useState(null);
-  const [noShowModalOpen, setNoShowModalOpen] = useState(false);
+  const [noShowOrderId, setNoShowOrderId] = useState(null);
   const [noShowReason, setNoShowReason] = useState('');
   const [hasCalledCustomer, setHasCalledCustomer] = useState(false);
 
-  // ---- Tickets: one per live takeout order, oldest first ----
+  // ---- Tickets: one per live takeout order that has items, oldest first.
+  // A guest who has started an order but not added anything yet has no ticket. ----
   const tickets = useMemo(() => {
     const list = [];
     for (const o of orders) {
       if (o.orderType !== 'takeout') continue;
       if (o.status !== 'new' && o.status !== 'preparing' && o.status !== 'ready') continue;
+      if (!o.items || o.items.length === 0) continue;
       const createdMs = new Date(o.createdAt).getTime();
       const stamp = o.status === 'new'
         ? o.createdAt
@@ -161,7 +194,10 @@ export default function StaffTakeawayPage() {
         items: o.items,
         notes: o.notes,
         guestName: o.guestName,
+        guestPhone: o.guestPhone,
+        ordered: o.time,
         pickupTime: o.pickupTime,
+        subtotal: o.items.reduce((sum, i) => sum + i.price * i.qty, 0),
         since: new Date(stamp).getTime(),
         createdMs
       });
@@ -175,14 +211,7 @@ export default function StaffTakeawayPage() {
     ready: tickets.filter(t => t.status === 'ready')
   }), [tickets]);
 
-  // Numbered in the order they appear on screen (1-9), for the keyboard.
-  const numbered = useMemo(() => [...columns.new, ...columns.preparing, ...columns.ready], [columns]);
-  const numberOf = (key) => {
-    const i = numbered.findIndex(t => t.key === key);
-    return i >= 0 && i < 9 ? i + 1 : 0;
-  };
-
-  const selectedOrder = orders.find(o => o.id === selectedOrderId && o.orderType === 'takeout');
+  const noShowOrder = orders.find(o => o.id === noShowOrderId && o.orderType === 'takeout');
 
   // ---- Moving tickets, with a 10-second Undo. Picked Up has no Undo because
   // it creates the bill. ----
@@ -241,29 +270,6 @@ export default function StaffTakeawayPage() {
     move(lastAction.orderId, lastAction.label, lastAction.to, lastAction.from, true);
   };
 
-  // ---- Keyboard: 1-9 moves that ticket on, 0 undoes ----
-  const numberedRef = useRef(numbered);
-  const bumpRef = useRef(bump);
-  const undoRef = useRef(undo);
-  numberedRef.current = numbered;
-  bumpRef.current = bump;
-  undoRef.current = undo;
-
-  useEffect(() => {
-    const onKey = (e) => {
-      const tag = (e.target && e.target.tagName) || '';
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.key === '0') { undoRef.current(); return; }
-      const n = Number(e.key);
-      if (n >= 1 && n <= 9) {
-        const t = numberedRef.current[n - 1];
-        if (t) bumpRef.current(t);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
   useEffect(() => () => {
     clearTimeout(undoTimer.current);
     clearTimeout(confirmTimer.current);
@@ -309,29 +315,22 @@ export default function StaffTakeawayPage() {
     };
   }, []);
 
-  // ---- Details panel: phone, total, cancel abandoned, no-show ----
-  const orderTotal = (order) => order.items.reduce((sum, i) => sum + i.price * i.qty, 0);
-  const minutesSinceReady = (order) => {
-    if (!order || !order.readyAt) return 0;
-    return (now - new Date(order.readyAt).getTime()) / 60000;
-  };
-  const canFlagNoShow = (order) => order && order.status === 'ready' && minutesSinceReady(order) >= MIN_NOSHOW_WAIT_MIN;
-  const minutesUntilEligible = (order) => Math.max(0, Math.ceil(MIN_NOSHOW_WAIT_MIN - minutesSinceReady(order)));
-  const isStale = (order) => {
-    if (!order || (order.status !== 'new' && order.status !== 'preparing')) return false;
-    return (now - new Date(order.createdAt).getTime()) / 60000 >= STALE_MIN;
+  // ---- Cancel and no-show ----
+  const cancelStuck = (t) => {
+    if (window.confirm(`Cancel ${t.label}? It looks abandoned. This does NOT block the customer from ordering again.`)) {
+      cancelOrder(t.orderId);
+    }
   };
 
   const closeNoShowModal = () => {
-    setNoShowModalOpen(false);
+    setNoShowOrderId(null);
     setNoShowReason('');
     setHasCalledCustomer(false);
   };
 
   const confirmNoShow = () => {
-    flagCustomerNoShow(selectedOrder.guestPhone, selectedOrder.id, noShowReason);
+    flagCustomerNoShow(noShowOrder.guestPhone, noShowOrder.id, noShowReason);
     closeNoShowModal();
-    setSelectedOrderId(null);
   };
 
   const renderColumn = (status) => {
@@ -355,11 +354,11 @@ export default function StaffTakeawayPage() {
             <Ticket
               key={t.key}
               ticket={t}
-              num={numberOf(t.key)}
               now={now}
               confirming={confirmKey === t.key}
               onBump={() => bump(t)}
-              onOpen={() => setSelectedOrderId(t.orderId)}
+              onFlagNoShow={() => setNoShowOrderId(t.orderId)}
+              onCancel={() => cancelStuck(t)}
             />
           ))}
         </div>
@@ -368,132 +367,30 @@ export default function StaffTakeawayPage() {
   };
 
   return (
-    <div className="flex flex-col-reverse md:flex-row md:h-[calc(100vh-80px)] relative select-none md:overflow-hidden bg-surface">
-      <div className="flex-grow flex flex-col min-h-0 min-w-0">
-        <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3 border-b border-muted-border bg-white shrink-0">
-          <p className="text-xs text-subtle-text">
-            {tickets.length} open {tickets.length === 1 ? 'order' : 'orders'} · Tap a ticket's top bar for details
-          </p>
-          <div className="flex items-center gap-3">
-            {message && <span className="text-xs text-red-600">{message}</span>}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1.2fr_0.8fr] gap-4 p-4 md:p-6 flex-grow min-h-0">
-          {renderColumn('new')}
-          {renderColumn('preparing')}
-          {renderColumn('ready')}
+    <div className="flex flex-col md:h-[calc(100vh-80px)] md:overflow-hidden select-none bg-surface">
+      <div className="flex items-center justify-between gap-4 px-4 md:px-6 py-3 border-b border-muted-border bg-white shrink-0">
+        <p className="text-xs text-subtle-text">
+          {tickets.length} open {tickets.length === 1 ? 'order' : 'orders'}
+        </p>
+        <div className="flex items-center gap-3">
+          {message && <span className="text-xs text-red-600">{message}</span>}
         </div>
       </div>
 
-      {/* Details slide-over panel */}
-      {selectedOrder && <div className="fixed inset-0 z-40 bg-black/30 md:hidden" onClick={() => setSelectedOrderId(null)} />}
-      <div className={`fixed md:static inset-y-0 right-0 z-50 md:z-auto bg-white border-l border-muted-border shrink-0 min-h-0 transition-all duration-300 shadow-2xl flex flex-col ${
-        selectedOrder ? 'w-full md:w-96 translate-x-0' : 'w-full md:w-96 translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'
-      }`}>
-        {selectedOrder && (
-          <div className="h-full flex flex-col justify-between">
-            <div className="p-6 bg-ink-navy text-canvas-cream shrink-0">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <span className="font-label-caps text-[9px] text-saffron-gold tracking-widest font-bold uppercase block mb-1">
-                    {selectedOrder.table}
-                  </span>
-                  <h3 className="font-serif text-2xl">{selectedOrder.guestName}</h3>
-                </div>
-                <button
-                  onClick={() => setSelectedOrderId(null)}
-                  className="p-1 text-canvas-cream/50 hover:text-canvas-cream hover:bg-white/10 rounded-full transition-colors focus:outline-none"
-                >
-                  <span className="material-symbols-outlined normal-case">close</span>
-                </button>
-              </div>
-              <p className="text-[11px] text-canvas-cream/60 font-label-caps tracking-widest uppercase">
-                {selectedOrder.guestPhone} • Ordered {selectedOrder.time}
-              </p>
-            </div>
-
-            <div className="flex-grow min-h-0 overflow-y-auto p-6 space-y-6 hide-scrollbar" data-lenis-prevent>
-              <div className="space-y-3 pb-6 border-b border-muted-border text-xs">
-                <div className="flex justify-between">
-                  <span className="text-subtle-text">Pickup Time:</span>
-                  <span className="font-bold text-ink-navy">{selectedOrder.pickupTime || 'ASAP'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-subtle-text">Order Total:</span>
-                  <span className="font-bold font-mono text-ink-navy">{formatINR(orderTotal(selectedOrder))}</span>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="font-label-caps text-[10px] text-subtle-text uppercase tracking-widest font-bold">Items</h4>
-                <ul className="space-y-3.5 text-xs text-ink-navy divide-y divide-muted-border/50">
-                  {selectedOrder.items.map((item, idx) => (
-                    <li key={idx} className="flex justify-between items-center pt-3.5 first:pt-0">
-                      <div>
-                        <span className="font-bold text-saffron-gold mr-3">{item.qty}x</span>
-                        <span className="font-medium">{item.name}</span>
-                      </div>
-                      <span className="font-bold font-mono">{formatINR(item.price * item.qty)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {selectedOrder.notes && (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 text-xs italic text-ink-navy rounded-xs">
-                  <p className="font-semibold text-yellow-800 font-label-caps text-[9px] uppercase tracking-wider mb-1">Special Notes</p>
-                  <p>"{selectedOrder.notes}"</p>
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 border-t border-muted-border bg-canvas-cream shrink-0 space-y-3">
-              {isStale(selectedOrder) && (
-                <button
-                  onClick={() => {
-                    if (window.confirm('Cancel this order? Looks abandoned: no items progress in a while. This does NOT block the customer from ordering again.')) {
-                      cancelOrder(selectedOrder.id);
-                      setSelectedOrderId(null);
-                    }
-                  }}
-                  className="w-full text-red-500 hover:text-red-600 text-xs font-semibold uppercase tracking-widest py-2 cursor-pointer"
-                >
-                  Cancel Abandoned Order
-                </button>
-              )}
-              {selectedOrder.status === 'ready' && (
-                canFlagNoShow(selectedOrder) ? (
-                  <button
-                    onClick={() => setNoShowModalOpen(true)}
-                    className="w-full text-red-500 hover:text-red-600 text-xs font-semibold uppercase tracking-widest py-2 cursor-pointer"
-                  >
-                    Flag as No-Show
-                  </button>
-                ) : (
-                  <p className="text-center text-[11px] text-subtle-text/70 py-2">
-                    No-show option available in {minutesUntilEligible(selectedOrder)} min. Give them time, they might just be running late.
-                  </p>
-                )
-              )}
-              {!isStale(selectedOrder) && selectedOrder.status !== 'ready' && (
-                <p className="text-center text-[11px] text-subtle-text/70 py-2">
-                  Move this order on from its ticket on the board.
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1.2fr_0.8fr] gap-4 p-4 md:p-6 flex-grow min-h-0">
+        {renderColumn('new')}
+        {renderColumn('preparing')}
+        {renderColumn('ready')}
       </div>
 
       {/* No-Show Confirmation Modal */}
-      {noShowModalOpen && selectedOrder && (
+      {noShowOrder && (
         <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" onClick={closeNoShowModal}>
           <div className="bg-white w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 bg-red-600 text-white">
-              <h3 className="font-serif text-xl">Flag {selectedOrder.table} as No-Show?</h3>
+              <h3 className="font-serif text-xl">Flag {noShowOrder.table} as No-Show?</h3>
               <p className="text-xs text-white/80 mt-1">
-                This cancels the order and blocks {selectedOrder.guestPhone} from placing new online takeout orders.
+                This cancels the order and blocks {noShowOrder.guestPhone} from placing new online takeout orders.
                 The food already prepared for this order will go to waste.
               </p>
             </div>
@@ -524,7 +421,7 @@ export default function StaffTakeawayPage() {
                   className="mt-0.5 w-4 h-4 accent-red-600"
                 />
                 <span className="text-xs text-ink-navy">
-                  I called <strong>{selectedOrder.guestPhone}</strong> and confirmed they are not coming, or could not reach them after trying.
+                  I called <strong>{noShowOrder.guestPhone}</strong> and confirmed they are not coming, or could not reach them after trying.
                 </span>
               </label>
 

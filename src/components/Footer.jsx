@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import { useStaff } from '../context/StaffContext';
+import OnlyWithOrder from './OnlyWithOrder';
 
 export default function Footer() {
   const { restaurantInfo } = useStaff();
@@ -88,7 +89,7 @@ export default function Footer() {
             <Link to="/menu" className="hover:text-saffron-gold transition-colors">Menu</Link>
             <Link to="/reservation" className="hover:text-saffron-gold transition-colors">Reservation</Link>
             <Link to="/check-reservation" className="hover:text-saffron-gold transition-colors">Check Reservation</Link>
-            <Link to="/order-status" className="hover:text-saffron-gold transition-colors">Track Order</Link>
+            <OnlyWithOrder><Link to="/order-status" className="hover:text-saffron-gold transition-colors">Track Order</Link></OnlyWithOrder>
             <Link to="/gallery" className="hover:text-saffron-gold transition-colors">Gallery</Link>
             <Link to="/contact" className="hover:text-saffron-gold transition-colors">Contact</Link>
           </nav>

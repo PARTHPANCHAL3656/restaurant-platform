@@ -3,6 +3,7 @@ import Customer from "../models/Customer.js"
 import Settings from "../models/Settings.js"
 import { generateTakeoutToken, signTakeoutToken } from "../utils/generateTakeoutToken.js"
 import { nextBillNumber } from "../utils/nextBillNumber.js"
+import { nextTakeoutNumber } from "../utils/nextTakeoutNumber.js"
 import { checkPickupTime } from "../utils/checkTakeoutHours.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 
@@ -44,8 +45,7 @@ export const startTakeoutSession = async (req, res) => {
     }
 
     const { sessionId, token, menuUrl } = generateTakeoutToken()
-    const count = await Order.countDocuments({ orderType: "takeout" })
-    const orderNumber = `TA-${1000 + count + 1}`
+    const orderNumber = await nextTakeoutNumber()
     const billNumber = await nextBillNumber()
 
     await Order.create({

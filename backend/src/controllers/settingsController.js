@@ -61,6 +61,14 @@ export const updateSettings = async (req, res) => {
       }
     }
 
+    if (billing && billing.takeoutOrderPrefix !== undefined) {
+      const prefix = String(billing.takeoutOrderPrefix).trim().toUpperCase()
+      if (!/^[A-Z0-9]{1,6}$/.test(prefix)) {
+        return res.status(400).json({ error: "Takeaway order prefix must be 1 to 6 letters or numbers." })
+      }
+      billing.takeoutOrderPrefix = prefix
+    }
+
     if (openingHours && !Array.isArray(openingHours)) {
       return res.status(400).json({ error: "openingHours must be an array." })
     }

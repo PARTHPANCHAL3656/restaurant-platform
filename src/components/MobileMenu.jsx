@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import BrandLogo from './BrandLogo';
+import OnlyWithOrder from './OnlyWithOrder';
 
 export default function MobileMenu({ isOpen, onClose }) {
   const navigate = useNavigate();
@@ -133,19 +134,21 @@ export default function MobileMenu({ isOpen, onClose }) {
                 Check Reservation
               </NavLink>
             </motion.div>
-            <motion.div variants={linkVariants}>
-              <NavLink 
-                to="/order-status" 
-                onClick={onClose}
-                className={({ isActive }) => 
-                  `font-display-lg text-4xl block hover:text-saffron-gold transition-colors ${
-                    isActive ? 'text-saffron-gold' : 'text-canvas-cream/70'
-                  }`
-                }
-              >
-                Track Order
-              </NavLink>
-            </motion.div>
+            <OnlyWithOrder>
+              <motion.div variants={linkVariants}>
+                <NavLink 
+                  to="/order-status" 
+                  onClick={onClose}
+                  className={({ isActive }) => 
+                    `font-display-lg text-4xl block hover:text-saffron-gold transition-colors ${
+                      isActive ? 'text-saffron-gold' : 'text-canvas-cream/70'
+                    }`
+                  }
+                >
+                  Track Order
+                </NavLink>
+              </motion.div>
+            </OnlyWithOrder>
             <motion.div variants={linkVariants}>
               <NavLink 
                 to="/gallery" 
