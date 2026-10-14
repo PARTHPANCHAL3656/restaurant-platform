@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken"
 import Table from "../models/Table.js"
 import Order from "../models/Order.js"
 import Settings from "../models/Settings.js"
+import { guestMessageForCancelled } from "../utils/cancelReasons.js"
 
 // Attach this to customer routes that need a valid table OR takeout session
 // Verifies the token from the QR code URL (or the takeout self-service start)
@@ -31,10 +32,17 @@ const tableSession = async (req, res, next) => {
       const order = await Order.findOne({ sessionId, orderType: "takeout" })
 
       if (!order || order.status === "Cancelled") {
+        // A cancelled order tells the guest why, in a friendly line.
+        let guestMessage
+        if (order) {
+          const settings = await Settings.getSingleton()
+          guestMessage = guestMessageForCancelled(order, settings.contact.primaryPhone)
+        }
         return res.status(401).json({
           error: "Session expired. This takeout order is no longer active.",
           sessionEnded: true,
-          status: "closed"
+          status: "closed",
+          guestMessage
         })
       }
 
@@ -67,10 +75,19 @@ const tableSession = async (req, res, next) => {
     }
 
     if (table.currentSessionId !== sessionId || (table.status !== 'occupied' && table.status !== 'reserved')) {
+      // If the table was closed because staff turned the first order away,
+      // tell the guest why instead of the generic "reset" line.
+      let guestMessage
+      const ended = await Order.findOne({ sessionId })
+      if (ended && ended.status === "Cancelled") {
+        const settings = await Settings.getSingleton()
+        guestMessage = guestMessageForCancelled(ended, settings.contact.primaryPhone)
+      }
       return res.status(401).json({
         error: "Session expired. This table has been reset by staff.",
         sessionEnded: true,
-        status: "closed"
+        status: "closed",
+        guestMessage
       })
     }
 

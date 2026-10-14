@@ -1377,6 +1377,18 @@ export function StaffProvider({ children }) {
   // Plain cancel — no blacklist, no reason required. For clearing abandoned
   // orders (empty cart, customer never came back) that never should count
   // against the customer, unlike flagCustomerNoShow.
+  // Turn an order away before the kitchen starts it (a takeout order, or a
+  // table's first order). The reason is one of the quick codes in
+  // backend/src/utils/cancelReasons.js. Throws with the server's message if
+  // the order can no longer be rejected.
+  const rejectOrder = async (orderId, reason) => {
+    try {
+      await api.post(`/api/orders/${orderId}/reject`, { reason });
+    } finally {
+      await loadAllData();
+    }
+  };
+
   const cancelOrder = async (orderId) => {
     const isMock = sessionStorage.getItem('staffToken') === 'mock-jwt-token-for-preview-only';
     if (isMock) {
@@ -2133,6 +2145,7 @@ export function StaffProvider({ children }) {
       advanceOrder,
       advanceRound,
       moveTakeout,
+      rejectOrder,
       cancelOrder,
       assignTable,
       markInvoicePaid,

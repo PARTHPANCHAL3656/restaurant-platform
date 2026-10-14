@@ -84,7 +84,7 @@ api.interceptors.response.use(
         } else {
           const isClosed = data?.status === 'closed' || data?.sessionEnded === true;
           if (isClosed) {
-            window.dispatchEvent(new Event('customer-session-expired'));
+            window.dispatchEvent(new CustomEvent('customer-session-expired', { detail: { guestMessage: data?.guestMessage || '' } }));
           } else {
             window.dispatchEvent(new Event('customer-session-invalid'));
           }

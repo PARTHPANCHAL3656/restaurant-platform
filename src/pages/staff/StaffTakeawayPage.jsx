@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useStaff } from '../../context/StaffContext';
 import { formatINR } from '../../utils/currency';
 import { isKitchenSoundOn, getKitchenAudio, playKitchenChime } from '../../utils/kitchenChime';
+import RejectOrderDialog, { REJECT_REASONS } from '../../components/staff/RejectOrderDialog';
 
 // One ticket = one takeout order (takeout has no rounds). The chef taps Start,
 // then Ready for pickup; whoever is at the counter taps Picked Up when the
@@ -17,7 +18,7 @@ const LATE_NEW_MIN = 5;
 const LATE_PREPARING_MIN = 20;
 const OVERDUE_READY_MIN = 25;
 // A ticket sitting in New or Preparing this long (since it last moved) is
-// flagged, and the Cancel option appears on it.
+// flagged so staff notice it.
 const STALE_MIN = 45;
 // Flagging a no-show cancels the order and blocks the customer, so staff can't
 // do it until the order has been Ready for this long.
@@ -71,7 +72,7 @@ const ago = (ms) => {
   return `${hrs} ${hrs === 1 ? 'hr' : 'hrs'} ago`;
 };
 
-function Ticket({ ticket, now, confirming, onBump, onFlagNoShow, onCancel }) {
+function Ticket({ ticket, now, confirming, onBump, onFlagNoShow, onReject }) {
   const stage = STAGE[ticket.status];
   const elapsedMs = now - ticket.since;
   const minutes = elapsedMs / 60000;
@@ -138,13 +139,13 @@ function Ticket({ ticket, now, confirming, onBump, onFlagNoShow, onCancel }) {
         Items subtotal {formatINR(ticket.subtotal)} · before GST and fees
       </p>
 
-      {stuck && (
+      {ticket.status === 'new' && (
         <button
           type="button"
-          onClick={onCancel}
+          onClick={onReject}
           className="mx-4 mb-3 text-red-500 hover:text-red-600 text-xs font-semibold uppercase tracking-widest py-1 text-left cursor-pointer"
         >
-          Cancel this order
+          Reject order
         </button>
       )}
       {ticket.status === 'ready' && (
@@ -175,7 +176,7 @@ function Ticket({ ticket, now, confirming, onBump, onFlagNoShow, onCancel }) {
 }
 
 export default function StaffTakeawayPage() {
-  const { orders, moveTakeout, cancelOrder, flagCustomerNoShow } = useStaff();
+  const { orders, moveTakeout, rejectOrder, flagCustomerNoShow } = useStaff();
   const now = useNow(1000);
 
   const [noShowOrderId, setNoShowOrderId] = useState(null);
@@ -324,10 +325,26 @@ export default function StaffTakeawayPage() {
     };
   }, []);
 
-  // ---- Cancel and no-show ----
-  const cancelStuck = (t) => {
-    if (window.confirm(`Cancel ${t.label}? It looks abandoned. This does NOT block the customer from ordering again.`)) {
-      cancelOrder(t.orderId);
+  // ---- Reject (only before the kitchen starts) and no-show ----
+  const [rejectTicket, setRejectTicket] = useState(null);
+  const [rejectBusy, setRejectBusy] = useState(false);
+  const [rejectError, setRejectError] = useState('');
+
+  const closeReject = () => {
+    setRejectTicket(null);
+    setRejectError('');
+  };
+
+  const pickRejectReason = async (code) => {
+    setRejectBusy(true);
+    setRejectError('');
+    try {
+      await rejectOrder(rejectTicket.orderId, code);
+      setRejectTicket(null);
+    } catch (err) {
+      setRejectError(err.message || 'Could not reject this order. Please try again.');
+    } finally {
+      setRejectBusy(false);
     }
   };
 
@@ -367,7 +384,7 @@ export default function StaffTakeawayPage() {
               confirming={confirmKey === t.key}
               onBump={() => bump(t)}
               onFlagNoShow={() => setNoShowOrderId(t.orderId)}
-              onCancel={() => cancelStuck(t)}
+              onReject={() => setRejectTicket(t)}
             />
           ))}
         </div>
@@ -391,6 +408,18 @@ export default function StaffTakeawayPage() {
         {renderColumn('preparing')}
         {renderColumn('ready')}
       </div>
+
+      {rejectTicket && (
+        <RejectOrderDialog
+          title={`Reject ${rejectTicket.label}?`}
+          note="The guest is told why, in a friendly message. Once you tap Start, an order can no longer be rejected."
+          reasons={REJECT_REASONS}
+          busy={rejectBusy}
+          error={rejectError}
+          onPick={pickRejectReason}
+          onClose={closeReject}
+        />
+      )}
 
       {/* No-Show Confirmation Modal */}
       {noShowOrder && (

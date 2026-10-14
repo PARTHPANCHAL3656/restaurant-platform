@@ -29,7 +29,7 @@ export function invoiceCoversOrder(invoice, order) {
 // "available". Manual release, the timer and the receipt download all end
 // up here, so they all clean up and notify clients in exactly the same way.
 // reason: "manual" | "auto" | "receipt" (sent to clients with the events).
-export async function releaseTableSession(table, reason = "manual") {
+export async function releaseTableSession(table, reason = "manual", extra = {}) {
   if (table.currentOrderId) {
     await Order.findByIdAndUpdate(table.currentOrderId, { status: "Served" })
   }
@@ -47,7 +47,7 @@ export async function releaseTableSession(table, reason = "manual") {
   table.autoReleaseAt = null
   await table.save()
 
-  io.emit("table:released", { tableId: table._id, status: "available", tableNumber: table.tableNumber, reason })
+  io.emit("table:released", { tableId: table._id, status: "available", tableNumber: table.tableNumber, reason, ...extra })
   io.emit("table:updated", { tableId: table._id, status: "available", tableNumber: table.tableNumber })
 }
 

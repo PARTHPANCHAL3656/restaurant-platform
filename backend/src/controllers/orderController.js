@@ -7,7 +7,8 @@ import { calculateBill } from "../utils/calculateBill.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
 import { refreshUnpaidInvoice } from "../utils/refreshInvoice.js"
-import { autoReleaseTable } from "../utils/tableRelease.js"
+import { autoReleaseTable, releaseTableSession } from "../utils/tableRelease.js"
+import { REJECT_REASONS, guestMessageForCancelled } from "../utils/cancelReasons.js"
 import { STEPS, ensureRounds, deriveStatus, servedThrough, applyRoundStatus, setUnservedRoundsTo } from "../utils/orderRounds.js"
 import Table from "../models/Table.js"
 
@@ -295,6 +296,67 @@ export const updateRoundStatus = async (req, res) => {
     if (err.name === "VersionError") {
       return res.status(409).json({ error: "This order was just updated by someone else. Please try again." })
     }
+    res.status(500).json({ error: err.message })
+  }
+}
+
+// POST /api/orders/:id/reject   { reason }
+// Staff turns an order away BEFORE the kitchen starts it: a takeout order, or
+// the very first order at a table (Round 1, with nothing else ordered). Staff
+// pick one of the quick reasons in utils/cancelReasons.js and never type one;
+// the guest is shown a friendly line for it. Once the kitchen has started, an
+// order can't be rejected. For a table, the table is released and the guest's
+// session ends. Protected by staffAuth middleware
+export const rejectOrder = async (req, res) => {
+  try {
+    const { reason } = req.body
+    if (!REJECT_REASONS[reason]) {
+      return res.status(400).json({ error: "Please choose a reason." })
+    }
+
+    const order = await Order.findById(req.params.id)
+    if (!order) return res.status(404).json({ error: "Order not found." })
+
+    let table = null
+    if (order.orderType === "takeout") {
+      if (order.status !== "Received") {
+        return res.status(409).json({ error: "The kitchen has already started this order, so it can't be rejected." })
+      }
+    } else {
+      ensureRounds(order)
+      const roundNumbers = new Set(order.rounds.map(r => r.round))
+      if (roundNumbers.size !== 1 || order.rounds[0].status !== "Received") {
+        return res.status(409).json({ error: "Only a table's first order, before the kitchen starts it, can be rejected." })
+      }
+      if (await Invoice.findOne({ sessionId: order.sessionId })) {
+        return res.status(409).json({ error: "A bill already exists for this table, so the order can't be rejected." })
+      }
+      table = await Table.findOne({ currentOrderId: order._id })
+    }
+
+    // A table's session is closed first. Releasing marks the order Served, so
+    // the order is set to Cancelled after it. The guest's screen gets the
+    // friendly line with the release event.
+    if (table) {
+      const settings = await Settings.getSingleton()
+      await releaseTableSession(table, "rejected", {
+        message: guestMessageForCancelled({ cancelReason: reason }, settings.contact.primaryPhone)
+      })
+    }
+
+    order.status = "Cancelled"
+    order.cancelReason = reason
+    order.cancelledAt = new Date()
+    await order.save()
+
+    io.emit("order:updated", {
+      orderId: order._id,
+      tableNumber: order.tableNumber,
+      status: order.status
+    })
+
+    res.json(order)
+  } catch (err) {
     res.status(500).json({ error: err.message })
   }
 }

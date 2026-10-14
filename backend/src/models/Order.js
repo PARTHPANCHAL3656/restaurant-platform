@@ -82,6 +82,16 @@ const orderSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  // Set when staff turn an order away before the kitchen starts it. A code
+  // from utils/cancelReasons.js; the guest is shown a friendly line for it.
+  cancelReason: {
+    type: String,
+    default: ""
+  },
+  cancelledAt: {
+    type: Date,
+    default: null
+  },
   // Set only when a takeout order is cancelled via the no-show flow —
   // a permanent record of why, for accountability if a customer disputes
   // being blacklisted later.

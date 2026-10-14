@@ -14,6 +14,8 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [orderId, setOrderId] = useState(() => (typeof window !== 'undefined' ? sessionStorage.getItem('lastOrderId') : null) || null);
   const [sessionExpired, setSessionExpired] = useState(false);
+  // The friendly line shown when staff turned the order away (empty otherwise).
+  const [sessionEndedMessage, setSessionEndedMessage] = useState('');
   const [tableId, setTableId] = useState(null);
   const [tableSessionId, setTableSessionId] = useState(null);
 
@@ -42,8 +44,9 @@ export function CartProvider({ children }) {
   };
 
   useEffect(() => {
-    const handleCustomerExpired = () => {
+    const handleCustomerExpired = (e) => {
       if (receiptHoldRef.current) return;
+      setSessionEndedMessage((e && e.detail && e.detail.guestMessage) || '');
       setSessionExpired(true);
     };
     const handleCustomerInvalid = () => {
@@ -175,6 +178,7 @@ export function CartProvider({ children }) {
           handlePaidSessionEnd();
           return;
         }
+        setSessionEndedMessage(data.message || '');
         setSessionExpired(true);
       }
     };
@@ -466,10 +470,14 @@ export function CartProvider({ children }) {
       sessionExpired,
       // Dismissing the "session ended" screen also clears its thank-you wording.
       setSessionExpired: (value) => {
-        if (!value) setSessionEndedPaid(false);
+        if (!value) {
+          setSessionEndedPaid(false);
+          setSessionEndedMessage('');
+        }
         setSessionExpired(value);
       },
       sessionEndedPaid,
+      sessionEndedMessage,
       billPaid,
       receiptPrompt,
       dismissReceiptPrompt: () => setReceiptPrompt(false),

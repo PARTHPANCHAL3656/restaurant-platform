@@ -7,7 +7,8 @@ import {
   getOrderByTable,
   getAllActiveOrders,
   updateOrderStatus,
-  updateRoundStatus
+  updateRoundStatus,
+  rejectOrder
 } from "../controllers/orderController.js"
 
 const router = express.Router()
@@ -20,6 +21,7 @@ router.get("/my-order", tableSession, getMyOrder)     // get bill summary
 router.get("/all-active", staffAuth, getAllActiveOrders)
 router.get("/table/:tableNumber", staffAuth, getOrderByTable)
 router.patch("/:id/status", staffAuth, updateOrderStatus)
+router.post("/:id/reject", staffAuth, rejectOrder)
 router.patch("/:id/rounds/:round/status", staffAuth, updateRoundStatus)
 
 export default router
