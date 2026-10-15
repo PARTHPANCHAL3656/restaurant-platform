@@ -37,6 +37,9 @@ const settingsSchema = new mongoose.Schema({
     primaryPhone: { type: String, default: "+91 265 234 5678" },
     whatsappNumber: { type: String, default: "" },
     secondaryPhone: { type: String, default: "+91 70960 34960" },
+    // The manager's direct line, shown in "call to cancel or change" notes.
+    // Empty means the primary phone is shown instead.
+    managerPhone: { type: String, default: "" },
     email: { type: String, default: "concierge@spicegarden.com" },
     googleMapsUrl: { type: String, default: "https://www.google.com/maps/search/?api=1&query=12+Alkapuri+Boulevard%2C+Vadodara%2C+Gujarat+390007" },
     googleMapsEmbedUrl: { type: String, default: "https://www.google.com/maps?q=Alkapuri,+Vadodara,+Gujarat+390007&output=embed" }

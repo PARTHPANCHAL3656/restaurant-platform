@@ -45,6 +45,7 @@ const StaffSettingsPage = React.lazy(() => import('./pages/staff/StaffSettingsPa
 const StaffSettingsLegalPage = React.lazy(() => import('./pages/staff/StaffSettingsLegalPage'));
 const StaffSettingsOperationsPage = React.lazy(() => import('./pages/staff/StaffSettingsOperationsPage'));
 const StaffSettingsContactPage = React.lazy(() => import('./pages/staff/StaffSettingsContactPage'));
+const StaffSettingsNoShowsPage = React.lazy(() => import('./pages/staff/StaffSettingsNoShowsPage'));
 const StaffSettingsBillingPage = React.lazy(() => import('./pages/staff/StaffSettingsBillingPage'));
 const StaffSettingsStaffPage = React.lazy(() => import('./pages/staff/StaffSettingsStaffPage'));
 const StaffSettingsLinksPage = React.lazy(() => import('./pages/staff/StaffSettingsLinksPage'));
@@ -207,6 +208,7 @@ function MainAppRouter() {
             <Route path="/staff/settings/legal" element={<StaffSettingsLegalPage />} />
             <Route path="/staff/settings/operations" element={<StaffSettingsOperationsPage />} />
             <Route path="/staff/settings/contact" element={<StaffSettingsContactPage />} />
+            <Route path="/staff/settings/no-shows" element={<StaffSettingsNoShowsPage />} />
             <Route path="/staff/settings/billing" element={<StaffSettingsBillingPage />} />
             <Route path="/staff/settings/staff" element={<StaffSettingsStaffPage />} />
             <Route path="/staff/settings/links" element={<StaffSettingsLinksPage />} />

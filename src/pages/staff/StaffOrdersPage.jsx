@@ -49,7 +49,7 @@ const clock = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-function Ticket({ ticket, now, prepMin, onBump }) {
+function Ticket({ ticket, num, now, prepMin, onBump }) {
   const stage = STAGE[ticket.status];
   const elapsedMs = now - ticket.since;
   const minutes = elapsedMs / 60000;
@@ -68,8 +68,9 @@ function Ticket({ ticket, now, prepMin, onBump }) {
             {clock(elapsedMs)}
           </span>
         </div>
-        <div className="mt-1 text-[11px] font-semibold uppercase tracking-widest">
-          Round {ticket.round} · {itemCount} {itemCount === 1 ? 'item' : 'items'}
+        <div className="mt-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-widest">
+          <span>Round {ticket.round} · {itemCount} {itemCount === 1 ? 'item' : 'items'}</span>
+          {num ? <span className="opacity-70">Key {num}</span> : null}
         </div>
       </div>
 
@@ -140,6 +141,13 @@ export default function StaffOrdersPage() {
     Ready: tickets.filter(t => t.status === 'Ready')
   }), [tickets]);
 
+  // Numbered in the order they appear on screen (1-9), for the keyboard.
+  const numbered = useMemo(() => [...columns.Received, ...columns.Preparing, ...columns.Ready], [columns]);
+  const numberOf = (key) => {
+    const i = numbered.findIndex(t => t.key === key);
+    return i >= 0 && i < 9 ? i + 1 : 0;
+  };
+
   const prepMinutes = (items) => {
     const longest = items.reduce((m, i) => {
       const found = (menuItems || []).find(x => x.name === i.name);
@@ -183,6 +191,29 @@ export default function StaffOrdersPage() {
     if (!lastAction) return;
     move(lastAction.orderId, lastAction.round, lastAction.label, lastAction.to, lastAction.from, true);
   };
+
+  // ---- Keyboard: 1-9 moves that ticket on, 0 undoes ----
+  const numberedRef = useRef(numbered);
+  const bumpRef = useRef(bump);
+  const undoRef = useRef(undo);
+  numberedRef.current = numbered;
+  bumpRef.current = bump;
+  undoRef.current = undo;
+
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === '0') { undoRef.current(); return; }
+      const n = Number(e.key);
+      if (n >= 1 && n <= 9) {
+        const t = numberedRef.current[n - 1];
+        if (t) bumpRef.current(t);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // ---- Chime when a new ticket arrives ----
   // The on/off switch lives in Settings → Operations (it is saved per device).
@@ -246,6 +277,7 @@ export default function StaffOrdersPage() {
             <Ticket
               key={t.key}
               ticket={t}
+              num={numberOf(t.key)}
               now={now}
               prepMin={prepMinutes(t.items)}
               onBump={() => bump(t)}

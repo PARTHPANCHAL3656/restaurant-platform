@@ -44,6 +44,14 @@ const GROUPS = [
     live: true
   },
   {
+    key: 'noshows',
+    title: 'No-Show List',
+    description: 'Customers with missed pickups or reservations. Block or unblock online takeout.',
+    path: '/staff/settings/no-shows',
+    ownerOnly: false,
+    live: true
+  },
+  {
     key: 'staff',
     title: 'Staff Accounts',
     description: 'Who can log in, and what role they have.',

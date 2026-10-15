@@ -1,4 +1,5 @@
 import Customer from "../models/Customer.js"
+import Order from "../models/Order.js"
 import Settings from "../models/Settings.js"
 
 // -------------------------------------------------------
@@ -175,6 +176,41 @@ export const getChurnList = async (req, res) => {
       count: withDaysSince.length,
       customers: withDaysSince
     })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+// GET /api/crm/no-shows
+// Every customer with at least one no-show strike, or who is currently
+// blocked from online takeout, for the Manager's No-Show List (Settings).
+// Each row carries the most recent takeout no-show reason, when there is one.
+export const getNoShowList = async (req, res) => {
+  try {
+    const customers = await Customer.find({
+      $or: [{ noShowStrikes: { $gt: 0 } }, { isBlacklisted: true }]
+    }).sort({ updatedAt: -1 }).lean()
+
+    const rows = []
+    for (const c of customers) {
+      const last = await Order.findOne({
+        orderType: "takeout",
+        guestPhone: c.phone,
+        noShowReason: { $ne: "" }
+      }).sort({ updatedAt: -1 }).select("noShowReason orderNumber updatedAt").lean()
+
+      rows.push({
+        phone: c.phone,
+        name: c.name || "",
+        noShowStrikes: c.noShowStrikes || 0,
+        isBlacklisted: !!c.isBlacklisted,
+        lastReason: last ? last.noShowReason : "",
+        lastOrderNumber: last ? last.orderNumber : "",
+        lastAt: last ? last.updatedAt : null
+      })
+    }
+
+    res.json({ count: rows.length, customers: rows })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

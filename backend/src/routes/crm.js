@@ -7,7 +7,8 @@ import {
   getRetentionRate,
   getCustomerOverview,
   getChurnList,
-  setCustomerBlacklist
+  setCustomerBlacklist,
+  getNoShowList
 } from "../controllers/crmController.js"
 
 const router = express.Router()
@@ -17,6 +18,7 @@ router.get("/discount-eligible", staffAuth, requireRole("OWNER", "MANAGER"), get
 router.get("/retention-rate", staffAuth, requireRole("OWNER", "MANAGER"), getRetentionRate)
 router.get("/customer-overview", staffAuth, requireRole("OWNER", "MANAGER"), getCustomerOverview)
 router.get("/churn-list", staffAuth, requireRole("OWNER", "MANAGER"), getChurnList)
+router.get("/no-shows", staffAuth, requireRole("OWNER", "MANAGER"), getNoShowList)
 router.patch("/customers/:phone/blacklist", staffAuth, requireRole("OWNER", "MANAGER"), setCustomerBlacklist)
 
 export default router

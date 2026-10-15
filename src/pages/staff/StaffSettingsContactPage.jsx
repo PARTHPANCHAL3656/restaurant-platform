@@ -12,6 +12,7 @@ export default function StaffSettingsContactPage() {
     primaryPhone: restaurantInfo.primaryPhone,
     whatsappNumber: restaurantInfo.whatsappNumber,
     secondaryPhone: restaurantInfo.secondaryPhone,
+    managerPhone: restaurantInfo.managerPhone,
     email: restaurantInfo.email,
     googleMapsUrl: restaurantInfo.googleMapsUrl,
     googleMapsEmbedUrl: restaurantInfo.googleMapsEmbedUrl
@@ -25,11 +26,12 @@ export default function StaffSettingsContactPage() {
       primaryPhone: restaurantInfo.primaryPhone,
       whatsappNumber: restaurantInfo.whatsappNumber,
       secondaryPhone: restaurantInfo.secondaryPhone,
+      managerPhone: restaurantInfo.managerPhone,
       email: restaurantInfo.email,
       googleMapsUrl: restaurantInfo.googleMapsUrl,
       googleMapsEmbedUrl: restaurantInfo.googleMapsEmbedUrl
     });
-  }, [restaurantInfo.primaryPhone, restaurantInfo.whatsappNumber, restaurantInfo.secondaryPhone, restaurantInfo.email, restaurantInfo.googleMapsUrl, restaurantInfo.googleMapsEmbedUrl]);
+  }, [restaurantInfo.primaryPhone, restaurantInfo.whatsappNumber, restaurantInfo.secondaryPhone, restaurantInfo.managerPhone, restaurantInfo.email, restaurantInfo.googleMapsUrl, restaurantInfo.googleMapsEmbedUrl]);
 
   const updateField = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -85,6 +87,13 @@ export default function StaffSettingsContactPage() {
               className="w-full sm:flex-1 border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
             />
           </div>
+          <input
+            type="text"
+            value={form.managerPhone}
+            onChange={(e) => updateField('managerPhone', e.target.value)}
+            placeholder="Manager phone (shown in 'call to cancel or change' notes; empty = primary phone)"
+            className="w-full border border-muted-border px-3 h-10 text-sm focus:outline-none focus:border-saffron-gold"
+          />
           <input
             type="text"
             value={form.whatsappNumber}

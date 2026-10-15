@@ -23,6 +23,9 @@ const STALE_MIN = 45;
 // Flagging a no-show cancels the order and blocks the customer, so staff can't
 // do it until the order has been Ready for this long.
 const MIN_NOSHOW_WAIT_MIN = 15;
+// "Guest called to cancel" is only offered this long after the order was
+// placed (the server enforces the same limit).
+const GUEST_CANCEL_WINDOW_MIN = 5;
 
 const STAGE = {
   new: {
@@ -72,7 +75,7 @@ const ago = (ms) => {
   return `${hrs} ${hrs === 1 ? 'hr' : 'hrs'} ago`;
 };
 
-function Ticket({ ticket, now, confirming, onBump, onFlagNoShow, onReject }) {
+function Ticket({ ticket, num, now, confirming, onBump, onFlagNoShow, onReject }) {
   const stage = STAGE[ticket.status];
   const elapsedMs = now - ticket.since;
   const minutes = elapsedMs / 60000;
@@ -95,8 +98,9 @@ function Ticket({ ticket, now, confirming, onBump, onFlagNoShow, onReject }) {
             {clock(elapsedMs)}
           </span>
         </div>
-        <div className="mt-1 text-[11px] font-semibold uppercase tracking-widest">
-          {itemCount} {itemCount === 1 ? 'item' : 'items'} · Pickup {ticket.pickupTime || 'ASAP'}
+        <div className="mt-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-widest">
+          <span>{itemCount} {itemCount === 1 ? 'item' : 'items'} · Pickup {ticket.pickupTime || 'ASAP'}</span>
+          {num ? <span className="opacity-70">Key {num}</span> : null}
         </div>
       </div>
 
@@ -223,6 +227,13 @@ export default function StaffTakeawayPage() {
     preparing: tickets.filter(t => t.status === 'preparing'),
     ready: tickets.filter(t => t.status === 'ready')
   }), [tickets]);
+
+  // Numbered in the order they appear on screen (1-9), for the keyboard.
+  const numbered = useMemo(() => [...columns.new, ...columns.preparing, ...columns.ready], [columns]);
+  const numberOf = (key) => {
+    const i = numbered.findIndex(t => t.key === key);
+    return i >= 0 && i < 9 ? i + 1 : 0;
+  };
 
   const noShowOrder = orders.find(o => o.id === noShowOrderId && o.orderType === 'takeout');
 
@@ -362,6 +373,33 @@ export default function StaffTakeawayPage() {
     closeNoShowModal();
   };
 
+  // ---- Keyboard: 1-9 moves that ticket on, 0 undoes. Switched off while the
+  // Reject or No-Show dialog is open. Picked Up still needs its second press. ----
+  const numberedRef = useRef(numbered);
+  const bumpRef = useRef(bump);
+  const undoRef = useRef(undo);
+  const dialogOpenRef = useRef(false);
+  numberedRef.current = numbered;
+  bumpRef.current = bump;
+  undoRef.current = undo;
+  dialogOpenRef.current = Boolean(rejectTicket || noShowOrderId);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (dialogOpenRef.current) return;
+      if (e.key === '0') { undoRef.current(); return; }
+      const n = Number(e.key);
+      if (n >= 1 && n <= 9) {
+        const t = numberedRef.current[n - 1];
+        if (t) bumpRef.current(t);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const renderColumn = (status) => {
     const stage = STAGE[status];
     const list = columns[status];
@@ -383,6 +421,7 @@ export default function StaffTakeawayPage() {
             <Ticket
               key={t.key}
               ticket={t}
+              num={numberOf(t.key)}
               now={now}
               confirming={confirmKey === t.key}
               onBump={() => bump(t)}
@@ -416,7 +455,7 @@ export default function StaffTakeawayPage() {
         <RejectOrderDialog
           title={`Reject ${rejectTicket.label}?`}
           note="The guest is told why, in a friendly message. Once you tap Start, an order can no longer be rejected."
-          reasons={REJECT_REASONS}
+          reasons={REJECT_REASONS.filter(r => r.code !== 'guest_called' || (now - rejectTicket.createdMs) / 60000 <= GUEST_CANCEL_WINDOW_MIN)}
           busy={rejectBusy}
           error={rejectError}
           onPick={pickRejectReason}
@@ -431,8 +470,9 @@ export default function StaffTakeawayPage() {
             <div className="p-6 bg-red-600 text-white">
               <h3 className="font-serif text-xl">Flag {noShowOrder.table} as No-Show?</h3>
               <p className="text-xs text-white/80 mt-1">
-                This cancels the order and blocks {noShowOrder.guestPhone} from placing new online takeout orders.
-                The food already prepared for this order will go to waste.
+                This cancels the order and adds a no-show strike to {noShowOrder.guestPhone}. Nobody is blocked
+                automatically: a Manager reviews no-shows in Settings and decides. The food already prepared
+                for this order will go to waste.
               </p>
             </div>
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import Footer from '../components/Footer';
@@ -8,6 +8,25 @@ export default function ReservationSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
   const reservation = location.state?.reservation;
+  const [copied, setCopied] = useState(false);
+
+  const copyReference = async () => {
+    const code = reservation?.referenceCode;
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch (e) {
+      // Older or non-secure browsers: fall back to a temporary text box.
+      const box = document.createElement('textarea');
+      box.value = code;
+      document.body.appendChild(box);
+      box.select();
+      try { document.execCommand('copy'); } catch (err) { /* nothing more to try */ }
+      document.body.removeChild(box);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     // Launch premium confetti burst on successful reservation request
@@ -44,9 +63,21 @@ export default function ReservationSuccess() {
           </div>
 
           {reservation?.referenceCode && (
-            <div className="bg-saffron-gold/10 border border-saffron-gold/30 py-4">
-              <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-1">Your reference</p>
-              <p className="font-serif text-2xl text-ink-navy tracking-wider">{reservation.referenceCode}</p>
+            <div className="bg-saffron-gold/10 border border-saffron-gold/30 py-4 px-4 space-y-3">
+              <div>
+                <p className="font-label-caps text-[10px] text-subtle-text uppercase tracking-wider mb-1">Your reference</p>
+                <p className="font-serif text-2xl text-ink-navy tracking-wider">{reservation.referenceCode}</p>
+              </div>
+              <button
+                type="button"
+                onClick={copyReference}
+                className="text-xs font-label-caps tracking-widest uppercase text-ink-navy border border-ink-navy/30 px-4 py-2 hover:bg-ink-navy hover:text-canvas-cream transition-colors cursor-pointer"
+              >
+                {copied ? 'Copied' : 'Copy reference'}
+              </button>
+              <p className="text-[11px] text-subtle-text leading-relaxed">
+                Please record this reference number. You'll need it, with your phone number, to check your booking.
+              </p>
             </div>
           )}
 

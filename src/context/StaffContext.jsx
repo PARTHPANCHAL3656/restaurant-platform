@@ -39,6 +39,7 @@ export function StaffProvider({ children }) {
     primaryPhone: "+91 265 234 5678",
     whatsappNumber: "",
     secondaryPhone: "+91 70960 34960",
+    managerPhone: "",
     email: "concierge@spicegarden.com",
     googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=12+Alkapuri+Boulevard%2C+Vadodara%2C+Gujarat+390007",
     googleMapsEmbedUrl: "https://www.google.com/maps?q=Alkapuri,+Vadodara,+Gujarat+390007&output=embed"
@@ -1525,12 +1526,13 @@ export function StaffProvider({ children }) {
     }
 
     try {
+      // The server adds a strike. Blocking a number is a Manager decision,
+      // made in Settings → No-Show List.
       await api.patch(`/api/orders/${orderId}/status`, { status: 'Cancelled', noShowReason: reason });
-      await api.patch(`/api/crm/customers/${phone}/blacklist`, { isBlacklisted: true });
       await loadAllData();
       logActivity(
         'Customer flagged as no-show',
-        `${phone} blocked from future online takeout orders — ${reason || 'no reason given'}`,
+        `${phone} marked as a no-show (a strike was added) — ${reason || 'no reason given'}`,
         'block',
         '/staff/orders'
       );

@@ -412,6 +412,18 @@ export const updateOrderStatus = async (req, res) => {
       }
     }
     if (status === "Cancelled" && noShowReason) {
+      // A no-show adds a strike to the customer. It never blocks anyone: a
+      // Manager reviews the list in Settings → No-Show List and decides.
+      if (!order.noShowReason) {
+        const phone = normalizePhone(order.guestPhone)
+        if (phone) {
+          await Customer.findOneAndUpdate(
+            { phone },
+            { $inc: { noShowStrikes: 1 }, $setOnInsert: { name: order.guestName || "" } },
+            { upsert: true }
+          )
+        }
+      }
       order.noShowReason = noShowReason
     }
     if (status === "Served") {
