@@ -10,7 +10,7 @@ import useSidebarBadges from '../../hooks/useSidebarBadges';
 export default function StaffLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isDataLoaded, isError, isAuthenticated, queue, reservations, orders, invoices } = useStaff();
+  const { isDataLoaded, isError, isAuthenticated, queue, reservations, orders, invoices, tables } = useStaff();
 
   // Live counters (sidebar, bell, mobile menu button), worked out from the loaded data
   const { badges, total: badgeTotal, markAllSeen } = useSidebarBadges({
@@ -20,7 +20,8 @@ export default function StaffLayout() {
     queueCount: queue.length,
     reservations,
     orders,
-    invoices
+    invoices,
+    tables
   });
 
   const pageVariants = {

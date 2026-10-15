@@ -696,7 +696,8 @@ export function StaffProvider({ children }) {
         name: i.name,
         qty: i.qty,
         price: i.price,
-        round: i.round
+        round: i.round,
+        addedAt: i.addedAt || null
       })),
       servedThroughRound: o.servedThroughRound || 0,
       // One entry per round for dine-in orders (the kitchen board works per round).

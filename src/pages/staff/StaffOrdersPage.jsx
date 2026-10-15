@@ -79,6 +79,9 @@ function Ticket({ ticket, num, now, prepMin, onBump }) {
           <li key={idx} className={`flex gap-2 ${compact ? 'text-sm' : 'text-base'}`}>
             <span className="font-bold text-saffron-gold w-8 shrink-0">{item.qty}x</span>
             <span className="font-semibold text-ink-navy">{item.name}</span>
+            {ticket.status === 'Received' && item.addedAt && new Date(item.addedAt).getTime() - ticket.placed > 10000 && (
+              <span className="self-center text-[9px] font-bold uppercase tracking-widest bg-saffron-gold text-ink-navy px-1.5 py-0.5">Added</span>
+            )}
           </li>
         ))}
       </ul>
@@ -229,10 +232,12 @@ export default function StaffOrdersPage() {
 
   const seenNew = useRef(null);
   useEffect(() => {
-    const current = new Set(columns.Received.map(t => t.key));
+    // Remember how many items each New ticket has: a chime for a new ticket,
+    // and again when items are added to one that hasn't been started yet.
+    const current = new Map(columns.Received.map(t => [t.key, t.items.reduce((n, i) => n + i.qty, 0)]));
     if (seenNew.current && soundOn) {
-      for (const k of current) {
-        if (!seenNew.current.has(k)) { playKitchenChime(); break; }
+      for (const [k, count] of current) {
+        if (!seenNew.current.has(k) || seenNew.current.get(k) < count) { playKitchenChime(); break; }
       }
     }
     seenNew.current = current; // first load only sets the baseline, no chime

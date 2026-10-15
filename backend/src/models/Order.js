@@ -8,7 +8,10 @@ const orderItemSchema = new mongoose.Schema({
   qty:      { type: Number, required: true, min: 1 },
   // Tracks which "round" this item was ordered in
   // Round 1 = first order, Round 2 = ordered more, etc.
-  round:    { type: Number, default: 1 }
+  round:    { type: Number, default: 1 },
+  // When this item was last added or increased. The kitchen board uses it to
+  // flag items that joined a ticket after it was first placed.
+  addedAt:  { type: Date, default: Date.now }
 }, { _id: false })
 
 // Dine-in orders are cooked and served round by round, so each round carries

@@ -9,6 +9,7 @@ import { normalizePhone } from "../utils/normalizePhone.js"
 import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
 import { io } from "../index.js"
 import { autoReleaseTable } from "../utils/tableRelease.js"
+import { ensureBillNumber } from "../utils/nextBillNumber.js"
 
 // Reservation.source is "Customer" (a real advance booking) or "Walk-in"
 // (seated from the Guest Queue) — the correct distinction, unlike
@@ -87,12 +88,10 @@ export const generateInvoiceForTable = async (req, res) => {
 
     const orderSource = await resolveOrderSource(table)
 
-    // Reuse the number already minted on this order at creation time (see
-    // utils/nextBillNumber.js) so the customer's pre-invoice bill and this
-    // tax invoice show the identical number. Orders created before this
-    // field existed have no billNumber — fall back to the old counting
-    // method so legacy in-flight orders can still be invoiced.
-    const invoiceNumber = order.billNumber || `INV-${1000 + (await Invoice.countDocuments()) + 1}`
+    // The number is taken now, when the invoice is really created, so
+    // orders that never reach an invoice can't use up a number. Older orders
+    // already carry one from when they were created, and keep it.
+    const invoiceNumber = await ensureBillNumber(order)
 
     const invoice = await Invoice.create({
       invoiceNumber,

@@ -129,13 +129,12 @@ export default function BillSummaryPage() {
     : percentOfSubtotal(serviceCharge);
   const grandTotal = hasInvoice ? invoice.total : hasActiveOrder ? activeOrderTotal : 0;
 
-  // The ID shown to the guest: the invoice number once an Invoice exists,
-  // otherwise the SAME number already minted on the order at creation time
-  // (see backend utils/nextBillNumber.js) - so this never shows the raw
-  // Mongo order id, and always matches what staff will eventually see.
-  // Only orders created before that field existed fall back to the id.
+  // The number shown to the guest: the invoice number once an Invoice exists.
+  // The number is only taken when the invoice is created (see backend
+  // utils/nextBillNumber.js), so before that the bill says Pending. Older
+  // orders already carry a number from when they were created.
   const displayOrderId = hasInvoice ? invoice.invoiceNumber
-    : hasActiveOrder ? (activeOrderBillNumber || orderId) : '#SG-992104';
+    : hasActiveOrder ? (activeOrderBillNumber || 'Pending') : '#SG-992104';
 
     const handleDownloadPDF = () => {
     const element = receiptRef.current;

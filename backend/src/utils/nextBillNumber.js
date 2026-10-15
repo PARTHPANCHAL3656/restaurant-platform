@@ -1,12 +1,11 @@
 import Counter from "../models/Counter.js"
 import Settings from "../models/Settings.js"
+import Order from "../models/Order.js"
 // <PREFIX>-<YY>-<00001> - resets to 00001 every year at midnight IST (not
 // UTC midnight, which would flip the counter over 5.5 hours late relative
-// to an actual Indian midnight). Minted once, at order creation, and
-// carried through to the invoice later rather than being (re)computed at
-// invoice time - that's what lets a customer's pre-invoice bill and
-// staff's eventual tax invoice show the exact same number, no matter
-// which side looks first.
+// to an actual Indian midnight). Taken only when an invoice is really created
+// for an order (see ensureBillNumber below), never earlier, so an order that
+// is rejected, cancelled or abandoned can't use up a number in the series.
 //
 // The year is embedded directly in the counter's _id (e.g. "billNumber-
 // 2026"), so a new year automatically starts a brand new counter document
@@ -29,4 +28,15 @@ export async function nextBillNumber() {
     { new: true, upsert: true, setDefaultsOnInsert: true }
   )
   return `${settings.billing.invoicePrefix}-${yy}-${String(counter.seq).padStart(5, '0')}`
+}
+
+// The invoice number for an order, taken the first time an invoice is created
+// for it. Orders made before this change were given a number when they were
+// created; those keep it.
+export async function ensureBillNumber(order) {
+  if (order.billNumber) return order.billNumber
+  const number = await nextBillNumber()
+  await Order.updateOne({ _id: order._id, billNumber: "" }, { $set: { billNumber: number } })
+  const fresh = await Order.findById(order._id).select("billNumber")
+  return (fresh && fresh.billNumber) || number
 }

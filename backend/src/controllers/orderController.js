@@ -9,6 +9,7 @@ import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
 import { refreshUnpaidInvoice } from "../utils/refreshInvoice.js"
 import { autoReleaseTable } from "../utils/tableRelease.js"
 import { REJECT_REASONS } from "../utils/cancelReasons.js"
+import { ensureBillNumber } from "../utils/nextBillNumber.js"
 import { STEPS, ensureRounds, deriveStatus, servedThrough, applyRoundStatus, setUnservedRoundsTo } from "../utils/orderRounds.js"
 import Table from "../models/Table.js"
 
@@ -78,8 +79,19 @@ export const addItems = async (req, res) => {
         current.placedAt = new Date()
       }
 
-      round = current.currentRound
-      const newItems = items.map(item => ({ ...item, round }))
+      // Dine-in: if the newest round hasn't been started by the kitchen yet,
+      // these items join it instead of starting another ticket. Once cooking
+      // has started, a new round begins. (Takeout is one list anyway.)
+      let mergeIntoRound = null
+      if (current.orderType !== "takeout") {
+        ensureRounds(current)
+        const newest = current.rounds.reduce((a, b) => (!a || b.round > a.round ? b : a), null)
+        if (newest && newest.status === "Received") mergeIntoRound = newest.round
+      }
+
+      round = mergeIntoRound !== null ? mergeIntoRound : current.currentRound
+      const addedNow = new Date()
+      const newItems = items.map(item => ({ ...item, round, addedAt: addedNow }))
 
       newItems.forEach(newItem => {
         const existingInThisRound = current.items.find(
@@ -87,6 +99,7 @@ export const addItems = async (req, res) => {
         )
         if (existingInThisRound) {
           existingInThisRound.qty += newItem.qty
+          existingInThisRound.addedAt = addedNow
         } else {
           current.items.push(newItem)
         }
@@ -104,7 +117,9 @@ export const addItems = async (req, res) => {
         const placedRound = current.rounds.find(r => r.round === round)
         if (placedRound) {
           placedRound.status = "Received"
-          placedRound.placedAt = new Date()
+          // A round that was joined keeps its original time, so its timer
+          // and place in the queue don't jump.
+          if (mergeIntoRound === null) placedRound.placedAt = new Date()
           placedRound.startedAt = null
           placedRound.readyAt = null
           placedRound.servedAt = null
@@ -113,7 +128,7 @@ export const addItems = async (req, res) => {
         }
         current.status = deriveStatus(current)
       }
-      current.currentRound = round + 1
+      current.currentRound = Math.max(current.currentRound, round + 1)
 
       try {
         order = await current.save()
@@ -467,7 +482,7 @@ export const updateOrderStatus = async (req, res) => {
           isRepeatCustomer
         })
 
-        const invoiceNumber = order.billNumber || `INV-${1000 + (await Invoice.countDocuments()) + 1}`
+        const invoiceNumber = await ensureBillNumber(order)
 
         generatedInvoice = await Invoice.create({
           invoiceNumber,

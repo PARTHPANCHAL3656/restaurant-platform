@@ -4,7 +4,6 @@ import Order from "../models/Order.js"
 import WaitingList from "../models/WaitingList.js"
 import Reservation from "../models/Reservation.js"
 import { generateTableToken } from "../utils/generateTableToken.js"
-import { nextBillNumber } from "../utils/nextBillNumber.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { releaseHeldTable } from "./reservationController.js"
 import { releaseTableSession } from "../utils/tableRelease.js"
@@ -124,13 +123,11 @@ export const assignTable = async (req, res) => {
 
     // Generate table session credentials
     const { sessionId, token, qrDataUrl } = await generateTableToken(table._id, table.tableNumber)
-    const billNumber = await nextBillNumber()
 
     const order = await Order.create({
       tableId: table._id,
       tableNumber: table.tableNumber,
       sessionId,
-      billNumber,
       items: [],
       status: "Received",
       guestName,

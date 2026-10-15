@@ -2,7 +2,6 @@ import Order from "../models/Order.js"
 import Customer from "../models/Customer.js"
 import Settings from "../models/Settings.js"
 import { generateTakeoutToken, signTakeoutToken } from "../utils/generateTakeoutToken.js"
-import { nextBillNumber } from "../utils/nextBillNumber.js"
 import { nextTakeoutNumber } from "../utils/nextTakeoutNumber.js"
 import { checkPickupTime } from "../utils/checkTakeoutHours.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
@@ -46,13 +45,11 @@ export const startTakeoutSession = async (req, res) => {
 
     const { sessionId, token, menuUrl } = generateTakeoutToken()
     const orderNumber = await nextTakeoutNumber()
-    const billNumber = await nextBillNumber()
 
     await Order.create({
       orderType: "takeout",
       sessionId,
       orderNumber,
-      billNumber,
       guestName,
       guestPhone: phone,
       pickupTime: pickupTime || "ASAP",

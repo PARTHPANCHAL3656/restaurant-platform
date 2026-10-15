@@ -22,13 +22,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
  */
 
 // Which sidebar page "owns" which counter.
-const PAGE_TO_GROUP = {
-  '/staff/orders': 'orders',
-  '/staff/takeaway': 'takeaway',
-  '/staff/billing': 'billing',
-  '/staff/tables': 'reservations',
+const PAGE_TO_GROUPS = {
+  '/staff/orders': ['orders'],
+  '/staff/takeaway': ['takeaway'],
+  '/staff/billing': ['billing'],
+  // Tables & Reservations owns three kinds: reservation requests, newly
+  // seated guests, and paid bills waiting for the table to be released.
+  '/staff/tables': ['reservations', 'seated', 'release'],
 };
-const GROUPS = ['orders', 'takeaway', 'billing', 'reservations'];
+const GROUPS = ['orders', 'takeaway', 'billing', 'reservations', 'seated', 'release'];
 
 // sessionStorage (not localStorage) on purpose: the staff login lives in
 // sessionStorage too, so closing the tab = logout = counters start fresh.
@@ -62,6 +64,7 @@ export default function useSidebarBadges({
   reservations = [],
   orders = [],
   invoices = [],
+  tables = [],
 }) {
   const [seen, setSeen] = useState(readSeen);
   const [wasEnabled, setWasEnabled] = useState(enabled);
@@ -76,7 +79,7 @@ export default function useSidebarBadges({
 
   // Everything that currently needs attention, as "group|id" keys.
   const pending = useMemo(() => {
-    const out = { orders: [], takeaway: [], billing: [], reservations: [] };
+    const out = { orders: [], takeaway: [], billing: [], reservations: [], seated: [], release: [] };
 
     for (const r of reservations) {
       // Walk-ins are typed in by staff themselves - only customer requests count.
@@ -102,8 +105,14 @@ export default function useSidebarBadges({
     for (const inv of invoices) {
       if (inv.status === 'unpaid') out.billing.push(`billing|${inv.id}`);
     }
+    for (const t of tables) {
+      if (t.status !== 'occupied' || !t.currentSessionId) continue;
+      // Paid: waiting for the table to be released. Otherwise a seated guest.
+      if (t.autoReleaseAt) out.release.push(`release|${t._id}:${t.currentSessionId}`);
+      else out.seated.push(`seated|${t._id}:${t.currentSessionId}`);
+    }
     return out;
-  }, [reservations, orders, invoices]);
+  }, [reservations, orders, invoices, tables]);
 
   const live = Boolean(enabled && ready);
 
@@ -121,9 +130,9 @@ export default function useSidebarBadges({
       setSeen({ baselined: true, keys: withKeys(seen.keys, GROUPS.flatMap((g) => pending[g])) });
     } else {
       // Looking at a page (tab visible) = everything on it is seen.
-      const group = PAGE_TO_GROUP[pathname];
-      if (group && visible) {
-        const unseen = pending[group].filter((k) => !seen.keys[k]);
+      const groups = PAGE_TO_GROUPS[pathname];
+      if (groups && visible) {
+        const unseen = groups.flatMap((g) => pending[g]).filter((k) => !seen.keys[k]);
         if (unseen.length) setSeen({ baselined: true, keys: withKeys(seen.keys, unseen) });
       }
     }
@@ -159,6 +168,10 @@ export default function useSidebarBadges({
       for (const g of GROUPS) badges[g] = pending[g].filter((k) => !seen.keys[k]).length;
     }
     badges.queue = enabled ? Math.max(0, Number(queueCount) || 0) : 0;
+    // The Tables & Reservations badge adds the three kinds together. The bell
+    // lists them separately.
+    badges.reservationRequests = badges.reservations;
+    badges.reservations = badges.reservations + badges.seated + badges.release;
     const total = badges.orders + badges.takeaway + badges.billing + badges.reservations;
     return { badges, total, markAllSeen };
   }, [live, enabled, seen, pending, queueCount, markAllSeen]);

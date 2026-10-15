@@ -6,14 +6,16 @@ import { useStaff } from '../../context/StaffContext';
 
 // Rows shown in the bell panel (only the ones with something new are listed).
 const BELL_ALERTS = [
-  { key: 'reservations', label: 'New reservation requests', path: '/staff/tables', icon: 'event_seat' },
+  { key: 'reservationRequests', label: 'New reservation requests', path: '/staff/tables', icon: 'event_seat' },
+  { key: 'seated', label: 'New guests seated', path: '/staff/tables', icon: 'event_seat' },
+  { key: 'release', label: 'Paid tables to release', path: '/staff/tables', icon: 'payments' },
   { key: 'orders', label: 'New orders', path: '/staff/orders', icon: 'receipt_long' },
   { key: 'takeaway', label: 'New takeaway orders', path: '/staff/takeaway', icon: 'shopping_bag' },
   { key: 'billing', label: 'New invoices', path: '/staff/billing', icon: 'payments' }
 ];
 
 export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0, onMarkAllSeen }) {
-  const { staffProfile, staffName, staffJobTitle, logoutStaff } = useStaff();
+  const { staffProfile, staffName, staffJobTitle, logoutStaff, tables, releaseTable } = useStaff();
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -56,6 +58,8 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
   }, [bellOpen, dropdownOpen]);
 
   const bellAlerts = BELL_ALERTS.filter((a) => badges[a.key] > 0);
+  // Tables whose bill is paid and that are still waiting to be released.
+  const paidTables = (tables || []).filter((t) => t.status === 'occupied' && t.autoReleaseAt);
 
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -168,7 +172,7 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
                   )}
                 </div>
 
-                {bellAlerts.length === 0 ? (
+                {bellAlerts.length === 0 && paidTables.length === 0 ? (
                   <p className="px-4 py-6 text-center font-serif italic text-xs text-subtle-text">You&apos;re all caught up</p>
                 ) : (
                   <ul className="py-1">
@@ -186,6 +190,26 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
                       </li>
                     ))}
                   </ul>
+                )}
+
+                {paidTables.length > 0 && (
+                  <div className="border-t border-muted-border/60 py-2">
+                    <p className="px-4 pt-2 pb-1 font-label-caps text-[10px] tracking-widest uppercase text-subtle-text">Quick release</p>
+                    <ul>
+                      {paidTables.map((t) => (
+                        <li key={t._id} className="flex items-center justify-between gap-3 px-4 py-2">
+                          <span className="text-xs text-ink-navy">{t.id} paid</span>
+                          <button
+                            type="button"
+                            onClick={() => releaseTable(t.id)}
+                            className="text-[10px] font-semibold uppercase tracking-widest bg-saffron-gold text-ink-navy px-3 h-8 hover:brightness-110 cursor-pointer"
+                          >
+                            Release
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
           )}
