@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
+import CallRestaurantNote from '../components/CallRestaurantNote';
 import api from '../utils/api';
 
 const STATUS_COPY = {
@@ -127,6 +128,12 @@ export default function ReservationTrackerPage() {
             </div>
           )}
         </form>
+
+        {result && (result.status === 'pending' || result.status === 'confirmed') && (
+          <CallRestaurantNote className="text-center mt-6">
+            To cancel or change this reservation, please call the restaurant and speak to the manager:
+          </CallRestaurantNote>
+        )}
 
         <Link
           to="/reservation"

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useStaff } from '../context/StaffContext';
+import CallRestaurantNote from './CallRestaurantNote';
 
 import { getImage } from '../utils/assetHelper';
 import { formatINR } from '../utils/currency'
@@ -236,6 +237,11 @@ export default function CartDrawer({ isOpen, onClose }) {
                       <p className="text-center text-xs text-subtle-text leading-relaxed">
                         Your takeout order is already being prepared, so items can't be added to it. To order more, please place a new takeout order.
                       </p>
+                    )}
+                    {isTakeout && !takeoutLocked && (
+                      <CallRestaurantNote className="text-center">
+                        Takeout orders can't be cancelled once placed. If you order by mistake, call us within 5 minutes, while your order is still new:
+                      </CallRestaurantNote>
                     )}
                     <button 
                       onClick={onClose}

@@ -8,7 +8,7 @@ export const REJECT_REASONS = [
   { code: 'busy', label: 'Too many orders right now' },
   { code: 'unavailable', label: "An item isn't available" },
   { code: 'later', label: 'Please order another time' },
-  { code: 'guest_called', label: 'Guest called to cancel', takeoutOnly: true }
+  { code: 'guest_called', label: 'Guest called to cancel' }
 ];
 
 export default function RejectOrderDialog({ title, note, reasons, busy, error, onPick, onClose }) {

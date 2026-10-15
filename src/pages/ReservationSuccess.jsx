@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import Footer from '../components/Footer';
+import CallRestaurantNote from '../components/CallRestaurantNote';
 
 export default function ReservationSuccess() {
   const location = useLocation();
@@ -98,6 +99,10 @@ export default function ReservationSuccess() {
               Back to Home
             </Link>
           </div>
+
+          <CallRestaurantNote className="text-center mt-6">
+            To cancel or change this reservation, please call the restaurant and speak to the manager:
+          </CallRestaurantNote>
 
           {/* Subtle Decorative Elements */}
           <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none">

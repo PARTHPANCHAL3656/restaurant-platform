@@ -7,8 +7,8 @@ import { calculateBill } from "../utils/calculateBill.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
 import { refreshUnpaidInvoice } from "../utils/refreshInvoice.js"
-import { autoReleaseTable, releaseTableSession } from "../utils/tableRelease.js"
-import { REJECT_REASONS, guestMessageForCancelled } from "../utils/cancelReasons.js"
+import { autoReleaseTable } from "../utils/tableRelease.js"
+import { REJECT_REASONS } from "../utils/cancelReasons.js"
 import { STEPS, ensureRounds, deriveStatus, servedThrough, applyRoundStatus, setUnservedRoundsTo } from "../utils/orderRounds.js"
 import Table from "../models/Table.js"
 
@@ -70,6 +70,12 @@ export const addItems = async (req, res) => {
 
       if (guestPhone && !current.guestPhone) {
         current.guestPhone = guestPhone
+      }
+
+      // A takeout order is created when the guest enters their name and
+      // phone. Note the moment their first items actually arrive.
+      if (current.orderType === "takeout" && current.items.length === 0 && !current.placedAt) {
+        current.placedAt = new Date()
       }
 
       round = current.currentRound
@@ -300,13 +306,17 @@ export const updateRoundStatus = async (req, res) => {
   }
 }
 
+// How long after ordering a guest may cancel by phone.
+const GUEST_CANCEL_WINDOW_MIN = 5
+
 // POST /api/orders/:id/reject   { reason }
-// Staff turns an order away BEFORE the kitchen starts it: a takeout order, or
-// the very first order at a table (Round 1, with nothing else ordered). Staff
-// pick one of the quick reasons in utils/cancelReasons.js and never type one;
-// the guest is shown a friendly line for it. Once the kitchen has started, an
-// order can't be rejected. For a table, the table is released and the guest's
-// session ends. Protected by staffAuth middleware
+// Staff turns a TAKEOUT order away before the kitchen has started it. (A
+// seated table's order is never rejected: those guests were already accepted,
+// and a table can be released from the Tables page.) Staff pick one of the
+// quick reasons in utils/cancelReasons.js and never type one; the guest is
+// shown a friendly line for it. Once the kitchen has started, an order can't
+// be rejected. "Guest called to cancel" is only allowed in the first 5
+// minutes after the order was placed. Protected by staffAuth middleware
 export const rejectOrder = async (req, res) => {
   try {
     const { reason } = req.body
@@ -317,31 +327,18 @@ export const rejectOrder = async (req, res) => {
     const order = await Order.findById(req.params.id)
     if (!order) return res.status(404).json({ error: "Order not found." })
 
-    let table = null
-    if (order.orderType === "takeout") {
-      if (order.status !== "Received") {
-        return res.status(409).json({ error: "The kitchen has already started this order, so it can't be rejected." })
-      }
-    } else {
-      ensureRounds(order)
-      const roundNumbers = new Set(order.rounds.map(r => r.round))
-      if (roundNumbers.size !== 1 || order.rounds[0].status !== "Received") {
-        return res.status(409).json({ error: "Only a table's first order, before the kitchen starts it, can be rejected." })
-      }
-      if (await Invoice.findOne({ sessionId: order.sessionId })) {
-        return res.status(409).json({ error: "A bill already exists for this table, so the order can't be rejected." })
-      }
-      table = await Table.findOne({ currentOrderId: order._id })
+    if (order.orderType !== "takeout") {
+      return res.status(400).json({ error: "Only takeout orders can be rejected." })
+    }
+    if (order.status !== "Received") {
+      return res.status(409).json({ error: "The kitchen has already started this order, so it can't be rejected." })
     }
 
-    // A table's session is closed first. Releasing marks the order Served, so
-    // the order is set to Cancelled after it. The guest's screen gets the
-    // friendly line with the release event.
-    if (table) {
-      const settings = await Settings.getSingleton()
-      await releaseTableSession(table, "rejected", {
-        message: guestMessageForCancelled({ cancelReason: reason }, settings.contact.primaryPhone)
-      })
+    if (reason === "guest_called") {
+      const placed = new Date(order.placedAt || order.createdAt).getTime()
+      if (Date.now() - placed > GUEST_CANCEL_WINDOW_MIN * 60000) {
+        return res.status(409).json({ error: `Guests can only cancel by phone in the first ${GUEST_CANCEL_WINDOW_MIN} minutes after ordering.` })
+      }
     }
 
     order.status = "Cancelled"

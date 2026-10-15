@@ -75,19 +75,10 @@ const tableSession = async (req, res, next) => {
     }
 
     if (table.currentSessionId !== sessionId || (table.status !== 'occupied' && table.status !== 'reserved')) {
-      // If the table was closed because staff turned the first order away,
-      // tell the guest why instead of the generic "reset" line.
-      let guestMessage
-      const ended = await Order.findOne({ sessionId })
-      if (ended && ended.status === "Cancelled") {
-        const settings = await Settings.getSingleton()
-        guestMessage = guestMessageForCancelled(ended, settings.contact.primaryPhone)
-      }
       return res.status(401).json({
         error: "Session expired. This table has been reset by staff.",
         sessionEnded: true,
-        status: "closed",
-        guestMessage
+        status: "closed"
       })
     }
 

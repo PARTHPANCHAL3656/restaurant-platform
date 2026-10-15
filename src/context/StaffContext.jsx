@@ -688,6 +688,7 @@ export function StaffProvider({ children }) {
       pickupTime: o.pickupTime || '',
       readyAt: o.readyAt || null,
       startedAt: o.startedAt || null,
+      placedAt: o.placedAt || null,
       time: timeStr,
       status: mappedStatus,
       items: o.items.map(i => ({

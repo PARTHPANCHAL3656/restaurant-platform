@@ -92,6 +92,14 @@ const orderSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  // Takeout only: when the guest first placed items. The order itself is
+  // created earlier, when they enter their name and phone, which can be well
+  // before that. Used for the kitchen timers and the 5-minute "call to
+  // cancel" window.
+  placedAt: {
+    type: Date,
+    default: null
+  },
   // Set only when a takeout order is cancelled via the no-show flow —
   // a permanent record of why, for accountability if a customer disputes
   // being blacklisted later.

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useStaff } from '../../context/StaffContext';
 import { isKitchenSoundOn, getKitchenAudio, playKitchenChime } from '../../utils/kitchenChime';
-import RejectOrderDialog, { REJECT_REASONS } from '../../components/staff/RejectOrderDialog';
 
 // One ticket = one round of one table. Chef taps Start, then Send out; the
 // waiter taps Served. Takeout lives on its own page.
@@ -50,7 +49,7 @@ const clock = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-function Ticket({ ticket, now, prepMin, onBump, onReject }) {
+function Ticket({ ticket, now, prepMin, onBump }) {
   const stage = STAGE[ticket.status];
   const elapsedMs = now - ticket.since;
   const minutes = elapsedMs / 60000;
@@ -89,16 +88,6 @@ function Ticket({ ticket, now, prepMin, onBump, onReject }) {
         </p>
       )}
 
-      {ticket.canReject && (
-        <button
-          type="button"
-          onClick={onReject}
-          className="mx-4 mb-3 text-red-500 hover:text-red-600 text-xs font-semibold uppercase tracking-widest py-1 text-left cursor-pointer"
-        >
-          Reject order
-        </button>
-      )}
-
       <button
         type="button"
         onClick={onBump}
@@ -111,32 +100,8 @@ function Ticket({ ticket, now, prepMin, onBump, onReject }) {
 }
 
 export default function StaffOrdersPage() {
-  const { orders, advanceRound, rejectOrder, menuItems } = useStaff();
+  const { orders, advanceRound, menuItems } = useStaff();
   const now = useNow(1000);
-
-  // ---- Reject a table's first order (only before the kitchen starts it).
-  // The table is released and the guests are told why. ----
-  const [rejectTicket, setRejectTicket] = useState(null);
-  const [rejectBusy, setRejectBusy] = useState(false);
-  const [rejectError, setRejectError] = useState('');
-
-  const closeReject = () => {
-    setRejectTicket(null);
-    setRejectError('');
-  };
-
-  const pickRejectReason = async (code) => {
-    setRejectBusy(true);
-    setRejectError('');
-    try {
-      await rejectOrder(rejectTicket.orderId, code);
-      setRejectTicket(null);
-    } catch (err) {
-      setRejectError(err.message || 'Could not reject this order. Please try again.');
-    } finally {
-      setRejectBusy(false);
-    }
-  };
 
   // ---- Tickets: one per unserved round of every dine-in order. If the data
   // ever holds the same round twice, only the most advanced copy is used. ----
@@ -162,8 +127,6 @@ export default function StaffOrdersPage() {
         status: r.status,
         items: o.items.filter(i => (i.round || 1) === r.round),
         notes: o.notes,
-        // Only a table's very first order, before the kitchen starts it, can be rejected.
-        canReject: r.round === 1 && r.status === 'Received' && new Set((o.rounds || []).map(x => x.round)).size === 1,
         since: new Date(stamp).getTime(),
         placed: new Date(r.placedAt).getTime()
       });
@@ -286,7 +249,6 @@ export default function StaffOrdersPage() {
               now={now}
               prepMin={prepMinutes(t.items)}
               onBump={() => bump(t)}
-              onReject={() => setRejectTicket(t)}
             />
           ))}
         </div>
@@ -310,18 +272,6 @@ export default function StaffOrdersPage() {
         {renderColumn('Preparing')}
         {renderColumn('Ready')}
       </div>
-
-      {rejectTicket && (
-        <RejectOrderDialog
-          title={`Reject ${rejectTicket.table}'s first order?`}
-          note="The table is released and the guests are told why. Only a table's first order, before the kitchen starts it, can be rejected."
-          reasons={REJECT_REASONS.filter(r => !r.takeoutOnly)}
-          busy={rejectBusy}
-          error={rejectError}
-          onPick={pickRejectReason}
-          onClose={closeReject}
-        />
-      )}
 
       {lastAction && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-ink-navy text-canvas-cream px-5 py-3 shadow-2xl flex items-center gap-4 text-sm">

@@ -191,9 +191,12 @@ export default function StaffTakeawayPage() {
       if (o.orderType !== 'takeout') continue;
       if (o.status !== 'new' && o.status !== 'preparing' && o.status !== 'ready') continue;
       if (!o.items || o.items.length === 0) continue;
-      const createdMs = new Date(o.createdAt).getTime();
+      // When the guest actually placed the order (not when they started the
+      // form), falling back to the creation time for older orders.
+      const placedAt = o.placedAt || o.createdAt;
+      const createdMs = new Date(placedAt).getTime();
       const stamp = o.status === 'new'
-        ? o.createdAt
+        ? placedAt
         : o.status === 'preparing'
           ? (o.startedAt || o.createdAt)
           : (o.readyAt || o.createdAt);

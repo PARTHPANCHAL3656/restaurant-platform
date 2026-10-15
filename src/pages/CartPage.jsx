@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import Footer from '../components/Footer';
+import CallRestaurantNote from '../components/CallRestaurantNote';
 import { getImage } from '../utils/assetHelper';
 import { formatINR } from '../utils/currency';
 
@@ -185,6 +186,11 @@ export default function CartPage() {
                   <p className="text-center text-xs text-subtle-text leading-relaxed">
                     Your takeout order is already being prepared, so items can't be added to it. To order more, please place a new takeout order.
                   </p>
+                )}
+                {isTakeout && !takeoutLocked && (
+                  <CallRestaurantNote className="text-center">
+                    Takeout orders can't be cancelled once placed. If you order by mistake, call us within 5 minutes, while your order is still new:
+                  </CallRestaurantNote>
                 )}
                 <Link 
                   to="/menu"

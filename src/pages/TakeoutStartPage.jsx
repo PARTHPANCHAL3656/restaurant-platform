@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useStaff } from '../context/StaffContext';
 import api from '../utils/api';
 import Footer from '../components/Footer';
+import CallRestaurantNote from '../components/CallRestaurantNote';
 
 // Parses restaurantInfo.openingHours (free-text day ranges like
 // "Monday - Thursday" + "12:00 PM - 10:30 PM") to find today's closing
@@ -377,6 +378,10 @@ export default function TakeoutStartPage() {
             <p className="text-[10px] text-subtle-text/70 text-center leading-relaxed">
               Pay at the counter when you arrive — cash or UPI. No online payment needed.
             </p>
+
+            <CallRestaurantNote className="text-center">
+              Takeout orders can't be cancelled once placed. If you order by mistake, call us within 5 minutes, while your order is still new:
+            </CallRestaurantNote>
           </form>
           )}
         </div>

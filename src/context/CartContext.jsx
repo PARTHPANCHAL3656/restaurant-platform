@@ -178,7 +178,6 @@ export function CartProvider({ children }) {
           handlePaidSessionEnd();
           return;
         }
-        setSessionEndedMessage(data.message || '');
         setSessionExpired(true);
       }
     };
