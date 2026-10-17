@@ -71,21 +71,26 @@ export const startTakeoutSession = async (req, res) => {
 // at the same time.
 export const resumeTakeoutSession = async (req, res) => {
   try {
-    const { guestPhone } = req.body
+    const { guestPhone, orderNumber } = req.body
     const phone = normalizePhone(guestPhone)
+    const wanted = String(orderNumber || "").trim().toUpperCase()
 
-    if (phone.length !== 10) {
-      return res.status(400).json({ error: "Please enter a valid 10-digit phone number." })
+    if (phone.length !== 10 || !wanted) {
+      return res.status(400).json({ error: "Please enter your phone number and your order number." })
     }
 
+    // A phone number alone is not enough to open someone's order: it must
+    // come with the order number shown when the order was started. Any
+    // mismatch gets the same answer, so nothing can be guessed from it.
     const order = await Order.findOne({
       guestPhone: phone,
+      orderNumber: wanted,
       orderType: "takeout",
       status: { $in: ["Received", "Preparing", "Ready"] }
-    }).sort({ createdAt: -1 })
+    })
 
     if (!order) {
-      return res.status(404).json({ error: "We couldn't find an active takeout order for this number. Start a new one below." })
+      return res.status(404).json({ error: "We couldn't find an active takeout order with that phone number and order number. Please check both, or call the restaurant." })
     }
 
     const { token, menuUrl } = signTakeoutToken(order.sessionId)

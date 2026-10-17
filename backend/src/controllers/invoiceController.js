@@ -8,18 +8,9 @@ import { calculateBill } from "../utils/calculateBill.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { legalSnapshotFrom } from "../utils/legalSnapshot.js"
 import { io } from "../index.js"
-import { autoReleaseTable } from "../utils/tableRelease.js"
+import { autoReleaseTable, unservedRounds } from "../utils/tableRelease.js"
+import { createDineInInvoice, resolveOrderSource } from "../utils/createInvoice.js"
 import { ensureBillNumber } from "../utils/nextBillNumber.js"
-
-// Reservation.source is "Customer" (a real advance booking) or "Walk-in"
-// (seated from the Guest Queue) — the correct distinction, unlike
-// "does this table have a reservationId at all," which both cases satisfy.
-async function resolveOrderSource(table) {
-  if (!table.reservationId) return "Walk-in"
-  const reservation = await Reservation.findById(table.reservationId)
-  if (!reservation) return "Walk-in"
-  return reservation.source === "Walk-in" ? "Walk-in" : "Reservation"
-}
 
 // POST /api/invoices/table/:id
 // Staff generates a final bill for a table's current order.
@@ -48,7 +39,10 @@ export const generateInvoiceForTable = async (req, res) => {
     // Generating it must never push an order through the kitchen workflow on
     // staff's behalf - it used to jump a just-placed order straight to Served
     // and skip Order Management entirely.
-    if (order.status !== "Served") {
+    // Once ANY round has been served the bill can be presented; later rounds
+    // are added to it in place. (The same rule the automatic sweep uses.)
+    const anyServed = order.status === "Served" || (order.rounds || []).some(r => r.status === "Served")
+    if (!anyServed) {
       const waitingOn = {
         Received: "hasn't been started by the kitchen yet",
         Preparing: "is still being prepared",
@@ -71,61 +65,9 @@ export const generateInvoiceForTable = async (req, res) => {
       await order.save()
     }
 
-    const settings = await Settings.getSingleton()
-
-    const normalizedPhone = normalizePhone(order.guestPhone)
-    const existingCustomer = normalizedPhone ? await Customer.findOne({ phone: normalizedPhone }) : null
-    const isRepeatCustomer = Boolean(
-      existingCustomer && existingCustomer.visitCount >= settings.billing.repeatCustomerVisitThreshold
-    )
-
-    const { subtotal, discount, serviceCharge, packagingFee, cgst, sgst, gst, cgstRate, sgstRate, serviceChargePercent, total } = calculateBill({
-      items: order.items,
-      orderType: "dine-in",
-      billing: settings.billing,
-      isRepeatCustomer
-    })
-
-    const orderSource = await resolveOrderSource(table)
-
-    // The number is taken now, when the invoice is really created, so
-    // orders that never reach an invoice can't use up a number. Older orders
-    // already carry one from when they were created, and keep it.
-    const invoiceNumber = await ensureBillNumber(order)
-
-    const invoice = await Invoice.create({
-      invoiceNumber,
-      sessionId: table.currentSessionId,
-      reservationId: table.reservationId || null,
-      orderId: order._id,
-      tableId: table._id,
-      tableNumber: table.tableNumber,
-      guestName: table.guestName || "Guest",
-      guestPhone: order.guestPhone || "",
-      partySize: table.guestCount || null,
-      orderSource,
-      legalSnapshot: legalSnapshotFrom(settings),
-      items: order.items.map(i => ({ itemId: i.itemId, name: i.name, price: i.price, qty: i.qty })),
-      subtotal,
-      discount,
-      serviceCharge,
-      serviceChargePercent,
-      packagingFee,
-      cgst,
-      sgst,
-      cgstRate,
-      sgstRate,
-      gst,
-      total,
-      status: "unpaid",
-      generatedBy: req.staff.name
-    })
-
-    // The order is already Served (checked above), so its status is not
-    // touched here - only the invoice is created.
-    // Signal only — the full invoice has customer details (see orderController).
-    io.emit("invoice:generated", { invoiceId: invoice._id })
-    io.emit("order:updated", { orderId: order._id, tableNumber: order.tableNumber, status: order.status })
+    // The invoice itself is built in utils/createInvoice.js, the same code
+    // the automatic sweep uses.
+    const invoice = await createDineInInvoice({ table, order, generatedBy: req.staff.name })
 
     res.status(201).json(invoice)
   } catch (err) {
@@ -258,6 +200,21 @@ export const updateInvoiceStatus = async (req, res) => {
       return res.status(409).json({ error: "This invoice is already paid and can't be set back to unpaid." })
     }
 
+    // Paying while a round is still being prepared ("paying ahead") needs a
+    // deliberate yes. The table then stays occupied until that round has been
+    // served, and an item that can't be served has to be refunded by hand.
+    if (status === "paid" && existing.status === "unpaid" && existing.orderType !== "takeout" && existing.orderId && req.body?.payAhead !== true) {
+      const cookingOrder = await Order.findById(existing.orderId)
+      const cooking = unservedRounds(cookingOrder)
+      if (cooking.length > 0) {
+        const names = cooking.map(r => `Round ${r.round}`).join(" and ")
+        return res.status(409).json({
+          code: "ROUNDS_COOKING",
+          error: `${names} ${cooking.length > 1 ? "are" : "is"} still being prepared.`
+        })
+      }
+    }
+
     let invoice
     let justPaid = false
     if (status === "paid") {
@@ -306,15 +263,20 @@ export const updateInvoiceStatus = async (req, res) => {
       // runs out (never less than 5 minutes). Matching on this invoice's own
       // sessionId means it can never arm a timer on a newer party's table.
       if (invoice.orderType !== "takeout" && invoice.tableId) {
-        const settings = await Settings.getSingleton()
-        const minutes = Math.max(5, Number(settings.billing?.tableAutoReleaseMinutes) || 10)
-        const armed = await Table.findOneAndUpdate(
-          { _id: invoice.tableId, currentSessionId: invoice.sessionId },
-          { $set: { autoReleaseAt: new Date(Date.now() + minutes * 60 * 1000) } },
-          { new: true }
-        )
-        if (armed) {
-          io.emit("table:updated", { tableId: armed._id, status: armed.status, tableNumber: armed.tableNumber })
+        // Paid ahead with a round still cooking: the timer is armed later, by
+        // the sweep in utils/tableRelease.js, once that round has been served.
+        const payOrder = invoice.orderId ? await Order.findById(invoice.orderId) : null
+        if (unservedRounds(payOrder).length === 0) {
+          const settings = await Settings.getSingleton()
+          const minutes = Math.max(5, Number(settings.billing?.tableAutoReleaseMinutes) || 10)
+          const armed = await Table.findOneAndUpdate(
+            { _id: invoice.tableId, currentSessionId: invoice.sessionId },
+            { $set: { autoReleaseAt: new Date(Date.now() + minutes * 60 * 1000) } },
+            { new: true }
+          )
+          if (armed) {
+            io.emit("table:updated", { tableId: armed._id, status: armed.status, tableNumber: armed.tableNumber })
+          }
         }
       }
     } else {

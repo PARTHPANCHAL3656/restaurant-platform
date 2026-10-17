@@ -826,6 +826,7 @@ export function StaffProvider({ children }) {
       time: timeStr,
       status: inv.status,
       paymentMethod: inv.paymentMethod,
+      paidAt: inv.paidAt || null,
       generatedBy: inv.generatedBy || 'Floor Manager',
       orderSource: inv.orderSource || (isTakeout ? 'Takeout' : (inv.reservationId ? 'Reservation' : 'Walk-in')),
       subtotal: inv.subtotal,
@@ -1495,7 +1496,18 @@ export function StaffProvider({ children }) {
     }
 
     try {
-      await api.patch(`/api/invoices/${invoiceId}`, { status: 'paid', paymentMethod });
+      try {
+        await api.patch(`/api/invoices/${invoiceId}`, { status: 'paid', paymentMethod });
+      } catch (err) {
+        // A round is still being prepared. Ask once, then pay ahead on purpose.
+        const data = err.response?.data;
+        if (data?.code !== 'ROUNDS_COOKING') throw err;
+        const ok = window.confirm(
+          `${data.error}\n\nIf you take payment now, the table stays occupied until it has been served, and any item that can't be served has to be refunded by hand.\n\nTake payment ahead?`
+        );
+        if (!ok) return;
+        await api.patch(`/api/invoices/${invoiceId}`, { status: 'paid', paymentMethod, payAhead: true });
+      }
       await loadAllData();
 
       logActivity(

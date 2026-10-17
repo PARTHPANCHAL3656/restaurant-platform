@@ -26,7 +26,7 @@ import paymentRoutes from "./routes/payments.js"
 import invoiceRoutes from "./routes/invoices.js"
 import analyticsRoutes from "./routes/analytics.js"
 import crmRoutes from "./routes/crm.js"
-import { runAutoReleaseSweep, autoServeReadyRounds } from "./utils/tableRelease.js"
+import { runAutoReleaseSweep, autoServeReadyRounds, runInvoiceSweep } from "./utils/tableRelease.js"
 
 dotenv.config()
 connectDB()
@@ -138,9 +138,20 @@ const publicIntakeLimiter = rateLimit({
   message: { error: "Too many requests, please try again in a few minutes." }
 })
 
+// Takeout "resume" hands out a session for someone's order, so it is limited
+// much harder than the other intake routes: a handful of tries per 15 minutes.
+const resumeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many attempts. Please wait a few minutes or call the restaurant." }
+})
+
 app.use("/api/auth", authRoutes)
 app.use("/api/tables", publicIntakeLimiter, tableRoutes)
 app.use("/api/orders", orderRoutes)
+app.use("/api/takeout/resume", resumeLimiter)
 app.use("/api/takeout", takeoutRoutes)
 app.use("/api/settings", settingsRoutes)
 app.use("/api/staff", staffRoutes)
@@ -177,6 +188,7 @@ if (!process.env.VERCEL) {
   const sweep = () => {
     runAutoReleaseSweep().catch((err) => console.error("Auto-release sweep failed:", err))
     autoServeReadyRounds().catch((err) => console.error("Auto-serve sweep failed:", err))
+    runInvoiceSweep().catch((err) => console.error("Invoice sweep failed:", err))
   }
   setTimeout(sweep, 10 * 1000)
   setInterval(sweep, 30 * 1000)

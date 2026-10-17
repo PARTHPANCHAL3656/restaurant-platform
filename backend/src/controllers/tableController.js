@@ -6,7 +6,7 @@ import Reservation from "../models/Reservation.js"
 import { generateTableToken } from "../utils/generateTableToken.js"
 import { normalizePhone } from "../utils/normalizePhone.js"
 import { releaseHeldTable } from "./reservationController.js"
-import { releaseTableSession } from "../utils/tableRelease.js"
+import { releaseTableSession, unservedRounds } from "../utils/tableRelease.js"
 import { io } from "../index.js"
 
 // GET /api/tables
@@ -175,6 +175,18 @@ export const freeTable = async (req, res) => {
     // Verify invoice is paid before freeing, if there was a session
     if (table.currentSessionId) {
       const order = table.currentOrderId ? await Order.findById(table.currentOrderId) : null
+
+      // Never release a table whose food is still being prepared: it would
+      // wipe the kitchen's ticket. (Paying ahead doesn't change this.)
+      const cooking = unservedRounds(order)
+      if (cooking.length > 0) {
+        const names = cooking.map(r => `Round ${r.round}`).join(" and ")
+        return res.status(409).json({
+          code: "ROUNDS_COOKING",
+          error: `${names} ${cooking.length > 1 ? "are" : "is"} still being prepared. Mark ${cooking.length > 1 ? "them" : "it"} Served in Order Management before releasing the table.`
+        })
+      }
+
       const hasUnbilledItems = order && order.items && order.items.length > 0
 
       const invoice = await Invoice.findOne({ sessionId: table.currentSessionId })

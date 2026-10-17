@@ -99,6 +99,10 @@ export default function TakeoutStartPage() {
   const [pickupChoice, setPickupChoice] = useState('ASAP');
   const [specificTime, setSpecificTime] = useState('');
   const [resumePhone, setResumePhone] = useState('');
+  const [resumeOrderNumber, setResumeOrderNumber] = useState('');
+  // Set right after an order is started, to show the order number to record.
+  const [startedOrder, setStartedOrder] = useState(null);
+  const [copiedNumber, setCopiedNumber] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -194,7 +198,9 @@ export default function TakeoutStartPage() {
       const { token } = res.data;
       sessionStorage.setItem('tableToken', token);
       setTableToken(token);
-      navigate('/menu');
+      // Show the order number first: it is needed, with the phone number, to
+      // get back to this order if the page is ever closed.
+      setStartedOrder({ orderNumber: res.data.orderNumber });
     } catch (err) {
       setError(err.message || 'Could not start your takeout order. Please try again.');
     } finally {
@@ -204,12 +210,12 @@ export default function TakeoutStartPage() {
 
   const handleResume = async (e) => {
     e.preventDefault();
-    if (resumePhone.length !== 10) return;
+    if (resumePhone.length !== 10 || !resumeOrderNumber.trim()) return;
     setError('');
     setIsSubmitting(true);
 
     try {
-      const res = await api.post('/api/takeout/resume', { guestPhone: resumePhone.trim() });
+      const res = await api.post('/api/takeout/resume', { guestPhone: resumePhone.trim(), orderNumber: resumeOrderNumber.trim() });
       const { token } = res.data;
       sessionStorage.setItem('tableToken', token);
       setTableToken(token);
@@ -220,6 +226,57 @@ export default function TakeoutStartPage() {
       setIsSubmitting(false);
     }
   };
+
+  // Right after starting: the order number to record, before the menu.
+  if (startedOrder) {
+    const copyOrderNumber = async () => {
+      try {
+        await navigator.clipboard.writeText(startedOrder.orderNumber);
+      } catch (e) {
+        // Older or non-secure browsers: fall back to a temporary text box.
+        const box = document.createElement('textarea');
+        box.value = startedOrder.orderNumber;
+        document.body.appendChild(box);
+        box.select();
+        try { document.execCommand('copy'); } catch (err) { /* nothing more to try */ }
+        document.body.removeChild(box);
+      }
+      setCopiedNumber(true);
+      setTimeout(() => setCopiedNumber(false), 2000);
+    };
+
+    return (
+      <div className="min-h-screen bg-canvas-cream flex flex-col">
+        <div className="flex-grow flex items-center justify-center px-6 py-16">
+          <div className="w-full max-w-md bg-white border border-muted-border p-8 text-center space-y-5">
+            <p className="font-label-caps text-[10px] tracking-widest uppercase text-saffron-gold font-bold">Takeout order started</p>
+            <h1 className="font-serif text-3xl text-ink-navy">Your order number</h1>
+            <div className="bg-saffron-gold/10 border border-saffron-gold/30 py-4 px-4 space-y-3">
+              <p className="font-serif text-3xl text-ink-navy tracking-wider">{startedOrder.orderNumber}</p>
+              <button
+                type="button"
+                onClick={copyOrderNumber}
+                className="text-xs font-label-caps tracking-widest uppercase text-ink-navy border border-ink-navy/30 px-4 py-2 hover:bg-ink-navy hover:text-canvas-cream transition-colors cursor-pointer"
+              >
+                {copiedNumber ? 'Copied' : 'Copy order number'}
+              </button>
+            </div>
+            <p className="text-xs text-subtle-text leading-relaxed">
+              Please record this order number. If you close this page, you'll need it, together with your phone number, to get back to your order.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/menu')}
+              className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[52px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 transition-all duration-300 shadow-md cursor-pointer"
+            >
+              Continue to Menu
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-canvas-cream flex flex-col">
@@ -256,7 +313,8 @@ export default function TakeoutStartPage() {
             <form onSubmit={handleResume} className="bg-white border border-t-0 border-muted-border p-8 space-y-5">
               <p className="text-xs text-subtle-text leading-relaxed">
                 Already started an order but closed the page, switched phones, or cleared your browser?
-                Enter the phone number you used and we'll bring your order back up — no QR code needed.
+                Enter the phone number you used and the order number you were given when you started
+                (it looks like SGTA-0017). We'll bring your order back up, no QR code needed.
               </p>
               <div>
                 <label className="text-[11px] font-label-caps uppercase tracking-widest text-subtle-text font-bold">
@@ -273,6 +331,20 @@ export default function TakeoutStartPage() {
                   placeholder="10-digit mobile number"
                 />
               </div>
+              <div>
+                <label className="text-[11px] font-label-caps uppercase tracking-widest text-subtle-text font-bold">
+                  Order Number
+                </label>
+                <input
+                  type="text"
+                  value={resumeOrderNumber}
+                  onChange={(e) => setResumeOrderNumber(e.target.value.toUpperCase())}
+                  autoCapitalize="characters"
+                  required
+                  className="w-full mt-1 border border-muted-border px-3 h-11 text-sm focus:outline-none focus:border-saffron-gold"
+                  placeholder="e.g. SGTA-0017"
+                />
+              </div>
 
               {error && (
                 <p className="text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2">{error}</p>
@@ -280,7 +352,7 @@ export default function TakeoutStartPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting || resumePhone.length !== 10}
+                disabled={isSubmitting || resumePhone.length !== 10 || !resumeOrderNumber.trim()}
                 className="w-full bg-saffron-gold text-ink-navy font-cta-label text-cta-label h-[52px] flex items-center justify-center uppercase tracking-widest hover:brightness-110 active:scale-98 transition-all duration-300 shadow-md disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmitting ? 'Looking up your order...' : 'Resume My Order'}

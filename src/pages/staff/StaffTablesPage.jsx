@@ -33,6 +33,14 @@ export default function StaffTablesPage() {
     reservationRules,
     holdTableForReservation
   } = useStaff();
+  const { orders: kitchenOrders } = useStaff();
+
+  // Round numbers still being prepared at a table. While there are any, the
+  // table can't be released (the kitchen would lose the ticket).
+  const cookingAt = (label) => {
+    const o = kitchenOrders.find(x => x.orderType !== 'takeout' && x.table === label);
+    return o ? (o.rounds || []).filter(r => r.status !== 'Served').map(r => r.round) : [];
+  };
 
   const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
   const [selectedTableId, setSelectedTableId] = useState(null);
@@ -452,6 +460,9 @@ export default function StaffTablesPage() {
                   {tbl.status === 'occupied' && tbl.autoReleaseAt && (
                     <p className="mt-0.5 text-[9px] font-black tracking-wider">PAID</p>
                   )}
+                  {tbl.status === 'occupied' && !tbl.autoReleaseAt && cookingAt(tbl.id).length > 0 && (
+                    <p className="mt-0.5 text-[9px] font-black tracking-wider">COOKING</p>
+                  )}
                 </div>
                 {tbl.status === 'occupied' && tbl.autoReleaseAt && (
                   <span
@@ -773,6 +784,11 @@ export default function StaffTablesPage() {
                           This order is {invoiceWaitingOn === 'new' ? 'still waiting for the kitchen' : invoiceWaitingOn === 'preparing' ? 'still being prepared' : 'ready but not served yet'}. Mark it as Served in Order Management before generating the invoice.
                         </p>
                       )}
+                      {cookingAt(currentTable.id).length > 0 && (
+                        <p className="text-[11px] leading-snug text-ink-navy bg-saffron-gold/10 border border-saffron-gold/40 p-3" role="status">
+                          Round {cookingAt(currentTable.id).join(' and ')} is still being prepared. This table can't be released until it has been served.
+                        </p>
+                      )}
                       {currentTable.autoReleaseAt && (
                         <p className="text-[11px] leading-snug text-ink-navy bg-saffron-gold/10 border border-saffron-gold/40 p-3" role="status">
                           Bill paid. This table frees itself at {new Date(currentTable.autoReleaseAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. Tap Release Table to free it now.
@@ -787,8 +803,9 @@ export default function StaffTablesPage() {
                           Generate Invoice
                         </button>
                         <button 
+                          disabled={cookingAt(currentTable.id).length > 0}
                           onClick={() => (currentTable.autoReleaseAt ? handleConfirmRelease() : setShowReleaseConfirm(true))}
-                          className="h-[56px] bg-red-950 text-white font-cta-label text-cta-label uppercase tracking-widest hover:bg-red-900 transition-all duration-300 cursor-pointer rounded-none text-center"
+                          className="h-[56px] bg-red-950 text-white font-cta-label text-cta-label uppercase tracking-widest hover:bg-red-900 transition-all duration-300 cursor-pointer rounded-none text-center disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           Release Table
                         </button>

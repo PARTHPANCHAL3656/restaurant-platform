@@ -4,6 +4,7 @@ import Invoice from "../models/Invoice.js"
 import { io } from "../index.js"
 import Settings from "../models/Settings.js"
 import { ensureRounds, applyRoundStatus, deriveStatus, servedThrough } from "./orderRounds.js"
+import { createDineInInvoice } from "./createInvoice.js"
 
 // True when every item on the order appears on the invoice in at least the
 // same quantity. Used by the automatic paths only: if a guest ordered more
@@ -55,6 +56,15 @@ export async function releaseTableSession(table, reason = "manual") {
 //   "released"     - table was freed
 //   "skipped"      - paid, but items were added after the bill; staff are told
 //   "not-eligible" - no paid invoice for this table's current session
+// The rounds of an order that haven't been served yet. A table with any of
+// them is never released, manually or automatically: releasing it would wipe
+// the kitchen's ticket for food the guests are still waiting for.
+export function unservedRounds(order) {
+  if (!order) return []
+  ensureRounds(order)
+  return order.rounds.filter(r => r.status !== "Served")
+}
+
 export async function autoReleaseTable(table, reason) {
   if (!table.currentSessionId) return "not-eligible"
 
@@ -62,6 +72,14 @@ export async function autoReleaseTable(table, reason) {
   if (!invoice || invoice.status !== "paid") return "not-eligible"
 
   const order = table.currentOrderId ? await Order.findById(table.currentOrderId) : null
+  if (order && unservedRounds(order).length > 0) {
+    // Paid ahead while a round is still cooking: hold the table. The invoice
+    // sweep arms the timer again once the last round has been served.
+    table.autoReleaseAt = null
+    await table.save()
+    io.emit("table:updated", { tableId: table._id, status: table.status, tableNumber: table.tableNumber })
+    return "skipped"
+  }
   if (order && !invoiceCoversOrder(invoice, order)) {
     table.autoReleaseAt = null
     await table.save()
@@ -121,6 +139,65 @@ export async function autoServeReadyRounds() {
 // Runs every 30 seconds (and once shortly after boot). Each due table is
 // claimed atomically first, so two sweeps - or a sweep racing a manual
 // release - can never both act on it.
+// A bill is made 30 seconds after a round is served, so a mistaken "Served"
+// tap can still be undone first.
+const INVOICE_DELAY_MS = 30 * 1000
+
+// Runs with the other sweeps. For each occupied table:
+// 1) Once any round has been served for 30 seconds and there is no invoice
+//    yet, create the unpaid invoice, so the guest can see and download their
+//    bill and quote its number at the counter. Later rounds are added to it
+//    in place (utils/refreshInvoice.js).
+// 2) If the bill was paid ahead and the last round has now been served, arm
+//    the release timer.
+export async function runInvoiceSweep() {
+  const tables = await Table.find({
+    currentOrderId: { $ne: null },
+    currentSessionId: { $ne: null },
+    status: { $in: ["occupied", "reserved"] }
+  })
+
+  for (const table of tables) {
+    const order = await Order.findById(table.currentOrderId)
+    if (!order || order.orderType === "takeout" || order.items.length === 0) continue
+    ensureRounds(order)
+
+    const invoice = await Invoice.findOne({ sessionId: table.currentSessionId })
+
+    if (!invoice) {
+      const cutoff = Date.now() - INVOICE_DELAY_MS
+      const servedLongEnough = order.rounds.some(
+        r => r.status === "Served" && new Date(r.servedAt || order.updatedAt).getTime() <= cutoff
+      )
+      if (!servedLongEnough) continue
+      try {
+        await createDineInInvoice({ table, order, generatedBy: "Automatic" })
+      } catch (err) {
+        console.error("Automatic invoice failed:", err.message)
+      }
+      continue
+    }
+
+    if (
+      invoice.status === "paid" &&
+      !table.autoReleaseAt &&
+      unservedRounds(order).length === 0 &&
+      invoiceCoversOrder(invoice, order)
+    ) {
+      const settings = await Settings.getSingleton()
+      const minutes = Math.max(5, Number(settings.billing?.tableAutoReleaseMinutes) || 10)
+      const armed = await Table.findOneAndUpdate(
+        { _id: table._id, currentSessionId: table.currentSessionId, autoReleaseAt: null },
+        { $set: { autoReleaseAt: new Date(Date.now() + minutes * 60 * 1000) } },
+        { new: true }
+      )
+      if (armed) {
+        io.emit("table:updated", { tableId: armed._id, status: armed.status, tableNumber: armed.tableNumber })
+      }
+    }
+  }
+}
+
 export async function runAutoReleaseSweep() {
   const due = await Table.find({ autoReleaseAt: { $ne: null, $lte: new Date() } }).select("_id")
 

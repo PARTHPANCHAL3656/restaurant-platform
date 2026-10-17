@@ -14,7 +14,7 @@ const BELL_ALERTS = [
   { key: 'billing', label: 'New invoices', path: '/staff/billing', icon: 'payments' }
 ];
 
-export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0, onMarkAllSeen }) {
+export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0, onMarkAllSeen, collapsed = false }) {
   const { staffProfile, staffName, staffJobTitle, logoutStaff, tables, releaseTable } = useStaff();
   const location = useLocation();
   const navigate = useNavigate();
@@ -107,7 +107,7 @@ export default function StaffHeader({ onMenuToggle, badges = {}, badgeTotal = 0,
   const formattedDate = time.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <header className="h-16 md:h-20 border-b border-muted-border bg-canvas-cream/85 backdrop-blur-md fixed top-0 right-0 left-0 lg:left-[300px] z-30 px-4 sm:px-6 md:px-8 flex items-center justify-between overflow-visible">
+    <header className={`h-16 md:h-20 border-b border-muted-border bg-canvas-cream/85 backdrop-blur-md fixed top-0 right-0 left-0 ${collapsed ? 'lg:left-[76px]' : 'lg:left-[300px]'} transition-[left] duration-300 z-30 px-4 sm:px-6 md:px-8 flex items-center justify-between overflow-visible`}>
       
       {/* Left side: Hamburger (mobile/tablet) + Page Title */}
       <div className="flex items-center gap-4">

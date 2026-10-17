@@ -20,7 +20,11 @@ export default function StaffDashboardPage() {
   const todayStr = getTodayIST();
   const todayReservationsCount = reservations.filter(r => r.date === todayStr && (r.status === 'pending' || r.status === 'confirmed')).length;
 
-  const activeOrdersCount = orders.length;
+  // Dine-in tickets only; takeaway has its own card.
+  const dineInOrders = orders.filter(o => o.orderType !== 'takeout');
+  const activeOrdersCount = dineInOrders.length;
+  const takeoutActive = orders.filter(o => o.orderType === 'takeout' && o.items && o.items.length > 0 && ['new', 'preparing', 'ready'].includes(o.status));
+  const takeoutByStage = (stage) => takeoutActive.filter(o => o.status === stage).length;
   const avgKitchenPrep = orders.length > 0 
     ? `${Math.max(1, Math.floor(orders.reduce((sum, o) => sum + (new Date() - new Date(o.createdAt)) / 60000, 0) / orders.length))} Mins` 
     : '—';
@@ -31,18 +35,26 @@ export default function StaffDashboardPage() {
       ? 'Active Service' 
       : 'Calm Service';
 
-  const todayRevenue = invoices
-    .filter(inv => inv.status === 'paid')
+  // Everything below is TODAY (India time): a paid bill counts on the day it
+  // was paid, so the numbers update as bills are settled and reset at midnight.
+  const paidTodayInvoices = invoices.filter(
+    inv => inv.status === 'paid' && inv.paidAt &&
+      new Date(inv.paidAt).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) === todayStr
+  );
+  const todayRevenue = paidTodayInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+  const cashCollected = paidTodayInvoices
+    .filter(inv => String(inv.paymentMethod || '').toLowerCase() === 'cash')
     .reduce((sum, inv) => sum + inv.amount, 0);
+  const onlineCollected = todayRevenue - cashCollected;
 
   const revenuePending = tables
     .filter(t => t.status === 'occupied')
     .reduce((sum, t) => sum + (t.billTotal || 0), 0) + 
     invoices.filter(inv => inv.status === 'unpaid').reduce((sum, inv) => sum + inv.amount, 0);
 
-  const completedBills = invoices.filter(inv => inv.status === 'paid').length;
+  const completedBills = paidTodayInvoices.length;
   const pendingBills = invoices.filter(inv => inv.status === 'unpaid').length;
-  const paidInvoices = invoices.filter(inv => inv.status === 'paid');
+  const paidInvoices = paidTodayInvoices;
   const avgBill = paidInvoices.length > 0 ? paidInvoices.reduce((sum, inv) => sum + inv.amount, 0) / paidInvoices.length : 0;
   const diningSessions = occupiedTables + completedBills;
 
@@ -153,6 +165,21 @@ export default function StaffDashboardPage() {
                 </div>
               </div>
 
+              {/* Takeaway: live from the same orders the Takeaway board uses */}
+              <div
+                onClick={() => navigate('/staff/takeaway')}
+                className="bg-canvas-cream border border-saffron-gold/15 p-6 flex justify-between items-center shadow-sm cursor-pointer hover:border-saffron-gold/40 transition-colors"
+              >
+                <div>
+                  <p className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest mb-1">Takeaway Orders</p>
+                  <p className="font-serif text-xl text-ink-navy">{takeoutActive.length}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-label-caps text-[9px] text-subtle-text uppercase tracking-widest">New {takeoutByStage('new')} · Preparing {takeoutByStage('preparing')}</p>
+                  <p className="font-serif text-md text-ink-navy">Ready {takeoutByStage('ready')}</p>
+                </div>
+              </div>
+
             </div>
 
             {/* Revenue — Owner/Manager only; Staff can't load invoices, so it would only ever read ₹0 */}
@@ -169,6 +196,17 @@ export default function StaffDashboardPage() {
                 <div className="text-right">
                   <p className="font-label-caps text-[9px] text-saffron-gold uppercase tracking-wider mb-0.5">Pending Revenue</p>
                   <p className="font-serif text-md text-ink-navy">{formatINR(revenuePending)}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pb-4">
+                <div>
+                  <p className="text-[9px] font-label-caps text-subtle-text uppercase tracking-wider">Collected in cash</p>
+                  <p className="font-serif text-md text-ink-navy">{formatINR(cashCollected)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] font-label-caps text-subtle-text uppercase tracking-wider">Collected online</p>
+                  <p className="font-serif text-md text-ink-navy">{formatINR(onlineCollected)}</p>
                 </div>
               </div>
 
